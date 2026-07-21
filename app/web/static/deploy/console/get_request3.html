@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-dom-data2.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-json2.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-logic-nodes.js" charset="UTF-8"></script>
+    <script src="../../file/js/string.js" charset="UTF-8"></script>
+    <script src="../../file/js/md5.js" charset="UTF-8"></script>
+
+    <title>GET 请求</title>
+    <link href="../../file/css/kl-hammer-json2.css" rel="stylesheet">
+    <link href="../../file/css/kl-hammer-logic-nodes.css" rel="stylesheet">
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+
+
+        #dev_opts > div {
+            display: block;
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            margin: 0.1em;
+        }
+
+        #dev_opts > div > div {
+            width: 100%;
+        }
+
+        #dev_opts > div > div > label {
+            display: block;
+            width: 400px;
+            /* height: 2em; */
+            /* margin-top: 0.5em; */
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            background: #EEE;
+            margin: 0.1em;
+        }
+
+        #dev_opts_mysql_env {
+            margin-top: 50px;
+        }
+
+        #dev_opts_mysql_env > div {
+            display: block;
+            float: left;
+            padding-top: 20px;
+        }
+
+        #dev_opts_mysql_env > div > * {
+            display: block;
+            float: left;
+        }
+
+        #dev_opts_mysql_env > div > strong {
+            width: 100px;
+        }
+
+        #dev_opts_mysql_env > div > em {
+            width: 500px;
+        }
+
+        #dev_opts_mysql_env > div > span {
+            width: 190px;
+        }
+
+        .collapse {
+
+        }
+
+        .json_lines {
+            width: 50px;
+            display: block;
+            float: left;
+        }
+
+        .json_lines > div {
+            text-align: right;
+        }
+
+        .json_root {
+            width: 80%;
+            display: block;
+            float: left;
+            color: #55A;
+        }
+
+        .json_root > * {
+            width: 100%;
+            display: inline;
+            float: left;
+        }
+
+        .json_collapse {
+            display: none;
+        }
+
+        .json_extend_flag > .json_expand_label {
+            display: inline;
+        }
+
+        .json_expand_label {
+            display: none;
+        }
+
+        .json_extend_flag > .json_collapse_label {
+            display: none;
+        }
+
+        .json_root:hover {
+            background: #EEE;
+        }
+
+        .json_extend_btn {
+            cursor: pointer;
+            min-width: 10px;
+            display: inline-block;
+        }
+
+        .json_root:hover .json_extend_btn {
+            background: #666;
+        }
+
+        .trace_block {
+            border-bottom: 1px solid #000;
+            overflow-y: auto;
+        }
+
+        .trace_block > pre {
+            background: #EEE;
+            color: #666;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .trace_title {
+            display: inline;
+        }
+
+        .trace_toggle {
+            margin-left: 20px;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #cmd_selector, #cmds {
+            width: 100%;
+        }
+
+        #cmds > * {
+            width: 100%;
+        }
+
+        option {
+            display: block;
+            width: 100%;
+        }
+
+        .row {
+            float: left;
+            width: 100%;
+        }
+
+        .input_area {
+
+        }
+
+        .input_area .input_url {
+            display: block;
+            float: left;
+            width: 100%;
+            height: 30px;
+        }
+
+        .adv_opt {
+            display: block;
+            float: left;
+            padding: 2px;
+            margin: 5px;
+            border: 1px solid #DDD;
+            margin-left: 10px;
+        }
+
+        .adv_opts_div {
+            width: 100%;
+            float: left;
+        }
+
+        .adv_opt_json {
+            width: 100%;
+            float: left;
+        }
+
+        .adv_opt_json textarea {
+            min-width: 600px;
+            min-height: 150px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div>
+        <a href="../console.html" target="_blank"><h1>返回</h1></a>
+        <h1>GET 请求</h1>
+        <p>
+        <div id="tmp">
+
+        </div>
+
+        <button id="btn_cmd">执行</button>
+        </p>
+
+    </div>
+    <div id="dev_opts">
+        <div id="dev_opts_error">
+
+        </div>
+
+    </div>
+
+</div>
+<script></script>
+<script>
+
+    var box = new Emt('div');
+    box.setStyle({width: '100%', height: '100%', minHeight: '600px', minWidth: '600px'});
+    var blocks = [];
+
+    function new_content(json) {
+        //cli.log(json);
+        try {
+            let block = render(json);
+            blocks.push(block);
+            box.addNodes([block]);
+        } catch (e) {
+
+        }
+    }
+
+    function render(input) {
+        var show_div = new Emt('div').setPros({className: 'trace_block'});
+        var pre_t = new Emt('pre').setPros({className: 'trace_title'});
+        var pre_code = new Emt('pre');
+        var btn1 = new Emt('button').setPros({textContent: '收起/展开', className: 'trace_toggle'});
+
+        var label_p = new Emt('p').addNodes([pre_t, btn1]);
+        show_div.addNodes([
+            label_p,
+            pre_code
+        ]);
+
+        pre_t.textContent = input.data.line;
+        pre_code.textContent = input.data.code.join("\n");
+        // pre_var.textContent = JSON.stringify(input.data.args, null, 2);
+        //cli.log('---->view_json');
+        var div_dump = view_json(input.data.args);
+        show_div.addNodes([div_dump]);
+        btn1.addEventListener('click', function () {
+            div_dump.classList.toggle('hide');
+        }, false);
+
+        if (input.data.traces && input.data.traces.length > 0) {
+            var btn2 = new Emt('button').setPros({textContent: 'traces', className: 'trace_toggle', is_render: false});
+            label_p.addNodes([btn2]);
+
+
+            //div_trace.classList.add('hide');
+            btn2.addEventListener('click', function () {
+                if (btn2.is_render === false) {
+                    btn2.div_trace = new Emt('div').setPros({className: 'row'}).addNodes([
+                        new Emt('pre').setPros({textContent: 'traces:'}),
+                        new Emt('div').addNodes([view_json(input.data.traces)])
+                    ]);
+                    show_div.addNodes([btn2.div_trace]);
+                    btn2.is_render = true;
+                } else {
+                    btn2.div_trace.classList.toggle('hide');
+                }
+
+            }, false);
+
+        }
+        //cli.log('render', show_div);
+        //  show_div.textContent = input.data.join('');
+        //cli.log(show_div);
+        return show_div;
+    }
+
+
+    domLoaded(function () {
+        var adv_opts = [
+            {key: 'adv_fcgi_url', title: '通讯接口', dt: 'string', default: document.location.origin, readonly: true},
+            {key: 'adv_debug', title: '#', dt: 'bool', default: true, readonly: true},
+            {key: 'adv_echo_pretty', title: '针对配套web打印', dt: 'bool', default: true, readonly: true},
+            {key: 'adv_push_data', title: '推送', dt: 'bool', default: false},
+            {key: 'adv_use_mock', title: '使用mock', dt: 'bool', default: false},
+            {key: 'adv_dump_trace', title: 'dump trace', dt: 'bool', default: true},
+            {key: 'adv_tabecho', title: 'tab echo ', dt: 'bool', default: true, readonly: true},
+            {key: 'adv_evn_flag', title: 'env flag', dt: 'bool', default: false},
+            {key: 'adv_runner_debug', title: '入口是否debug', dt: 'bool', default: true},
+            {key: 'ca', title: 'ca', dt: 'string', default: 'funshionappbest'},
+            {key: 'adv_runner_debug_keywords_json', title: '逻辑debug关键词', dt: 'json', default: '{}', eleName: 'debug_json'},
+
+        ];
+
+        var div = new Emt('div').setPros({id: 'input_area', className: 'input_area'});
+        kl.id('tmp').appendChild(div);
+        var input_url = new Emt('input').setPros({id: 'input_url', type: 'text', className: 'input_url'});
+        input_url.value = 'http://po.kl_funtv.com/v6/config/channelhome?filter=media&app=main&nav_id=1&fudid=4383F38264A7FE2731A8DAF6A42E37C2&si=2551&apptype=aphone_app_main&cl=kyyapp&uc=99&ca=funshionappbest';
+        input_url.value = 'http://po.kl_funtv.com/v6/config/channelhome?cl=ipad&fudid=EEA4B6F8BCD6BCD6BDD6BDD6C6CBB48DDEE18DE7D8B2DBE2D8E4DEE18EE68CB2&nav_id=1&si=0&uc=252&ve=2.1.0.2&apptype=aphone_app_main&cl=kyyapp&uc=99&ca=funshionappbest';
+        input_url.value = 'http://po.kl_funtv.com/v5/config/channelhome?cl=pcclient&ve=4.0.3.6Beta&nav_id=1&channel=11&ca=funshionappbest&use_mock=1';
+        input_url.value = 'http://papi.kl_funtv.com/cp/syncmvdebug?cp=f3zua8d_dev1&mtype=media&access_token=ZjN6dWE4ZF9kZXYxLDE2MDc1OTE3MTMsMDY1M2NiMjQ0YjZkYTRmODAzYWFiMjgwMWVkZDIwNzk=&channel=&page_size=40&page_no=1&mtype=video&videoId=13590359&id=13590359&page=40&szie=1&cp=fy3ju2l';
+        input_url.value = 'http://papi.kl_funtv.com/cp/syncmv?cp=fy3ju2l&mtype=video&access_token=ZnkzanUybCwxNjA4Nzc3MTE5LDcxMzI2NGI1MDlhOTBiMTg1MmY5MTM3MDAxZjVlODlj&channel=8901&page_size=40&page_no=1&id=13590359&page=40&szie=1&ca=funshionappbest';
+        input_url.value='http://papi.kl_funtv.com/cp/syncmv?cp=fy3ju2l&mtype=video&access_token=ZnkzanUybCwxNjA4Nzc3MTE5LDcxMzI2NGI1MDlhOTBiMTg1MmY5MTM3MDAxZjVlODlj&page_size=40&page_no=1&id=13590359&page=40&szie=1&ca=funshionappbest';
+        input_url.value = 'http://po.kl_funtv.com/v10/config/channelhome?nav_id=1&pg=1&refresh=down&ves=1&cl=web_baofeng&uc=111&fudid=%7Bbcc15c83886166547bff40291ec73338%7D&ctime=1608868082';
+
+        input_url.value = 'http://po.kl_funtv.com/v9/config/channelhome?nav_id=1&pg=1&refresh=down&ves=1&cl=web_baofeng&uc=111&fudid=35913cc2fa384cdc80addac08ac1e448';
+        input_url.value = 'http://po.kl_funtv.com/v8/config/channelhome?nav_id=46&pg=1&cl=web&uc=277';
+        input_url.value = 'http://po.kl_funtv.com/v7/config/channelhome?nav_id=1&filter=media&pg=1&refresh=down&cl=aphone&ve=3.1.2.2&mac=3480b340c6dd&uc=101&apptype=aphone_app_main&app=main&si=1073&app_code=aphone&fudid=00b1f718dd23dc23df23df23f5ef8f986c8aafb879af084952c9eba36c6319fe';
+        input_url.value='http://papi.kl_funtv.com/cp/syncmv?cp=fy3ju2l&mtype=video&access_token=ZnkzanUybCwxNjA4Nzc3MTE5LDcxMzI2NGI1MDlhOTBiMTg1MmY5MTM3MDAxZjVlODlj&page_size=40&page_no=1&id=13590359&page=40&szie=1&ca=funshionappbest';
+
+        var adv_opts_div = new Emt('div').setPros({className: 'adv_opts_div'});
+        var adv_opt_inputs = [];
+        adv_opts.forEach(function (opt_conf) {
+            if (opt_conf.dt === 'bool') {
+                var input_tmp = new Emt('input').setPros({type: 'checkbox', checked: opt_conf.default, dt: opt_conf.dt, key: opt_conf.key});
+            } else if (opt_conf.dt === 'json') {
+                var md5_key = hex_md5(document.location.origin + ':adv_opt:' + opt_conf.key);
+                var val_tmp = window.localStorage.getItem(md5_key);
+                var input_tmp = new Emt('textarea').setPros({value: val_tmp || opt_conf.default, dt: opt_conf.dt, key: opt_conf.key});
+                input_tmp.addEventListener('change', function () {
+                    try {
+                        var obj_tmp = JSON.parse(input_tmp.value);
+                        var str = JSON.stringify(obj_tmp, null, 4);
+                        window.localStorage.setItem(md5_key, str);
+                        input_tmp.value = str;
+                    } catch (e) {
+                        alert(opt_conf.key + ':不对');
+                    }
+                });
+
+            } else {
+                var input_tmp = new Emt('input').setPros({type: 'text', value: opt_conf.default, dt: opt_conf.dt, key: opt_conf.key});
+            }
+            if (opt_conf.eleName) {
+                adv_opt_inputs[opt_conf.eleName] = input_tmp;
+            }
+            adv_opt_inputs.push(input_tmp);
+            adv_opts_div.addNodes([
+                function (label, input) {
+                    if (input.dt === 'json') {
+                        return new Emt('div').setPros({className: 'adv_opt_json'}).addNodes([label])
+                    } else {
+                        return label;
+                    }
+                }(
+                    new Emt('label').setPros({className: 'adv_opt', textContent: opt_conf.title}).addNodes([
+                        input_tmp
+                    ]),
+                    input_tmp
+                )
+
+            ])
+        });
+        div.addNodes([
+            input_url,
+            adv_opts_div
+        ]);
+        var debug_json_kw = new Emt('input').setPros({list: 'debug_jsons'}).setAttrs({list: 'debug_jsons'});
+        var debug_json = new Emt('datalist').setPros({id: 'debug_jsons'});
+        var btn_save_json = new Emt('button').setPros({textContent: '保存修改条数数据'});
+        var btn_add_json = new Emt('button').setPros({textContent: '新建调试数据'});
+        var btn_flush_json = new Emt('button').setPros({textContent: 'flush json'});
+        //<option value="BMW111">
+        div.addNodes([
+            new Emt('div').addNodes([
+                debug_json_kw,
+                debug_json,
+                btn_add_json,
+                btn_save_json,
+                btn_flush_json
+            ])
+        ]);
+        debug_json.addNodes([
+            //new Emt('option').setPros({textConent: 'yyyyy'}).setAttrs({value: 'xxxx'})
+        ]);
+
+        var logic_data = {};
+        var logic = new HammerLogicRoot();
+        logic.setData({"name": "root", "desc": "根节点，必须要有", "debug": true, "type": "node", "val": "", "val_type": "", "nodes": []});
+        logic.loadData();
+        div.addNodes([logic.dom]);
+
+
+        var ar = input_url.value.split('?')[0].replace('http://', '').split('.kl_funtv.com/');
+        var prefix = ar[0];
+        var version = ar[1].replace(/^v(\d+).*?$/g, "$1");
+        var api_name = ar[1];
+        console.log(prefix, version, api_name);
+        var getDomData = function () {
+            var tmp_data = logic.getData();
+            adv_opt_inputs.debug_json.value = JSON.stringify(tmp_data, null, 4);
+            logic_data.name = tmp_data.name;
+            logic_data.brief = tmp_data.desc;
+
+            var php_data = logic.getConvPhpData(tmp_data);
+            console.log(tmp_data, php_data);
+            adv_opt_inputs.debug_json.value = JSON.stringify(php_data.root, null, 4);
+            adv_opt_inputs.debug_json.scrollTop = 0; //防抖动
+            adv_opt_inputs.debug_json.style.height = adv_opt_inputs.debug_json.scrollHeight + 'px';
+
+            return tmp_data;
+        };
+
+        btn_add_json.addEventListener('click', function () {
+            var php_data_json = JSON.stringify(getDomData());
+            console.log(php_data_json, logic_data);
+
+            ajax({
+                url: '/dev/v1/devtool/runner/args/keywords/add',
+                data: {
+                    prefix: prefix,
+                    version: version,
+                    api_name: api_name,
+                    args_json: php_data_json,
+                    title: logic_data.name,
+                    brief: logic_data.brief
+                },
+                success: function (list_data) {
+                    console.log(list_data);
+                    if (list_data.status === 200) {
+                        document.location.reload();
+                    } else {
+                        alert('毛病1');
+                    }
+                },
+                error: function (data) {
+
+                },
+                type: 'json'
+            });
+
+        });
+
+        btn_save_json.addEventListener('click', function () {
+            if (typeof logic_data.id === 'undefined') {
+                alert('不能保存，没有目标Id');
+                return false;
+            }
+            var php_data_json = JSON.stringify(getDomData());
+            console.log(php_data_json, logic_data);
+            ajax({
+                url: '/dev/v1/devtool/runner/args/keywords/save',
+                data: {
+                    prefix: prefix,
+                    version: version,
+                    api_name: api_name,
+                    args_json: php_data_json,
+                    title: logic_data.name,
+                    brief: logic_data.brief, logic_id: logic_data.id
+                },
+                success: function (list_data) {
+                    console.log(list_data);
+                    if (list_data.status === 200) {
+
+                    } else {
+                        alert('毛病1');
+                    }
+                },
+                error: function (data) {
+
+                },
+                type: 'json'
+            });
+
+        });
+        btn_flush_json.addEventListener('click', function () {
+            console.log(logic.getData());
+            getDomData();
+        });
+
+        console.log(logic, logic.dom, logic.data, logic.dom.dom, 'xxxx');
+        //div.addNodes([logic.dom]);
+
+
+        ajax({
+            url: '/dev/v1/devtool/runner/args/keywords/list',
+            data: {prefix: prefix, version: version, api_name: api_name},
+            success: function (list_data) {
+                console.log(list_data);
+                if (list_data.status === 200) {
+                    var debug_jsons_list = list_data.data;
+                    list_data.data.forEach(function (ele, index) {
+                        debug_json.addNodes([
+                            new Emt('option').setAttrs({value: index + '####' + ele.title + ele.brief})
+                        ]);
+                    });
+                    debug_json_kw.addEventListener('change', function () {
+                        var index = debug_json_kw.value.replace(/^(\d+).*/g, "$1");
+                        logic_data = debug_jsons_list[index];
+                        console.log('对应索引', index);
+                        logic.dom.remove();
+                        logic.setData(debug_jsons_list[index].args_json);
+                        logic.loadData();
+                        console.log(logic, logic.dom, logic.data, logic.dom.dom, 'xxxx');
+                        div.addNodes([logic.dom]);
+                        getDomData();
+                    });
+                } else {
+                    alert('毛病1');
+                }
+            },
+            error: function (data) {
+
+            },
+            type: 'json'
+        });
+
+
+        console.log(div, adv_opts_div);
+
+        var input_kw = new Emt('input').setPros({type: 'text'});
+        var btn_hide_all = new Emt('button').setPros({textContent: '隐藏'});
+        var btn_show_all = new Emt('button').setPros({textContent: '展示'});
+        kl.id('dev_opts').appendChild(input_kw);
+        kl.id('dev_opts').appendChild(btn_hide_all);
+        kl.id('dev_opts').appendChild(btn_show_all);
+        btn_hide_all.addEventListener('click', function () {
+            if (input_kw.value.length) {
+
+            } else {
+                blocks.forEach(function (block, index) {
+                    //block.classList.add('collapse');
+                    block.toggle('hide', 1);
+                });
+            }
+        }, false);
+
+        btn_show_all.addEventListener('click', function () {
+            if (input_kw.value.length) {
+
+            } else {
+                blocks.forEach(function (block, index) {
+                    block.classList.remove('collapse');
+                });
+            }
+        }, false);
+
+        kl.id('dev_opts').appendChild(box);
+
+
+        var ifr = new Emt('iframe').setStyle({display: 'none'});
+        kl.id('dev_opts').appendChild(ifr);
+        window.ifr = ifr;
+        kl.id('btn_cmd').addEventListener('click', function () {
+            box.innerHTML = '';
+            ifr.src = input_url.value;
+
+            adv_opt_inputs.forEach(function (adv_opt_input) {
+                if (adv_opt_input.dt === 'bool') {
+                    if (adv_opt_input.checked) {
+                        ifr.src += '&' + adv_opt_input.key + '=true';
+                    }
+                } else if (adv_opt_input.dt === 'json') {
+                    try {
+                        var obj_tmp = JSON.parse(adv_opt_input.value);
+                        var str = JSON.stringify(obj_tmp);
+                        ifr.src += '&' + adv_opt_input.key + '=' + str.urlencode();
+                    } catch (e) {
+                        ifr.src += '&' + adv_opt_input.key + '={}';
+                    }
+                } else {
+                    ifr.src += '&' + adv_opt_input.key + '=' + adv_opt_input.value;
+                }
+            })
+        });
+
+        window.addEventListener('message', function (e) {
+            console.log(e);
+            try {
+                // var msg_data=JSON.parse(e.data);
+                // cli.log(msg_data);
+                window.new_content(e.data);
+            } catch (e) {
+                console.log(e, e.message);
+            }
+        }, false);
+    });
+
+    var domains = [
+        {title: 'po', domains: {dev: 'po.funtv_kl.com', prod: 'po.funshion.com'}},
+        {title: 'psmart', domains: {dev: 'psmart.funtv_kl.com', prod: 'psmart.funshion.com'}},
+    ];
+</script>
+</body>
+</html>

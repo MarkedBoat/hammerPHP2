@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.20240811.js" charset="UTF-8"></script>
+
+    <title>电视首页</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .item_list {
+            width: 100%;
+            float: left;
+        }
+
+        .item_list > button {
+            display: block;
+            width: 90%;
+            float: left;
+            margin-top: 0.5em;
+            text-align: left;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .video_player_div {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+        }
+
+        .video_player_div > video {
+
+        }
+
+        .item_on_fcous{
+            border: 0.3em solid #666;
+        }
+
+    </style>
+</head>
+<body>
+<div>
+    <div>
+
+    </div>
+    <div id="root_div">
+
+    </div>
+
+</div>
+<script></script>
+<script>
+    let onLeftDefault = () => {
+
+    };
+    let onRightDefault = () => {
+
+    };
+    let onUpDefault = () => {
+
+    };
+    let onDownDefault = () => {
+
+    };
+    let onOKDefault = () => {
+
+    };
+    let onEscDefault = () => {
+
+    };
+    let onFcous = () => {
+
+    };
+
+    function tvUnit(input) {
+        let self = this;
+        self.onLeft = input.onLeft || function () {
+            onLeftDefault(self);
+        };
+        self.onRight = input.onRight || function () {
+            onRightDefault(self);
+        };
+        self.onUp = input.onUp || function () {
+            onUpDefault(self);
+        };
+        self.onDown = input.onDown || function () {
+            onDownDefault(self);
+        };
+        self.onFcous = input.onFcous || function () {
+            onFcous(self);
+        };
+        self.onOK = input.onOKDefault || function () {
+            onOKDefault(self);
+        };
+        self.onEsc = input.onEscDefault || function () {
+            onEscDefault(self);
+        };
+    }
+
+    let currUnit;
+    let gotoUnit = (preUnit, nextUnit, input) => {
+        currUnit = nextUnit;
+        currUnit.onFcous(input);
+    };
+
+
+    document.onkeydown = function (e) {
+        if (currUnit) {
+            console.clear();
+            let keyCode = e.key || 'e.key';
+            let whichCode = e.which || 'e.which';
+            let charCode = e.charCode || 'e.charCode';
+            console.log(e.target);
+            console.log(whichCode);
+            // 37 l  38 top  39 right  40 down
+            if ([13, 27, 37, 38, 39, 40].indexOf(whichCode) !== -1) {
+                switch (whichCode) {
+                    case 13:
+                        currUnit.onOK();
+                        break;
+                    case 27:
+                        currUnit.onEsc();
+                        break;
+                    case 37:
+                        // currentInfo.table.selectCell(currentInfo.x - 1, currentInfo.y, 'left');
+                        currUnit.onLeft();
+                        break;
+                    case 38:
+                        //currentInfo.table.selectCell(currentInfo.x, currentInfo.y - 1, 'top');
+                        currUnit.onUp();
+                        break;
+                    case 39:
+                        //currentInfo.table.selectCell(currentInfo.x + 1, currentInfo.y, 'right');
+                        currUnit.onRight();
+                        break;
+                    case 40:
+                        //currentInfo.table.selectCell(currentInfo.x, currentInfo.y + 1, 'down');
+                        currUnit.onDown();
+                        break;
+                }
+                // e.preventDefault();
+                // return false;
+            }
+
+        }
+
+
+    };
+
+
+    domLoaded(function () {
+        let rootDiv = kl.id('root_div');
+        let itemListDiv = new Emt('div', 'class="item_list"');
+        let videoPlayerDiv = new Emt('div', 'class="video_player_div hidden"');
+        let playerControllerDiv = new Emt('div', 'class="video_player_ctrl_div "');
+        let videoPlayer = new Emt('video', 'controls="controls"', '', {volume: 0.1});
+
+        rootDiv.addNodes([
+            videoPlayerDiv.addNodes([
+                playerControllerDiv,
+                videoPlayer,
+            ]),
+            itemListDiv,
+        ]);
+
+        let play = (item) => {
+            videoPlayerDiv.classList.remove('hidden');
+            videoPlayer.src = item.src;
+            videoPlayer.play();
+        };
+        let exitPlayer = () => {
+            videoPlayerDiv.classList.add('hidden');
+            videoPlayer.pause();
+        };
+
+        let playerDivUnit = {
+            isPlaying: false,
+            onLeft: () => {
+                videoPlayer.currentTime += 15;
+            },
+            onRight: () => {
+                videoPlayer.currentTime -= 15;
+            },
+            onUp: () => {
+                videoPlayer.volume += 0.02;
+            },
+            onDown: () => {
+                videoPlayer.volume -= 0.02;
+            },
+            onFcous: (input) => {
+                videoPlayerDiv.classList.remove('hidden');
+                videoPlayer.src = input.item.src;
+                videoPlayer.play();
+            },
+            onOK: () => {
+                console.log('player div ok');
+
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                } else {
+                    videoPlayer.paused();
+                }
+            },
+            onEsc: () => {
+                console.log('player div exit');
+                videoPlayerDiv.classList.add('hidden');
+                videoPlayer.pause();
+            },
+        };
+
+        kl.ajax({
+            url: '/dev/v1/KL_PC/readFile',
+            data: {file: '/data/sysadv.debug'},
+            success: function (file_result) {
+                console.log(file_result);
+                let list = kl.getValByPath(file_result, 'data.list');
+                if (list && Array.isArray(list)) {
+                    console.log(file_result);
+                    list.forEach((item, i) => {
+                        let btn = new Emt('button', 'type="button"', item.title);
+                        itemListDiv.addNode(btn);
+
+                        let videoItemUnit = {
+                            itemElement: btn,
+                            onLeft: () => {
+                            },
+                            onRight: () => {
+
+                            },
+                            onUp: () => {
+                                if (videoItemUnit.itemElement.previousElementSibling) {
+                                    gotoUnit(videoItemUnit, videoItemUnit.itemElement.previousElementSibling.unitObject, {});
+                                }
+                            },
+                            onDown: () => {
+                                if (videoItemUnit.itemElement.nextElementSibling) {
+                                    gotoUnit(videoItemUnit, videoItemUnit.itemElement.nextElementSibling.unitObject, {});
+                                }
+                            },
+                            onFcous: (input) => {
+                                let className = 'item_on_fcous';
+                                let es = kl.xpathSearch(`.//button[contains(@class,'${className}')]`);
+                                es.forEach(e => {
+                                    e.classList.remove(className);
+                                });
+                                videoItemUnit.itemElement.classList.add(className);
+                            },
+                            onOK: () => {
+                                gotoUnit(videoItemUnit, playerDivUnit, {item: item});
+                            },
+                            onEsc: () => {
+                                console.log('player div exit');
+                                videoPlayerDiv.classList.add('hidden');
+                                videoPlayer.pause();
+                            },
+                        };
+                        btn.unitObject = videoItemUnit;
+
+                        btn.addEventListener('click', () => {
+                            event.preventDefault(); //阻止冒泡
+                            //videoPlayer.src = item.src;
+                            videoItemUnit.onOK();
+                        });
+                        if (i === 0) {
+                            gotoUnit(false, videoItemUnit, {});
+                        }
+                    });
+                } else {
+                    alert(file_result.msg || '未知');
+                }
+            },
+            type: 'json'
+        });
+
+        return false;
+        console.log(common_str);
+        cover_files.forEach(function (cmd) {
+            var box = kl.id('root_div_mysql_env');
+            var ar = cmd.split('###');
+            var ar2 = ar[0].split('/');
+            var filename = ar2[ar2.length - 1].replace('.php', '');
+            var msg = new Emt('span');
+
+            box.appendChild(new Emt('div').addNodes([
+                new Emt('strong').setPros({textContent: filename}),
+                function () {
+                    var fun = function (type) {
+                        var btn = new Emt('button').setPros({textContent: type});
+                        btn.addEventListener('click', function () {
+                            event.preventDefault(); //阻止冒泡
+                            ajax({
+                                url: '/dev/v1/funtv/conf/file/cover',
+                                data: {action: type, file: ar[0], date: (new Date()).toLocaleString()},
+                                success: function (input_result) {
+                                    console.log(input_result);
+                                    if (input_result.status === 200 && input_result.code === 'ok') {
+                                        //  alert('ok');
+                                        msg.textContent = '【ok' + '】' + ((new Date()).toLocaleTimeString()) + '' + input_result.data.action;
+                                    } else {
+                                        msg.textContent = '【' + input_result.msg + '】' + ((new Date()).toLocaleTimeString()) + '';
+                                    }
+                                },
+                                type: 'json'
+                            });
+                        });
+                        return btn;
+                    };
+                    return new Emt('div').addNodes([
+                        fun('debug'),
+                        fun('bak'),
+                    ]);
+                }(),
+                new Emt('em').setPros({textContent: cmd.replace(common_str, '')}),
+                msg
+            ]));
+
+        });
+
+    })
+
+</script>
+</body>
+</html>

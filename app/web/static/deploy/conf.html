@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../file/js/kl-hammer-dom-data.js" charset="UTF-8"></script>
+
+    <title>DB配置</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+
+
+        #dev_opts > div {
+            display: block;
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            margin: 0.1em;
+        }
+
+        #dev_opts > div > div {
+            width: 100%;
+        }
+
+        #dev_opts > div > div > label {
+            display: block;
+            width: 600px;
+            /* height: 2em; */
+            /* margin-top: 0.5em; */
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            background: #EEE;
+            margin: 0.1em;
+            min-height: 1.5em;
+        }
+
+        #dev_opts > div > div > label:hover {
+            background: #DDD;
+        }
+
+        #dev_opts_db_conf>div>label>span{
+            display: block;
+            float: left;
+            width: 200px;
+        }
+        #dev_opts_db_conf>div>label>div{
+            display: block;
+            float: left;
+        }
+        #dev_opts_db_conf>div>label>div>label{
+            padding-left: 50px;
+        }
+        #dev_opts_db_conf>div>label>div>label>input[type="radio"]{
+            display: none;
+        }
+        #dev_opts_db_conf>div>label>div>label>span{
+            cursor: pointer;
+        }
+        #dev_opts_db_conf>div>label>div>label>input[type="radio"]:checked+span{
+            background: #000;
+            color: #FFF;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div><a href="tool.html" target="_blank"><h1>工具箱</h1></a></div>
+    <div><h1>数据库配置</h1></div>
+
+    <div id="dev_opts">
+        <div id="dev_opts_db_conf">
+
+        </div>
+
+    </div>
+
+</div>
+<script></script>
+<script>
+    domLoaded(function () {
+
+        ajax({
+            url: '/dev/v1/funtv/conf/db/opts',
+            data: {},
+            success: function (file_result) {
+                console.log(file_result);
+                if (file_result.status === 200 && file_result.code === 'ok') {
+                    ajax({
+                        url: '/dev/v1/funtv/conf/db/map',
+                        data: {},
+                        success: function (file_result) {
+                            console.log(file_result);
+                        },
+                        type: 'json'
+                    });
+                    var data_tmp = {};
+                    file_result.data.forEach(function (row) {
+                        data_tmp[row.key] = row.val;
+                    });
+                    var domData = new HammerDomData(data_tmp);
+
+                    var box = kl.id('dev_opts_db_conf');
+                    file_result.data.forEach(function (row) {
+                        var em=new Emt('em');
+                        box.appendChild(new Emt('div').addNodes([
+                            new Emt('label').addNodes([
+                                new Emt('span').setPros({textContent: row.key}),
+                                function () {
+
+                                    var list=domData.createRadioList([["test", "test"],["slave", "slave"],["master", "master"]],row.key);
+                               list.bindData({    path: row.key,        domData: domData      });
+                                    // var select = new Emt('select').bindData({
+                                    //     path: row.key,
+                                    //     domData: domData
+                                    // });
+                                    // select.add(new Option("test", "test"));
+                                    // select.add(new Option("slave", "slave"));
+                                    // select.value = row.val;
+
+                                    list.changeCall = function () {
+                                        event.preventDefault(); //阻止冒泡
+                                        console.log(JSON.stringify(domData.dataBinded, null, 2));
+                                        //return false;
+                                        ajax({
+                                            url: '/dev/v1/funtv/conf/db/set',
+                                            data: {
+                                                opts: JSON.stringify(domData.dataBinded)
+                                            },
+                                            success: function (file_result) {
+                                                console.log(file_result);
+                                                if (file_result.status === 200 && file_result.code === 'ok') {
+                                                   // alert('ok');
+                                                    em.textContent='【ok'+'】'+((new Date()).toLocaleTimeString())+'';
+                                                } else {
+                                                   // alert(file_result.msg);
+                                                    em.textContent= '【'+file_result.msg+'】'+((new Date()).toLocaleTimeString())+'';
+
+                                                }
+                                            },
+                                            type: 'json'
+                                        });
+
+                                    };
+                                    return list;
+                                }(),
+                                em
+                            ])
+                        ]))
+
+                    });
+
+
+                } else {
+                    alert(file_result.msg);
+                }
+            },
+            type: 'json'
+        });
+
+        //cat /home/kinglone/poseidon_server_mysql_conf_files |xargs -I F ln -s /data/code/debug/poseidon.conf_mysql F
+        // cat /home/kinglone/poseidon_server_mysql_conf_files |xargs -I F rm -f F
+
+
+
+
+    })
+
+</script>
+</body>
+</html>
+
+
+
+adv_fcgi_url:http://cli.kl_funtv.com
+adv_debug:true
+adv_echo_pretty:true
+adv_push_data:false
+adv_use_mock:false
+adv_dump_trace:true
+adv_tabecho:true
+adv_evn_flag:test
+adv_runner_debug:true
+adv_reg_shutdown:true
+ca:funshionappbest
+adv_runner_debug_keywords_json:{}
+cl:iphone_baofeng
+cp:fr4k0se
+ctime:1611233601
+fudid:4054506FF249F249F349F3492131FA29962AC37BCA2A91709079CB79C670C62A
+ia:
+order_code:s202101212049520836248978251
+params:transid=1000000768034508
+pay_agent:apple
+product_id:10000003
+receipt:ewoJInNpZ25hdHVyZSIgPSAiQTVnakVVMWZYUTFOeGs3ZmNjOHpIa0IyU0h5NC9KSFhwRDkrNkRsUDlONnRBMUJuTUU4eERaRTJUK2tOVStES0pYSjdHSmNPZTJpbisyZFNmNXpDMEt3WWFWeWRzWjU3YWE1a1pPZDF6ZjE2VTAxbEVaSVNYOG5Vd3oxdncxRVljVFo2OHdLd3dHR1pZeWduSXFHU1pYbFZ1SnhpMHVMbllHb2p2OTlWamFXK1VrNlN2RGZneS9ma2pFRGZQeWJZbU56SHduOWJhL1RuTXI3QW55OE8vbGltVFo3N3VZMkFheDE0TUQ2ejJQdXdyeUdOdlQ5OVlFR3I1UExGRm5OTGd0KzVYcVRoOHRkbXp0Tm11NytjVDJrYXl3V1cvbDdIZWw2ZUdUK3pDQ0c5TkpySUdPT3M2WURreTFLUGh3ZFNpTjJoaEg5MHRFeUJWUUJQcFluNXlCVUFBQVdBTUlJRmZEQ0NCR1NnQXdJQkFnSUlEdXRYaCtlZUNZMHdEUVlKS29aSWh2Y05BUUVGQlFBd2daWXhDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFLREFwQmNIQnNaU0JKYm1NdU1Td3dLZ1lEVlFRTERDTkJjSEJzWlNCWGIzSnNaSGRwWkdVZ1JHVjJaV3h2Y0dWeUlGSmxiR0YwYVc5dWN6RkVNRUlHQTFVRUF3dzdRWEJ3YkdVZ1YyOXliR1IzYVdSbElFUmxkbVZzYjNCbGNpQlNaV3hoZEdsdmJuTWdRMlZ5ZEdsbWFXTmhkR2x2YmlCQmRYUm9iM0pwZEhrd0hoY05NVFV4TVRFek1ESXhOVEE1V2hjTk1qTXdNakEzTWpFME9EUTNXakNCaVRFM01EVUdBMVVFQXd3dVRXRmpJRUZ3Y0NCVGRHOXlaU0JoYm1RZ2FWUjFibVZ6SUZOMGIzSmxJRkpsWTJWcGNIUWdVMmxuYm1sdVp6RXNNQ29HQTFVRUN3d2pRWEJ3YkdVZ1YyOXliR1IzYVdSbElFUmxkbVZzYjNCbGNpQlNaV3hoZEdsdmJuTXhFekFSQmdOVkJBb01Da0Z3Y0d4bElFbHVZeTR4Q3pBSkJnTlZCQVlUQWxWVE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBcGMrQi9TV2lnVnZXaCswajJqTWNqdUlqd0tYRUpzczl4cC9zU2cxVmh2K2tBdGVYeWpsVWJYMS9zbFFZbmNRc1VuR09aSHVDem9tNlNkWUk1YlNJY2M4L1cwWXV4c1FkdUFPcFdLSUVQaUY0MWR1MzBJNFNqWU5NV3lwb041UEM4cjBleE5LaERFcFlVcXNTNCszZEg1Z1ZrRFV0d3N3U3lvMUlnZmRZZUZScjZJd3hOaDlLQmd4SFZQTTNrTGl5a29sOVg2U0ZTdUhBbk9DNnBMdUNsMlAwSzVQQi9UNXZ5c0gxUEttUFVockFKUXAyRHQ3K21mNy93bXYxVzE2c2MxRkpDRmFKekVPUXpJNkJBdENnbDdaY3NhRnBhWWVRRUdnbUpqbTRIUkJ6c0FwZHhYUFEzM1k3MkMzWmlCN2o3QWZQNG83UTAvb21WWUh2NGdOSkl3SURBUUFCbzRJQjF6Q0NBZE13UHdZSUt3WUJCUVVIQVFFRU16QXhNQzhHQ0NzR0FRVUZCekFCaGlOb2RIUndPaTh2YjJOemNDNWhjSEJzWlM1amIyMHZiMk56Y0RBekxYZDNaSEl3TkRBZEJnTlZIUTRFRmdRVWthU2MvTVIydDUrZ2l2Uk45WTgyWGUwckJJVXdEQVlEVlIwVEFRSC9CQUl3QURBZkJnTlZIU01FR0RBV2dCU0lKeGNKcWJZWVlJdnM2N3IyUjFuRlVsU2p0ekNDQVI0R0ExVWRJQVNDQVJVd2dnRVJNSUlCRFFZS0tvWklodmRqWkFVR0FUQ0IvakNCd3dZSUt3WUJCUVVIQWdJd2diWU1nYk5TWld4cFlXNWpaU0J2YmlCMGFHbHpJR05sY25ScFptbGpZWFJsSUdKNUlHRnVlU0J3WVhKMGVTQmhjM04xYldWeklHRmpZMlZ3ZEdGdVkyVWdiMllnZEdobElIUm9aVzRnWVhCd2JHbGpZV0pzWlNCemRHRnVaR0Z5WkNCMFpYSnRjeUJoYm1RZ1kyOXVaR2wwYVc5dWN5QnZaaUIxYzJVc0lHTmxjblJwWm1sallYUmxJSEJ2YkdsamVTQmhibVFnWTJWeWRHbG1hV05oZEdsdmJpQndjbUZqZEdsalpTQnpkR0YwWlcxbGJuUnpMakEyQmdnckJnRUZCUWNDQVJZcWFIUjBjRG92TDNkM2R5NWhjSEJzWlM1amIyMHZZMlZ5ZEdsbWFXTmhkR1ZoZFhSb2IzSnBkSGt2TUE0R0ExVWREd0VCL3dRRUF3SUhnREFRQmdvcWhraUc5Mk5rQmdzQkJBSUZBREFOQmdrcWhraUc5dzBCQVFVRkFBT0NBUUVBRGFZYjB5NDk0MXNyQjI1Q2xtelQ2SXhETUlKZjRGelJqYjY5RDcwYS9DV1MyNHlGdzRCWjMrUGkxeTRGRkt3TjI3YTQvdncxTG56THJSZHJqbjhmNUhlNXNXZVZ0Qk5lcGhtR2R2aGFJSlhuWTR3UGMvem83Y1lmcnBuNFpVaGNvT0FvT3NBUU55MjVvQVE1SDNPNXlBWDk4dDUvR2lvcWJpc0IvS0FnWE5ucmZTZW1NL2oxbU9DK1JOdXhUR2Y4YmdwUHllSUdxTktYODZlT2ExR2lXb1IxWmRFV0JHTGp3Vi8xQ0tuUGFObVNBTW5CakxQNGpRQmt1bGhnd0h5dmozWEthYmxiS3RZZGFHNllRdlZNcHpjWm04dzdISG9aUS9PamJiOUlZQVlNTnBJcjdONFl0UkhhTFNQUWp2eWdhWndYRzU2QWV6bEhSVEJoTDhjVHFBPT0iOwoJInB1cmNoYXNlLWluZm8iID0gImV3b0pJbTl5YVdkcGJtRnNMWEIxY21Ob1lYTmxMV1JoZEdVdGNITjBJaUE5SUNJeU1ESXdMVEV5TFRBeUlEQXhPakl6T2pBNElFRnRaWEpwWTJFdlRHOXpYMEZ1WjJWc1pYTWlPd29KSW5GMVlXNTBhWFI1SWlBOUlDSXhJanNLQ1NKemRXSnpZM0pwY0hScGIyNHRaM0p2ZFhBdGFXUmxiblJwWm1sbGNpSWdQU0FpTWpBek9EZzNNallpT3dvSkluVnVhWEYxWlMxMlpXNWtiM0l0YVdSbGJuUnBabWxsY2lJZ1BTQWlRVVEzTmpsQk5VVXRNVVJHTlMwMFFqSkJMVGhCTURjdFJUVkJSRUk1T0RNeVFqUTNJanNLQ1NKdmNtbG5hVzVoYkMxd2RYSmphR0Z6WlMxa1lYUmxMVzF6SWlBOUlDSXhOakEyT1RBd09UZzRNREF3SWpzS0NTSmxlSEJwY21WekxXUmhkR1V0Wm05eWJXRjBkR1ZrSWlBOUlDSXlNREl4TFRBeExUSXhJREV5T2pVNE9qQTFJRVYwWXk5SFRWUWlPd29KSW1sekxXbHVMV2x1ZEhKdkxXOW1abVZ5TFhCbGNtbHZaQ0lnUFNBaVptRnNjMlVpT3dvSkluQjFjbU5vWVhObExXUmhkR1V0YlhNaUlEMGdJakUyTVRFeU16TTFPRFU1TURjaU93b0pJbVY0Y0dseVpYTXRaR0YwWlMxbWIzSnRZWFIwWldRdGNITjBJaUE5SUNJeU1ESXhMVEF4TFRJeElEQTBPalU0T2pBMUlFRnRaWEpwWTJFdlRHOXpYMEZ1WjJWc1pYTWlPd29KSW1sekxYUnlhV0ZzTFhCbGNtbHZaQ0lnUFNBaVptRnNjMlVpT3dvSkltbDBaVzB0YVdRaUlEMGdJakUxTXprMk56VTVOamtpT3dvSkluVnVhWEYxWlMxcFpHVnVkR2xtYVdWeUlpQTlJQ0k0TWpGaE9HUTRaR0V5T1dNNE56UXdOekF5T1RBM01UTXlOelJoTUdSaE4yRmhOemMzWW1FM0lqc0tDU0p2Y21sbmFXNWhiQzEwY21GdWMyRmpkR2x2YmkxcFpDSWdQU0FpTVRBd01EQXdNRGMwT1RBd05UazJOU0k3Q2draVpYaHdhWEpsY3kxa1lYUmxJaUE5SUNJeE5qRXhNak16T0RnMU9UQTNJanNLQ1NKMGNtRnVjMkZqZEdsdmJpMXBaQ0lnUFNBaU1UQXdNREF3TURjMk9EQXpORFV3T0NJN0Nna2lZblp5Y3lJZ1BTQWlOUzQ1TGpFdU1TSTdDZ2tpZDJWaUxXOXlaR1Z5TFd4cGJtVXRhWFJsYlMxcFpDSWdQU0FpTVRBd01EQXdNREExT1RNd05ESTNNeUk3Q2draWRtVnljMmx2YmkxbGVIUmxjbTVoYkMxcFpHVnVkR2xtYVdWeUlpQTlJQ0l3SWpzS0NTSmlhV1FpSUQwZ0ltTnZiUzVpWVc5bVpXNW5lV2x1WjNscGJpNXBjR2h2Ym1WMlpYSnphVzl1SWpzS0NTSndjbTlrZFdOMExXbGtJaUE5SUNJeE1EQXdNREF3TXlJN0Nna2ljSFZ5WTJoaGMyVXRaR0YwWlNJZ1BTQWlNakF5TVMwd01TMHlNU0F4TWpvMU16b3dOU0JGZEdNdlIwMVVJanNLQ1NKd2RYSmphR0Z6WlMxa1lYUmxMWEJ6ZENJZ1BTQWlNakF5TVMwd01TMHlNU0F3TkRvMU16b3dOU0JCYldWeWFXTmhMMHh2YzE5QmJtZGxiR1Z6SWpzS0NTSnZjbWxuYVc1aGJDMXdkWEpqYUdGelpTMWtZWFJsSWlBOUlDSXlNREl3TFRFeUxUQXlJREE1T2pJek9qQTRJRVYwWXk5SFRWUWlPd3A5IjsKCSJlbnZpcm9ubWVudCIgPSAiU2FuZGJveCI7CgkicG9kIiA9ICIxMDAiOwoJInNpZ25pbmctc3RhdHVzIiA9ICIwIjsKfQ==
+si:0
+sign:10e4fa7cd45cf172b8ab1de2aa23ae01
+stevejobs:1
+token:BQVSPkskqmRDHWDdHWVHD__q2QXeBsD0k98rIPW-u1y-HDKzLo-RTTKtTiw2-iK2vKFPq6uuefR_2Hx3Xe7IKAzfStg4kRtwQvUhdNTdpKw
+uc:
+user_id:248978251
+ve:5.9.1.1
+
+
+
+{"adv_fcgi_url":"http://cli.kl_funtv.com","adv_debug":"true","adv_echo_pretty":"true","adv_push_data":"false","adv_use_mock":"false","adv_dump_trace":"true","adv_tabecho":"true","adv_evn_flag":"test","adv_runner_debug":"true","adv_reg_shutdown":"true","ca":"funshionappbest","adv_runner_debug_keywords_json":"{}","cl":"iphone_baofeng","cp":"fr4k0se","ctime":"1611233601","fudid":"4054506FF249F249F349F3492131FA29962AC37BCA2A91709079CB79C670C62A","ia":"","order_code":"s202101212049520836248978251","params":"transid=1000000768034508","pay_agent":"apple","product_id":"10000003","receipt":"ewoJInNpZ25hdHVyZSIgPSAiQTVnakVVMWZYUTFOeGs3ZmNjOHpIa0IyU0h5NC9KSFhwRDkrNkRsUDlONnRBMUJuTUU4eERaRTJUK2tOVStES0pYSjdHSmNPZTJpbisyZFNmNXpDMEt3WWFWeWRzWjU3YWE1a1pPZDF6ZjE2VTAxbEVaSVNYOG5Vd3oxdncxRVljVFo2OHdLd3dHR1pZeWduSXFHU1pYbFZ1SnhpMHVMbllHb2p2OTlWamFXK1VrNlN2RGZneS9ma2pFRGZQeWJZbU56SHduOWJhL1RuTXI3QW55OE8vbGltVFo3N3VZMkFheDE0TUQ2ejJQdXdyeUdOdlQ5OVlFR3I1UExGRm5OTGd0KzVYcVRoOHRkbXp0Tm11NytjVDJrYXl3V1cvbDdIZWw2ZUdUK3pDQ0c5TkpySUdPT3M2WURreTFLUGh3ZFNpTjJoaEg5MHRFeUJWUUJQcFluNXlCVUFBQVdBTUlJRmZEQ0NCR1NnQXdJQkFnSUlEdXRYaCtlZUNZMHdEUVlKS29aSWh2Y05BUUVGQlFBd2daWXhDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFLREFwQmNIQnNaU0JKYm1NdU1Td3dLZ1lEVlFRTERDTkJjSEJzWlNCWGIzSnNaSGRwWkdVZ1JHVjJaV3h2Y0dWeUlGSmxiR0YwYVc5dWN6RkVNRUlHQTFVRUF3dzdRWEJ3YkdVZ1YyOXliR1IzYVdSbElFUmxkbVZzYjNCbGNpQlNaV3hoZEdsdmJuTWdRMlZ5ZEdsbWFXTmhkR2x2YmlCQmRYUm9iM0pwZEhrd0hoY05NVFV4TVRFek1ESXhOVEE1V2hjTk1qTXdNakEzTWpFME9EUTNXakNCaVRFM01EVUdBMVVFQXd3dVRXRmpJRUZ3Y0NCVGRHOXlaU0JoYm1RZ2FWUjFibVZ6SUZOMGIzSmxJRkpsWTJWcGNIUWdVMmxuYm1sdVp6RXNNQ29HQTFVRUN3d2pRWEJ3YkdVZ1YyOXliR1IzYVdSbElFUmxkbVZzYjNCbGNpQlNaV3hoZEdsdmJuTXhFekFSQmdOVkJBb01Da0Z3Y0d4bElFbHVZeTR4Q3pBSkJnTlZCQVlUQWxWVE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBcGMrQi9TV2lnVnZXaCswajJqTWNqdUlqd0tYRUpzczl4cC9zU2cxVmh2K2tBdGVYeWpsVWJYMS9zbFFZbmNRc1VuR09aSHVDem9tNlNkWUk1YlNJY2M4L1cwWXV4c1FkdUFPcFdLSUVQaUY0MWR1MzBJNFNqWU5NV3lwb041UEM4cjBleE5LaERFcFlVcXNTNCszZEg1Z1ZrRFV0d3N3U3lvMUlnZmRZZUZScjZJd3hOaDlLQmd4SFZQTTNrTGl5a29sOVg2U0ZTdUhBbk9DNnBMdUNsMlAwSzVQQi9UNXZ5c0gxUEttUFVockFKUXAyRHQ3K21mNy93bXYxVzE2c2MxRkpDRmFKekVPUXpJNkJBdENnbDdaY3NhRnBhWWVRRUdnbUpqbTRIUkJ6c0FwZHhYUFEzM1k3MkMzWmlCN2o3QWZQNG83UTAvb21WWUh2NGdOSkl3SURBUUFCbzRJQjF6Q0NBZE13UHdZSUt3WUJCUVVIQVFFRU16QXhNQzhHQ0NzR0FRVUZCekFCaGlOb2RIUndPaTh2YjJOemNDNWhjSEJzWlM1amIyMHZiMk56Y0RBekxYZDNaSEl3TkRBZEJnTlZIUTRFRmdRVWthU2MvTVIydDUrZ2l2Uk45WTgyWGUwckJJVXdEQVlEVlIwVEFRSC9CQUl3QURBZkJnTlZIU01FR0RBV2dCU0lKeGNKcWJZWVlJdnM2N3IyUjFuRlVsU2p0ekNDQVI0R0ExVWRJQVNDQVJVd2dnRVJNSUlCRFFZS0tvWklodmRqWkFVR0FUQ0IvakNCd3dZSUt3WUJCUVVIQWdJd2diWU1nYk5TWld4cFlXNWpaU0J2YmlCMGFHbHpJR05sY25ScFptbGpZWFJsSUdKNUlHRnVlU0J3WVhKMGVTQmhjM04xYldWeklHRmpZMlZ3ZEdGdVkyVWdiMllnZEdobElIUm9aVzRnWVhCd2JHbGpZV0pzWlNCemRHRnVaR0Z5WkNCMFpYSnRjeUJoYm1RZ1kyOXVaR2wwYVc5dWN5QnZaaUIxYzJVc0lHTmxjblJwWm1sallYUmxJSEJ2YkdsamVTQmhibVFnWTJWeWRHbG1hV05oZEdsdmJpQndjbUZqZEdsalpTQnpkR0YwWlcxbGJuUnpMakEyQmdnckJnRUZCUWNDQVJZcWFIUjBjRG92TDNkM2R5NWhjSEJzWlM1amIyMHZZMlZ5ZEdsbWFXTmhkR1ZoZFhSb2IzSnBkSGt2TUE0R0ExVWREd0VCL3dRRUF3SUhnREFRQmdvcWhraUc5Mk5rQmdzQkJBSUZBREFOQmdrcWhraUc5dzBCQVFVRkFBT0NBUUVBRGFZYjB5NDk0MXNyQjI1Q2xtelQ2SXhETUlKZjRGelJqYjY5RDcwYS9DV1MyNHlGdzRCWjMrUGkxeTRGRkt3TjI3YTQvdncxTG56THJSZHJqbjhmNUhlNXNXZVZ0Qk5lcGhtR2R2aGFJSlhuWTR3UGMvem83Y1lmcnBuNFpVaGNvT0FvT3NBUU55MjVvQVE1SDNPNXlBWDk4dDUvR2lvcWJpc0IvS0FnWE5ucmZTZW1NL2oxbU9DK1JOdXhUR2Y4YmdwUHllSUdxTktYODZlT2ExR2lXb1IxWmRFV0JHTGp3Vi8xQ0tuUGFObVNBTW5CakxQNGpRQmt1bGhnd0h5dmozWEthYmxiS3RZZGFHNllRdlZNcHpjWm04dzdISG9aUS9PamJiOUlZQVlNTnBJcjdONFl0UkhhTFNQUWp2eWdhWndYRzU2QWV6bEhSVEJoTDhjVHFBPT0iOwoJInB1cmNoYXNlLWluZm8iID0gImV3b0pJbTl5YVdkcGJtRnNMWEIxY21Ob1lYTmxMV1JoZEdVdGNITjBJaUE5SUNJeU1ESXdMVEV5TFRBeUlEQXhPakl6T2pBNElFRnRaWEpwWTJFdlRHOXpYMEZ1WjJWc1pYTWlPd29KSW5GMVlXNTBhWFI1SWlBOUlDSXhJanNLQ1NKemRXSnpZM0pwY0hScGIyNHRaM0p2ZFhBdGFXUmxiblJwWm1sbGNpSWdQU0FpTWpBek9EZzNNallpT3dvSkluVnVhWEYxWlMxMlpXNWtiM0l0YVdSbGJuUnBabWxsY2lJZ1BTQWlRVVEzTmpsQk5VVXRNVVJHTlMwMFFqSkJMVGhCTURjdFJUVkJSRUk1T0RNeVFqUTNJanNLQ1NKdmNtbG5hVzVoYkMxd2RYSmphR0Z6WlMxa1lYUmxMVzF6SWlBOUlDSXhOakEyT1RBd09UZzRNREF3SWpzS0NTSmxlSEJwY21WekxXUmhkR1V0Wm05eWJXRjBkR1ZrSWlBOUlDSXlNREl4TFRBeExUSXhJREV5T2pVNE9qQTFJRVYwWXk5SFRWUWlPd29KSW1sekxXbHVMV2x1ZEhKdkxXOW1abVZ5TFhCbGNtbHZaQ0lnUFNBaVptRnNjMlVpT3dvSkluQjFjbU5vWVhObExXUmhkR1V0YlhNaUlEMGdJakUyTVRFeU16TTFPRFU1TURjaU93b0pJbVY0Y0dseVpYTXRaR0YwWlMxbWIzSnRZWFIwWldRdGNITjBJaUE5SUNJeU1ESXhMVEF4TFRJeElEQTBPalU0T2pBMUlFRnRaWEpwWTJFdlRHOXpYMEZ1WjJWc1pYTWlPd29KSW1sekxYUnlhV0ZzTFhCbGNtbHZaQ0lnUFNBaVptRnNjMlVpT3dvSkltbDBaVzB0YVdRaUlEMGdJakUxTXprMk56VTVOamtpT3dvSkluVnVhWEYxWlMxcFpHVnVkR2xtYVdWeUlpQTlJQ0k0TWpGaE9HUTRaR0V5T1dNNE56UXdOekF5T1RBM01UTXlOelJoTUdSaE4yRmhOemMzWW1FM0lqc0tDU0p2Y21sbmFXNWhiQzEwY21GdWMyRmpkR2x2YmkxcFpDSWdQU0FpTVRBd01EQXdNRGMwT1RBd05UazJOU0k3Q2draVpYaHdhWEpsY3kxa1lYUmxJaUE5SUNJeE5qRXhNak16T0RnMU9UQTNJanNLQ1NKMGNtRnVjMkZqZEdsdmJpMXBaQ0lnUFNBaU1UQXdNREF3TURjMk9EQXpORFV3T0NJN0Nna2lZblp5Y3lJZ1BTQWlOUzQ1TGpFdU1TSTdDZ2tpZDJWaUxXOXlaR1Z5TFd4cGJtVXRhWFJsYlMxcFpDSWdQU0FpTVRBd01EQXdNREExT1RNd05ESTNNeUk3Q2draWRtVnljMmx2YmkxbGVIUmxjbTVoYkMxcFpHVnVkR2xtYVdWeUlpQTlJQ0l3SWpzS0NTSmlhV1FpSUQwZ0ltTnZiUzVpWVc5bVpXNW5lV2x1WjNscGJpNXBjR2h2Ym1WMlpYSnphVzl1SWpzS0NTSndjbTlrZFdOMExXbGtJaUE5SUNJeE1EQXdNREF3TXlJN0Nna2ljSFZ5WTJoaGMyVXRaR0YwWlNJZ1BTQWlNakF5TVMwd01TMHlNU0F4TWpvMU16b3dOU0JGZEdNdlIwMVVJanNLQ1NKd2RYSmphR0Z6WlMxa1lYUmxMWEJ6ZENJZ1BTQWlNakF5TVMwd01TMHlNU0F3TkRvMU16b3dOU0JCYldWeWFXTmhMMHh2YzE5QmJtZGxiR1Z6SWpzS0NTSnZjbWxuYVc1aGJDMXdkWEpqYUdGelpTMWtZWFJsSWlBOUlDSXlNREl3TFRFeUxUQXlJREE1T2pJek9qQTRJRVYwWXk5SFRWUWlPd3A5IjsKCSJlbnZpcm9ubWVudCIgPSAiU2FuZGJveCI7CgkicG9kIiA9ICIxMDAiOwoJInNpZ25pbmctc3RhdHVzIiA9ICIwIjsKfQ==","si":"0","sign":"10e4fa7cd45cf172b8ab1de2aa23ae01","stevejobs":"1","token":"BQVSPkskqmRDHWDdHWVHD__q2QXeBsD0k98rIPW-u1y-HDKzLo-RTTKtTiw2-iK2vKFPq6uuefR_2Hx3Xe7IKAzfStg4kRtwQvUhdNTdpKw","uc":"","user_id":"248978251","ve":"5.9.1.1"}

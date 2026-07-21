@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>版权商接口</title>
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <style>
+        .div_projects {
+            width: 1020px;
+            margin: 0px auto;
+        }
+
+        #input, .tb_doc {
+            width: 100%;
+            float: left;
+            background: #000;
+        }
+
+        #div_input_json, #div_refund_json {
+            background: #FFF;
+        }
+
+        .row {
+            margin-top: 1px;
+            width: 100%;
+            background: #FFF;
+        }
+
+
+        .row > div {
+            background: #FFF;
+            height: 100%;
+        }
+
+        .row .key {
+            width: 150px;
+        }
+
+        .row .label {
+            width: 150px;
+        }
+
+        .row .dt {
+            width: 130px;
+        }
+
+        .row .need {
+            width: 100px;
+        }
+
+        .row .desc {
+            width: 400px;
+            overflow-y: auto;
+        }
+
+        td {
+            background: #FFF;
+            padding: 7px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        tr:nth-child(1) {
+            background: #DDD;
+            font-weight: 900;
+        }
+
+        tr:nth-child(1) > td {
+            background: #DDD;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div id="div_projects" class="div_projects">
+
+
+    </div>
+    <div class="div_projects">
+
+
+    </div>
+    <script></script>
+
+
+    <script>
+        var copyright_vendor = {
+            table: 'fmg_copyright_vendor#版权方',
+            attrs: {
+                vendor_id: '版权方id',
+                name: '版权方名字',
+                code: 'code',
+                icon: '版权方图标',
+            }
+        };
+        var auth = {
+            table: 'fmg_copyright#版权授权表',
+            attrs: {
+                vendor_id: '版权方id',
+                owner_id: '版权ID',
+                owner: '版权名称',
+                icon: '版权方图标',
+            }
+        };
+        //(.*),(\w+),\w+,\w+,\w+,\w+
+        var copy_media = {
+            table: 'fmg_copyright_media#版权媒体信息表(核心,灵魂)',
+            attrs: {
+                cm_id: '版权媒体ID',
+                media_id: '媒体id',
+                owner_id: '版权ID',
+            }
+        };
+
+        var cp_media_op = {
+            table: 'fmg_copyright_media_oper#版权方媒体运营表',
+            attrs: {
+                cm_oper_id: '运营ID',
+                cm_id: '媒体版权ID',
+                platform_id: '平台ID',
+                copyright_starttm: '开始时间',
+                copyright_endtm: '结束时间',
+                illegal_area: '版权屏蔽地域',
+            }
+        };
+
+        var used_plat = {
+            table: 'fmg_copyright_platform#版权使用平台',
+            attrs: {
+                platform_id: '平台ID',
+                code: '平台标识',
+                name: '平台名称',
+                disable: '禁用标识',
+            }
+        };
+
+
+        var policy_media = {
+            table: 'fmg_media_output_policy#渠道版权媒体输出策略',
+            attrs: {
+                cm_policy_id: '策略ID',
+                cm_id: '媒体版权ID',
+                api_id: '渠道ID',
+                follow_vendor_rule: '是否遵循版权运营商规则',
+                fee_mode: '收费模式',
+                fee_starttm: '收费开始时间',
+                fee_endtm: '收费结束时间',
+                vod_days: '单点付费的权益天数',
+                price: '单点价格',
+                downloadable: '是否可下载',
+                is_sole: '是否独播',
+                disable: '禁用标识',
+                creater: '创建人',
+                create_time: '创建时间',
+                update_time: '更新时间',
+            }
+        };
+        var t2 = {
+            table: 'fmg_episode_output_policy#渠道版权分集输出策略',
+            attrs: {
+                ce_policy_id: '策略ID',
+                ce_id: '版权分集ID',
+                api_id: '渠道ID',
+                open_time: '开启时间',
+                fee_start: '收费开始时间',
+                fee_end: '收费结束时间',
+                disab: '禁用标识',
+                create_time: '创建时间',
+                update_time: '更新时间',
+            }
+        };
+        var media_info = {
+            table: 'fmg_media#原始媒体信息表',
+            attrs: {
+                media_id: '媒体ID',
+                name: '名称',
+                alias: '别名',
+                aword: '一句话推荐',
+                poster: '海报',
+                still: '剧照',
+                focus_img: '焦点图',
+                director: '导演',
+                actor: '主演',
+                description: '简介',
+                source: '评分',
+                release_date: '上映日期',
+                release_year: '上映年代',
+                totalnum: '总集数',
+                schedule: '??????更新频率',
+                extend: '扩展字段',
+                experts: '专家评语',
+                channel: '频道ID',
+                channel_name: '频道名称',
+                year: '年代',
+                category: '题材',
+                area: '地域',
+                class: '分级',
+                eu_time: '分集更新时间',
+                out_switch: '输出开关',
+                disable: '禁用标识',
+                creater: '创建人',
+                create_time: '创建时间',
+                update_time: '更新时间',
+            }
+        };
+
+        var f = {
+
+            "cm_oper_id": "版权媒体ID",
+            "platform_id": "版权平台ID",
+            "platform_name": "版权平台名称",
+            "vendor_id": "版权代理商ID",
+            "vendor_name": "版权代理商名称",
+            "vendor_icon": "版权代理商图标",
+            "owner_id": "版权ID",
+            "owner_name": "版权名称",
+            "owner_icon": "版权图标",
+
+            //http://project.funshion.com/projects/funshion_fcm/wiki/%E6%A0%B9%E6%8D%AE%E5%8E%9F%E5%A7%8B%E5%AA%92%E4%BD%93ID%E6%9F%A5%E6%89%BE%E7%89%88%E6%9D%83%E5%AA%92%E4%BD%93%E5%88%97%E8%A1%A8   根据原始媒体ID查找版权媒体列表
+
+            "copyright_starttm": "版权开始时间yyyy-mm-dd HH:ii:ss",
+            "copyright_endtm": "版权结束时间yyyy-mm-dd HH:ii:ss",
+            "legal_area": "版权有效区域，格式待定",
+            "ilegal_area": "版权屏蔽区域，格式待定",
+            "fee_mode": "收费模式，取值请参考接口规范",
+            "fee_starttm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+            "fee_endtm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+            "vod_price": {
+                "ios": {
+                    "former_price": "原价，单位分",
+                    "now_price": "原价，单位分",
+                },
+                "default": {
+                    "former_price": "原价，单位分",
+                    "now_price": "原价，单位分",
+                }
+            },
+            "vod_days": "点播天数",
+            "keep_vip_days": "fee_mode=2时有效，仅单点到期之后，转为公VIP免费，此值表示多少天后转免",
+            "downloadable": "是否可下载",
+            "is_solo": "是否独播",
+            "episode_opers": [
+                {
+                    "ce_oper_id": "版权分集运营ID",
+                    "开启时间": "yyyy-mm-dd HH:ii:ss",
+                    "fee_starttm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                    "fee_endtm": "收费开始时间yyyy-mm-dd HH:ii:ss"
+                }
+            ],
+
+            //http://project.funshion.com/projects/funshion_fcm/wiki/%E4%BF%9D%E5%AD%98%E8%BF%90%E8%90%A5%E7%AD%96%E7%95%A5%E6%8E%A5%E5%8F%A3  保存运营策略接口
+
+
+            "cm_policy_id": "策略id",
+            "cm_id": "媒体版权ID",
+            "api_id": "渠道ID",
+            "follow_vendor_rule": "是否遵循版权运营",
+            "fee_mode": "收费模式",
+            "fee_starttm": "收费开始时间",
+            "fee_endtm": "收费结束时间",
+            "vod_days": "单点付费的权益天数",
+            "keep_vip_days": "单点结束后保留VIP免费天数",
+            "price": "单点价格",
+            "downloadable": "是否可下载",
+            "is_sole": "是否独播",
+            "disable": "渠道输出策略",
+
+            "media_id": "原始媒体ID",
+            "name": "媒体中文名",
+            "still": "横图",
+            "poster": "竖图",
+            "release": "上映日期",
+            "score": "媒体评分",
+            "director": "导演",
+            "actor": "主演1,主演2",
+            "area": "产地1,产地2",
+            "channel": "媒体频道（例如：电影 电视剧 动画 ）",
+            "aword": "一句话推荐",
+            "copyright": {
+                "owner_id": "版权ID",
+                "owner_name": "版权名称",
+                "owner_icon": "版权图标",
+                "vendor_id": "版权代理商ID",
+                "vendor_name": "版权代理商名称",
+                "vendor_icon": "版权代理商图标"
+            },
+
+            //http://project.funshion.com/projects/funshion_fcm/wiki/%E8%8E%B7%E5%8F%96%E5%85%A8%E9%83%A8%E5%AA%92%E4%BD%93  获取全部版权媒体策略¶
+
+
+            "cm_id": "版权媒体ID",
+            "cm_code": "版权媒体标识",
+            "media_id": "原始媒体ID",
+            "name": "媒体名称",
+            "disable": "版权媒体禁用状态",
+            "oper_status_list": [{
+                "platform_id": "平台ID",
+                "platform_name": "平台名称",
+                "oper_status": "运营状态，waiting、ready",
+                "disable": "禁用状态0/1",
+            }],
+            "create_time": "yyyy-mm-dd HH:ii:ss",
+            "update_time": "yyyy-mm-dd HH:ii:ss",
+            "creater": {
+                "user_id": "用户ID",
+                "name": "用户名",
+                "avatar": "用户头像",
+            },
+            "copyright": {
+                "owner_id": "版权ID",
+                "owner_name": "版权名称",
+                "owner_icon": "版权图标",
+                "vendor_id": "版权代理商ID",
+                "vendor_name": "版权代理商名称",
+                "vendor_icon": "版权代理商图标"
+            },
+
+            //http://project.funshion.com/projects/funshion_fcm/wiki/%E7%89%88%E6%9D%83%E5%AA%92%E4%BD%93%E5%88%97%E8%A1%A8%E6%8E%A5%E5%8F%A3 版权媒体列表接口
+
+            "cm_oper_id": "版权媒体运营ID",
+            "cm_id": "版权媒体ID",
+            "media_id": "原始媒体ID",
+            "name": "媒体名称",
+            "cm_code": "版权媒体标识",
+            "platform_id": "版权平台ID",
+            "platform_name": "版权平台名称",
+            "rule": {
+                "copyright_starttm": "版权开始时间yyyy-mm-dd HH:ii:ss",
+                "copyright_endtm": "版权结束时间yyyy-mm-dd HH:ii:ss",
+                "legal_area": "版权有效区域，格式待定",
+                "ilegal_area": "版权屏蔽区域，格式待定",
+                "fee_mode": "收费模式，取值请参考接口规范",
+                "fee_starttm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                "fee_endtm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                "vod_price": {
+                    "ios": {
+                        "former_price": "原价，单位分",
+                        "now_price": "原价，单位分",
+                    },
+                    "default": {
+                        "former_price": "原价，单位分",
+                        "now_price": "原价，单位分",
+                    }
+                },
+                "vod_days": "点播天数",
+                "keep_vip_days": "fee_mode=2时有效，仅单点到期之后，转为公VIP免费，此值表示多少天后转免",
+                "downloadable": "是否可下载",
+                "is_solo": "是否独播",
+                "disable": "禁用标识",
+                "oper_status": "运营状态",
+                "episode_opers": [// 版权分集运营
+                    {
+                        "ce_id": "版权分集ID",
+                        "ce_code": "版权分集标识",
+                        "episode_id": "原始分集ID",
+                        "platform_id": "版权平台ID",
+                        "num": "分集序号",
+                        "name": "分集名称",
+                        "开启时间": "yyyy-mm-dd HH:ii:ss",
+                        "name": "分集名称",
+                        "fee_starttm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                        "fee_endtm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                        "disable": "禁用标识"
+                    }
+                ]
+            },
+
+            //http://project.funshion.com/projects/funshion_fcm/wiki/%E7%89%88%E6%9D%83%E5%AA%92%E4%BD%93%E4%B8%8B%E7%9A%84%E8%BF%90%E8%90%A5%E7%AD%96%E7%95%A5%E5%88%97%E8%A1%A8%E6%8E%A5%E5%8F%A3  版权媒体下的运营策略列表接口
+
+            "cm_policy_id": "策略id",
+            "cm_id": "媒体版权ID",
+            "api_id": "渠道ID",
+            "follow_vendor_rule": "是否遵循版权运营",
+            "fee_mode": "收费模式",
+            "fee_starttm": "收费开始时间",
+            "fee_endtm": "收费结束时间",
+            "vod_days": "单点付费的权益天数",
+            "keep_vip_days": "单点结束后保留VIP免费天数",
+            "price": "单点价格",
+            "downloadable": "是否可下载",
+            "is_sole": "是否独播",
+            "disable": "渠道输出策略",
+            "media_id": "原始媒体ID",
+            "name": "媒体中文名",
+            "still": "横图",
+            "poster": "竖图",
+            "release": "上映日期",
+            "score": "媒体评分",
+            "director": "导演",
+            "actor": "主演1,主演2",
+            "area": "产地1,产地2",
+            "channel": "媒体频道（例如：电影 电视剧 动画 ）",
+            "aword": "一句话推荐",
+            "copyright": {
+                "owner_id": "版权ID",
+                "owner_name": "版权名称",
+                "owner_icon": "版权图标",
+                "vendor_id": "版权代理商ID",
+                "vendor_name": "版权代理商名称",
+                "vendor_icon": "版权代理商图标"
+            },
+
+            //http://project.funshion.com/projects/funshion_fcm/wiki/%E8%8E%B7%E5%8F%96%E5%B7%B2%E8%BE%93%E5%87%BA%E5%AA%92%E4%BD%93 获取已输出版权媒体策略
+
+            "cm_oper_id": "版权媒体运营ID",
+            "cm_id": "版权媒体ID",
+            "media_id": "原始媒体ID",
+            "name": "媒体名称",
+            "cm_code": "版权媒体标识",
+            "platform_id": "版权平台ID",
+            "copyright": {
+                "platform": {
+                    "platform_id": "版权平台ID",
+                    "name": "版权平台名称"
+                },
+                "vendor": {
+                    "vendor_id": "版权代理商ID",
+                    "name": "版权代理商名称",
+                    "icon": "版权代理商图标"
+                },
+                "owner": {
+                    "owner_id": "版权ID",
+                    "name": "版权名称",
+                    "icon": "版权代理商图标",
+                },
+                "rule": {
+                    "copyright_starttm": "版权开始时间yyyy-mm-dd HH:ii:ss",
+                    "copyright_endtm": "版权结束时间yyyy-mm-dd HH:ii:ss",
+                    "legal_area": "版权有效区域，格式待定",
+                    "ilegal_area": "版权屏蔽区域，格式待定",
+                    "fee_mode": "收费模式，取值请参考接口规范",
+                    "fee_starttm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                    "fee_endtm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                    "vod_price": {
+                        "ios": {
+                            "former_price": "原价，单位分",
+                            "now_price": "原价，单位分",
+                        },
+                        "default": {
+                            "former_price": "原价，单位分",
+                            "now_price": "原价，单位分",
+                        }
+                    },
+                    "vod_days": "点播天数",
+                    "keep_vip_days": "fee_mode=2时有效，仅单点到期之后，转为公VIP免费，此值表示多少天后转免",
+                    "downloadable": "是否可下载",
+                    "is_solo": "是否独播",
+                    "disable": "禁用标识",
+                    "oper_status": "运营状态",
+                    "episode_opers": [// 版权分集运营
+                        {
+                            "ce_id": "版权分集ID",
+                            "ce_code": "版权分集标识",
+                            "episode_id": "原始分集ID",
+                            "platform_id": "版权平台ID",
+                            "num": "分集序号",
+                            "name": "分集名称",
+                            "开启时间": "yyyy-mm-dd HH:ii:ss",
+                            "name": "分集名称",
+                            "fee_starttm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                            "fee_endtm": "收费开始时间yyyy-mm-dd HH:ii:ss",
+                            "disable": "禁用标识",
+                        }
+                    ]
+                }
+            }
+
+
+            //http://project.funshion.com/projects/funshion_fcm/wiki/%E8%BF%90%E8%90%A5%E7%AD%96%E7%95%A5%E8%AF%A6%E6%83%85%E6%8E%A5%E5%8F%A3 运营策略详情接口
+        };
+        /**
+         * 输出渠道
+         * @type {{}}
+         */
+        var partner_info = {
+            table: '输出渠道表foc_api',
+            attrs: {
+                'api_id': '输出渠道id',
+                'code': '渠道code',
+                'name': '渠道名',
+            }
+        };
+        var list_ele = {
+            cm_id: '媒体版权ID',
+            media_info: media_info.attrs,
+            parnters: [
+                partner_info.attrs
+            ],
+        };
+
+
+        var texts = [
+            {
+                title: '全部代理商接口',
+                api: '/api/common/common/view_copyright',
+                desc: '获取版权代理商的列表',
+                input: [],
+                data: {
+                    list: [
+                        copyright_vendor.attrs,
+                        copyright_vendor.attrs,
+                    ]
+                }
+            },
+            {
+                title: '版权代理商_平台_输出媒体列表',
+                api: '/api/copyright/output/view_hasout',
+                desc: '版权代理商_平台_输出媒体列表',
+                input: [
+                    {k: 'vendor_id', n: '版权方Id,', t: 'int', yn: true},
+                    {k: 'platform_id', n: '大小屏标识', t: 'string', yn: true},
+                ],
+                data: {
+                    list: [
+                        list_ele,
+                    ]
+                }
+            },
+            {
+                title: '版权代理商_平台_未输出媒体列表',
+                api: '/api/copyright/output/view_notout',
+                desc: '版权代理商_平台_未输出媒体列表',
+                input: [
+                    {k: 'vendor_id', n: '版权方Id,', t: 'int', yn: true},
+                    {k: 'platform_id', n: '大小屏标识', t: 'string', yn: true},
+                ],
+                data: {
+                    list: [
+                        list_ele,
+                    ]
+                }
+            },
+            {
+                title: '版权代理商_平台_媒体_输出渠道列表',
+                api: '/api/copyright/output/view_partners',
+                desc: '版权代理商_平台_媒体_输出渠道列表',
+                input: [
+                    {k: 'vendor_id', n: '版权方Id,', t: 'int', yn: true},
+                    {k: 'platform_id', n: '大小屏标识', t: 'string', yn: true},
+                    {k: 'cm_id', n: '版权媒体ID', t: 'string', yn: true, desc: '版权媒体ID，转化之后的版权方 媒体id对应的标识'},
+                ],
+                data: {
+                    has_out_partners: [68, 135, 189]
+                }
+            },
+            {
+                title: '版权代理商_平台_媒体_设置输出渠道列表',
+                api: '/api/copyright/output/modify_partners',
+                desc: '版权代理商_平台_媒体_设置输出渠道列表',
+                input: [
+                    {k: 'vendor_id', n: '版权方Id,', t: 'int', yn: true},
+                    {k: 'platform_id', n: '大小屏标识', t: 'string', yn: true},
+                    {k: 'cm_id', n: '版权媒体ID', t: 'string', yn: true, desc: '版权媒体ID，转化之后的版权方 媒体id对应的标识'},
+                    {k: 'add', n: '增加输出的渠道id,逗号分隔', t: 'string', yn: true, desc: 'parter[].api_id'},
+                    {k: 'cancel', n: '取消输出的渠道id,逗号分隔', t: 'string', yn: true, desc: 'parter[].api_id'},
+                ],
+                data: {
+                    has_out_partners: [68, 135, 189]
+                }
+            }
+        ];
+        var docs = new Emt('pre');
+        kl.id('div_projects').appendChild(docs);
+        var links = [];
+        texts.forEach(function (setting) {
+
+            var str1 = 'h1. ' + setting.title + '\n' +
+                '\n' +
+                'h2. 功能描述\n' +
+                '\n' +
+                '* ' + (setting.desc || '###') + '\n' +
+                '\n' +
+                'h2. 请求链接 \n' +
+                '\n' +
+                '* 请求路径: ' + (setting.api || '###') + '\n' +
+                '* 请求方式: GET\n' +
+                '* 请求参数: \n' +
+                '|参数名|参数含义|类型|是否必须|备注|\n';
+
+            setting.input.forEach(function (arg_opt) {
+                str1 += '|' + arg_opt.k + '|' + arg_opt.n + '|' + arg_opt.t + '|' + (arg_opt.yn ? '是' : '否') + '|' + (arg_opt.desc || '') + "|\n";
+            });
+
+            var str2 = '\n' +
+                'h2. 返回结果: \n' +
+                '\n' +
+                '* 成功返回\n' +
+                '<pre>\n' +
+                JSON.stringify({status: 200, retcode: 'ok', retmsg: 'ok', data: setting.data}, null, 4) +
+                '</pre>\n' +
+                '* 失败返回 :\n' +
+                '<pre>\n' +
+                '<code class="ruby">\n' +
+                '{ \n' +
+                '    "status":"返回状态码",\n' +
+                '    "retcode": "返回业务处理结果",\n' +
+                '    "retmsg": "返回状态描述" \n' +
+                '}\n' +
+                '</code>\n' +
+                '</pre>\n' +
+                '\n' +
+                'h2. 业务逻辑';
+            docs.textContent += "\n\n\n----------------------------------------\n\n" + str1 + "\n\n\n" + str2;
+            console.log('[[' + setting.title + '+' | '+' + setting.title + ']]' + setting.api);
+            links.push('[[' + setting.title.toString() + '|' + setting.title.toString() + ']]' + setting.api.toString());
+        });
+        console.log(links);
+        docs.textContent += links.join("\n");
+    </script>
+</body>
+</html>

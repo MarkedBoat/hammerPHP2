@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/file/js/kl-hammer.js" charset="UTF-8"></script>
+    <title>json参数调试列表</title>
+</head>
+<body>
+<div>
+    <div id="boxer">
+        <a href="dev.html" target="_blank"><h1>返回</h1></a>
+    </div>
+    <div id="dev_opts">
+
+    </div>
+
+</div>
+<script>
+    var sts = [
+        {file: 'sms_send_counter', text: '短信告警'},
+        {file: 'export_vr_videos', text: 'vr导出'},
+        {file: 'export_table', text: 'table 导出'},
+        {file: 'foc_api_report_aplet', text: '小程序增量统计{ymd}'},
+        {file: 'foc_api_report_daily', text: '小视频-短视频推送渠道库存余量日报 {ymd}'},
+        {file: 'foc_api_report_week', text: '{ymd-8}至{ymd-1}小程序库存及推送量周报'},
+    ];
+    domLoaded(function () {
+        var box = new Emt('div');
+        kl.id('dev_opts').appendChild(box);
+        sts.forEach(function (ele) {
+            box.addNodes([
+                new Emt('h1').addNodes([new Emt('a').setPros({textContent: ele.text, href: ele.file + ".html", target: "_blank"})])
+            ]);
+        })
+    })
+</script>
+
+</body>
+</html>

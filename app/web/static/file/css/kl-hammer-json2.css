@@ -1,0 +1,73 @@
+.json_key {
+    display: block;
+    float: left;
+}
+
+.json_key input {
+    display: none;
+}
+
+.json_key_checkbox:checked + span {
+    background: #AAA;
+}
+
+.json_ele, .json_map {
+    float: left;
+    margin-left: 25px;
+    border-left: 1px solid #EEE;
+    border-bottom: 1px solid #EEE;
+    width: 200%;
+    background: #fefefe;
+}
+.json_ele {
+    width: 100%;
+}
+
+
+.json_ele > div {
+    display: block;
+    float: left;
+}
+
+.hide {
+    display: none;
+}
+
+.json_val_div, .json_key_div {
+    float: left;
+    min-height: 15px;
+}
+
+.json_key_div > div {
+    float: left;
+    width: 100%;
+    min-height: 15px;
+}
+
+.eles_extend {
+
+}
+
+.eles_close {
+
+}
+
+.eles_close > .json_eles {
+    display: none;
+}
+
+.json_key, .eles_fix {
+    cursor: pointer;
+}
+
+.json_box {
+    font-size: 12px;
+    color: #55A;
+    line-height: 1.4em;
+}
+.eles_fix{
+    width: 20px;
+}
+.json_key_div{
+    padding-right: 10px;
+}

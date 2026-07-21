@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue DataGrid · 后端联动</title>
+    <style>
+        /* -------------------- 全局重置 & 字体 -------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f7fb;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        #app {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* -------------------- 卡片容器 -------------------- */
+        .demo-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            padding: 28px 24px 32px;
+            transition: box-shadow 0.2s;
+        }
+        .demo-card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .demo-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0b1a33;
+            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+        }
+        .demo-sub {
+            color: #6b7a8f;
+            font-size: 15px;
+            margin-bottom: 24px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 14px;
+            background: #f8faff;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+        }
+        .demo-sub code {
+            background: #eef2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1e3a6f;
+        }
+
+        /* -------------------- 工具栏 (筛选 + 分页控制) -------------------- */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .filter-area {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+        .filter-area label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2a41;
+        }
+        .filter-area input,
+        .filter-area select {
+            padding: 8px 14px;
+            border: 1px solid #dce1ea;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #ffffff;
+            transition: 0.2s;
+            outline: none;
+            min-width: 160px;
+            color: #0b1a33;
+        }
+        .filter-area input:focus,
+        .filter-area select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .filter-area input::placeholder {
+            color: #aab3c5;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pagination-controls button {
+            padding: 6px 16px;
+            border: 1px solid #dce1ea;
+            background: white;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2a41;
+            cursor: pointer;
+            transition: 0.15s;
+            min-width: 44px;
+        }
+        .pagination-controls button:hover:not(:disabled) {
+            background: #f0f4fe;
+            border-color: #3b82f6;
+            color: #1a4c8a;
+        }
+        .pagination-controls button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination-controls button.active-page {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .pagination-controls .page-info {
+            font-size: 14px;
+            color: #4a5a72;
+            padding: 0 6px;
+        }
+        .pagination-controls select {
+            padding: 6px 10px;
+            border: 1px solid #dce1ea;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* -------------------- 表格容器 (响应式滚动) -------------------- */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid #e9edf4;
+            background: #ffffff;
+        }
+
+        /* -------------------- 表格核心样式 -------------------- */
+        .datagrid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 600px;
+        }
+
+        /* 表头 */
+        .datagrid thead tr {
+            background: #f8fafd;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .datagrid th {
+            padding: 14px 18px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f2a41;
+            white-space: nowrap;
+            position: relative;
+            user-select: none;
+            transition: background 0.1s;
+        }
+        .datagrid th.sortable {
+            cursor: pointer;
+        }
+        .datagrid th.sortable:hover {
+            background: #eef3fc;
+        }
+        .datagrid th .th-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .datagrid th .sort-icon {
+            font-size: 16px;
+            color: #8a9bb0;
+            transition: 0.2s;
+            display: inline-block;
+            line-height: 1;
+        }
+        .datagrid th .sort-icon.active {
+            color: #3b82f6;
+        }
+        .datagrid th .sort-icon.desc {
+            transform: rotate(180deg);
+        }
+
+        /* 表体 */
+        .datagrid tbody tr {
+            border-bottom: 1px solid #edf1f7;
+            transition: background 0.12s;
+        }
+        .datagrid tbody tr:last-child {
+            border-bottom: none;
+        }
+        .datagrid tbody tr:hover {
+            background: #f8faff;
+        }
+        .datagrid td {
+            padding: 12px 18px;
+            color: #1f2a41;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+
+        /* 空状态 & 加载 */
+        .datagrid .empty-row td {
+            padding: 48px 18px;
+            text-align: center;
+            color: #8a9bb0;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+        }
+        .datagrid .empty-row td::before {
+            content: '📭 ';
+            font-size: 20px;
+        }
+        .datagrid .loading-row td {
+            padding: 48px 18px;
+            text-align: center;
+            color: #6b7a8f;
+            font-size: 15px;
+        }
+        .datagrid .loading-row td::after {
+            content: ' ⏳';
+            font-size: 18px;
+        }
+
+        /* 状态标签 (示例) */
+        .status-badge {
+            display: inline-block;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            text-transform: capitalize;
+        }
+        .status-badge.active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .status-badge.inactive {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #a16207;
+        }
+
+        /* 错误提示 */
+        .error-msg {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 10px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .error-msg::before {
+            content: '⚠️';
+            font-size: 18px;
+        }
+
+        /* -------------------- 响应式微调 -------------------- */
+        @media (max-width: 700px) {
+            .demo-card {
+                padding: 18px 14px;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-area {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-area input,
+            .filter-area select {
+                min-width: unset;
+                width: 100%;
+            }
+            .pagination-controls {
+                justify-content: center;
+                margin-top: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="demo-card">
+
+        <!-- 标题 -->
+        <h1 class="demo-title">📋 Vue DataGrid · 后端联动</h1>
+        <p class="demo-sub">
+            <code>fetch</code> 请求 · 筛选 / 排序 / 分页 全部联动后端 ·
+            列配置纯数组，内置状态徽章
+        </p>
+
+        <!-- 错误提示 -->
+        <div v-if="error" class="error-msg">{{ error }}</div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <div class="filter-area">
+                <template v-for="col in columns" :key="col.key">
+                    <label v-if="col.isAllowQuery" :for="'filter-' + col.key">{{ col.label }}</label>
+                    <!-- 非 tinyint 类型用 input text -->
+                    <input
+                            v-if="col.isAllowQuery && !col.isTinyInt"
+                            :id="'filter-' + col.key"
+                            type="text"
+                            :placeholder="'输入' + col.label"
+                            v-model="queryMap[col.key]"
+                            @input="onQueryChange"
+                    />
+                    <!-- tinyint 类型用下拉选择 -->
+                    <select
+                            v-if="col.isAllowQuery && col.isTinyInt"
+                            :id="'filter-' + col.key"
+                            v-model="queryMap[col.key]"
+                            @change="onQueryChange"
+                    >
+                        <option value="">全部</option>
+                        <option value="1">是</option>
+                        <option value="2">否</option>
+                    </select>
+                </template>
+            </div>
+
+            <div class="pagination-controls">
+                <button @click="goToPage(1)" :disabled="currentPage === 1 || loading">⏮</button>
+                <button @click="prevPage" :disabled="currentPage === 1 || loading">◀</button>
+
+                <span class="page-info">
+                        第 {{ currentPage }} / {{ totalPages }} 页
+                    </span>
+
+                <button @click="nextPage" :disabled="currentPage === totalPages || loading">▶</button>
+                <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages || loading">⏭</button>
+
+                <select v-model="pageSize" @change="currentPage = 1">
+                    <option :value="5">5 条/页</option>
+                    <option :value="10">10 条/页</option>
+                    <option :value="20">20 条/页</option>
+                    <option :value="50">50 条/页</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 表格 -->
+        <div class="table-wrapper">
+            <table class="datagrid">
+                <thead>
+                <tr>
+                    <th
+                            v-for="col in columns"
+                            :key="col.key"
+                            :class="{ sortable: col.sortable }"
+                            @click="col.sortable && handleSort(col.key)"
+                    >
+                            <span class="th-inner">
+                                {{ col.label }}
+                                <span
+                                        v-if="col.sortable"
+                                        class="sort-icon"
+                                        :class="{
+                                active: sortKey === col.key,
+                                desc: sortKey === col.key && sortOrder === 'desc'
+                                }"
+                                >
+                                {{ sortKey === col.key ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅' }}
+                            </span>
+                        </span>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- 加载中 -->
+                <tr v-if="loading" class="loading-row">
+                    <td :colspan="columns.length">数据加载中</td>
+                </tr>
+                <!-- 数据行 -->
+                <tr v-else v-for="row in dataList" :key="row.id">
+                    <td v-for="col in columns" :key="col.key">
+                        <!-- 长文本截断 + 点击弹窗 -->
+                        <template v-if="col.isLongText">
+        <span
+                :title="row[col.key]"
+                @click="showFullText(row[col.key])"
+                style="cursor:pointer; color:#3b82f6;"
+        >
+            {{ truncateText(row[col.key], 20) }}
+        </span>
+                        </template>
+                        <!-- tinyint 枚举显示（可点击切换） -->
+                        <template v-else-if="col.isTinyInt">
+        <span
+                @click="toggleTinyInt(row, col)"
+                style="cursor:pointer; padding:4px 8px; border-radius:12px; background:#eef2f6;"
+        >
+            {{ row[col.key] === 1 ? '✅ 是' : '❌ 否' }}
+        </span>
+                        </template>
+                        <!-- 其他类型直接显示 -->
+                        <template v-else>
+                            {{ row[col.key] }}
+                        </template>
+                    </td>
+                </tr>
+                <!-- 空状态 -->
+                <tr v-if="!loading && dataList.length === 0" class="empty-row">
+                    <td :colspan="columns.length">没有匹配的数据</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 底部统计 -->
+        <div style="margin-top: 18px; font-size: 14px; color: #6b7a8f; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <span>共 <strong>{{ total }}</strong> 条记录</span>
+            <span>当前显示 <strong>{{ dataList.length }}</strong> 条</span>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== Vue 3 ==================== -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js">
+</script>
+
+<script>
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+
+    const app = createApp({
+        setup() {
+            // ----------------------------------------------------------------
+            // 1. 配置：后端 API 地址 (请根据实际后端修改)
+            // ----------------------------------------------------------------
+            const API_URL = '/spider/v1/boss_zhipin/jobs'; // 替换为你的实际接口
+
+            // ----------------------------------------------------------------
+            // 2. 列配置 (纯数组，仅 key, label, sortable)
+            //    内置对 status 列的特殊渲染 (徽章)
+            // ----------------------------------------------------------------
+            const columns = ref([
+                { key: 'id', label: 'ID', type: 'int', isAllowQuery: false, sortable: true, operator: '=', isLongText: false, isTinyInt: false },
+                { key: 'com_id', label: '公司ID', type: 'string', isAllowQuery: true, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'area_title', label: '区域名称', type: 'string', isAllowQuery: true, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'area_code', label: '区域编码', type: 'string', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'job_id', label: '职位ID', type: 'string', isAllowQuery: true, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'title', label: '职位名称', type: 'string', isAllowQuery: true, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'salary_gte', label: '最低薪资', type: 'int', isAllowQuery: false, sortable: true, operator: '=', isLongText: false, isTinyInt: false },
+                { key: 'salary_lte', label: '最高薪资', type: 'int', isAllowQuery: false, sortable: true, operator: '=', isLongText: false, isTinyInt: false },
+                { key: 'salary_text', label: '薪资描述', type: 'string', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'salary_ocr', label: '薪资OCR', type: 'string', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'salary_shoot_md5', label: '薪资截图MD5', type: 'string', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'tags', label: '标签', type: 'json', isAllowQuery: false, sortable: true, operator: '$like', isLongText: true, isTinyInt: false },
+                { key: 'deny_reason', label: '拒绝原因', type: 'string', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'detail', label: '岗位描述', type: 'longtext', isAllowQuery: false, sortable: true, operator: '$like', isLongText: true, isTinyInt: false },
+                { key: 'remark', label: '备注', type: 'longtext', isAllowQuery: false, sortable: true, operator: '$like', isLongText: true, isTinyInt: false },
+                { key: 'spider_date', label: '爬取时间', type: 'datetime', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'publish_date', label: '发布时间', type: 'datetime', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'hr_title', label: 'HR头衔', type: 'string', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'hr_active_time', label: 'HR活跃时间', type: 'string', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'hr_active_int', label: 'HR活跃状态', type: 'int', isAllowQuery: false, sortable: true, operator: '=', isLongText: false, isTinyInt: false },
+                { key: 'hr_hot_date', label: 'HR最新在线', type: 'datetime', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                // 以下 is_* 为 tinyint 类型
+                { key: 'is_php', label: '是否PHP', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is_match', label: '是否匹配', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is_dog', label: '是否外包', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is_zombie', label: '是否僵尸', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is_fake', label: '是否骗子', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is_edu_ok', label: '学历OK', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is404', label: '是否404', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is_ok', label: '岗位是否OK', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'is_deny', label: '是否拒绝', type: 'tinyint', isAllowQuery: true, sortable: true, operator: '=', isLongText: false, isTinyInt: true },
+                { key: 'spider_times', label: '出现次数', type: 'int', isAllowQuery: false, sortable: true, operator: '=', isLongText: false, isTinyInt: false },
+                { key: 'create_date', label: '创建时间', type: 'datetime', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+                { key: 'update_date', label: '更新时间', type: 'datetime', isAllowQuery: false, sortable: true, operator: '$like', isLongText: false, isTinyInt: false },
+            ]);
+
+            //改写成 
+
+            // ----------------------------------------------------------------
+            // 3. 数据状态
+            // ----------------------------------------------------------------
+            const dataList = ref([]); // 当前页数据
+            const total = ref(0); // 总记录数
+            const loading = ref(false);
+            const error = ref('');
+
+
+            // 存储所有查询字段的值
+            const queryMap = ref({});
+
+            // ----------------------------------------------------------------
+            // 4. 筛选状态
+            // ----------------------------------------------------------------
+            const filterText = ref('');
+            const statusFilter = ref('all');
+
+            // ----------------------------------------------------------------
+            // 5. 排序状态
+            // ----------------------------------------------------------------
+            const sortKey = ref('id');
+            const sortOrder = ref('asc');
+
+            // ----------------------------------------------------------------
+            // 6. 分页状态
+            // ----------------------------------------------------------------
+            const currentPage = ref(1);
+            const pageSize = ref(10);
+
+            // ----------------------------------------------------------------
+            // 7. 计算总页数
+            // ----------------------------------------------------------------
+            const totalPages = computed(() => Math.ceil(total.value / pageSize.value) || 1);
+
+            // ----------------------------------------------------------------
+            // 8. 构建请求参数 (符合后端规范)
+            // ----------------------------------------------------------------
+            function buildParams() {
+                const attr = {};
+                columns.value.forEach(col => {
+                    if (!col.isAllowQuery) return;
+                    const val = queryMap.value[col.key];
+                    if (val === undefined || val === null || val === '') return;
+                    if (col.operator === '=') {
+                        attr[col.key] = val;
+                    } else { // '$like'
+                        attr[col.key] = { '$like': val };
+                    }
+                });
+
+                const sort = {};
+                if (sortKey.value) {
+                    sort[sortKey.value] = sortOrder.value;
+                }
+                const page = {
+                    no: currentPage.value,
+                    size: pageSize.value,
+                };
+                return { attr, sort, page };
+            }
+
+            // ----------------------------------------------------------------
+            // 9. 核心 fetch 函数
+            // ----------------------------------------------------------------
+            async function fetchData() {
+                loading.value = true;
+                error.value = '';
+                try {
+                    const params = buildParams();
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(params),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                    }
+                    const result = await response.json();
+                    // 根据后端返回格式解析
+                    if (result && result.data) {
+                        const { count: totalVal, page_no:pageIndex, page_size: size, data:list } = result;
+                        dataList.value = list || [];
+                        total.value = totalVal || 0;
+                        // 用后端返回的 pageIndex 更新当前页（保持同步）
+                        if (pageIndex !== undefined) {
+                            currentPage.value = pageIndex;
+                        }
+                        // 可选：更新 pageSize（如果后端返回不同）
+                        if (size !== undefined && size !== pageSize.value) {
+                            pageSize.value = size;
+                        }
+                    } else {
+                        throw new Error('响应格式错误：缺少 data 字段');
+                    }
+                } catch (err) {
+                    error.value = `请求失败：${err.message}`;
+                    // 清空数据
+                    dataList.value = [];
+                    total.value = 0;
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // 10. 监听筛选、排序、分页变化 → 重新请求
+            // ----------------------------------------------------------------
+            watch([filterText, statusFilter, sortKey, sortOrder, currentPage, pageSize], () => {
+                fetchData();
+            }, { immediate: false });
+
+            // 当 pageSize 变化时重置到第一页（已在模板中通过 @change 处理）
+            // 但 watch 中也会触发，没问题。
+
+            // ----------------------------------------------------------------
+            // 11. 分页方法
+            // ----------------------------------------------------------------
+            function goToPage(page) {
+                if (page < 1) page = 1;
+                if (page > totalPages.value) page = totalPages.value;
+                if (page !== currentPage.value) {
+                    currentPage.value = page;
+                }
+            }
+
+            function prevPage() {
+                if (currentPage.value > 1) currentPage.value--;
+            }
+
+            function nextPage() {
+                if (currentPage.value < totalPages.value) currentPage.value++;
+            }
+
+            // ----------------------------------------------------------------
+            // 12. 排序方法 (点击表头切换)
+            // ----------------------------------------------------------------
+            function handleSort(key) {
+                if (sortKey.value === key) {
+                    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortKey.value = key;
+                    sortOrder.value = 'asc';
+                }
+                // 排序后重置到第一页
+                currentPage.value = 1;
+            }
+
+
+
+
+// 查询变化时重置页码并请求
+            function onQueryChange() {
+                currentPage.value = 1;
+                fetchData();
+            }
+
+// 截断文本
+            function truncateText(text, len = 20) {
+                if (!text) return '';
+                return text.length > len ? text.substring(0, len) + '…' : text;
+            }
+
+// 弹窗显示完整内容
+            function showFullText(text) {
+                if (!text) return;
+                alert(text); // 可替换为自定义模态框
+            }
+
+            // 切换 tinyint 字段值 (1 -> 2, 2 -> 1)
+            async function toggleTinyInt(row, col) {
+                const current = row[col.key];
+                const newVal = current === 1 ? 2 : 1;
+                try {
+                    const resp = await fetch('/xxx/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: row.id, field: col.key, value: newVal }),
+                    });
+                    if (!resp.ok) throw new Error('更新失败');
+                    row[col.key] = newVal;
+                    // 可选：刷新表格数据以保持一致性
+                    // fetchData();
+                } catch (e) {
+                    alert('更新失败：' + e.message);
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // 13. 生命周期：挂载后请求数据
+            // ----------------------------------------------------------------
+            onMounted(() => {
+                fetchData();
+            });
+
+            // ----------------------------------------------------------------
+            // 14. 暴露给模板
+            // ----------------------------------------------------------------
+            return {
+                columns,
+                dataList,
+                total,
+                totalPages,
+                loading,
+                error,
+                filterText,
+                statusFilter,
+                sortKey,
+                sortOrder,
+                currentPage,
+                pageSize,
+                goToPage,
+                prevPage,
+                nextPage,
+                handleSort,
+                // 新增导出（模板所需）
+                queryMap,
+                onQueryChange,
+                truncateText,
+                showFullText,
+                toggleTinyInt,
+            };
+        },
+    });
+
+    app.mount('#app');
+</script>
+</body>
+</html>

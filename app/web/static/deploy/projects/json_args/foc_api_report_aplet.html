@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="/static/file/js/kl-hammer-json.js" charset="UTF-8"></script>
+    <title>小程序增量统计{ymd}</title>
+    <style>
+        #text {
+            width: 90%;
+            min-height: 600px;
+        }
+    </style>
+    <link href="/static/file/css/kl-hammer-json.css" media="all" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div>
+    <div id="boxer">
+        <a href="/static/deploy/projects/json_args/index.html" target="_blank"><h1>json参数调试</h1></a>
+    </div>
+    <div id="dev_opts">
+        <div id="dev_opts_error">
+
+        </div>
+    </div>
+
+</div>
+<script></script>
+<script>
+
+    var box = new Emt('textarea').setPros({id: 'text'});
+    kl.id('boxer').appendChild(box);
+    var json_pre = new Emt('div');
+    kl.id('boxer').appendChild(json_pre);
+    t = {
+        "title": "小程序增量统计{ymd}",
+        "sub_title": "小程序增量",
+        "no_channels": true,
+        "init_items": {
+            "db_push": 1,
+            "db_increase": 1,
+            "db_insert": 1,
+            "his_push": 1,
+            "his_pushV": 1,
+            "his_pushH": 1,
+            "his_implement": 1,
+            "his_vr": 1,
+            "his_vrV": 1,
+            "his_vrH": 1,
+            "statis_all": 1,
+            'db_channelsCreateAt': 1,
+        },
+        "cols": {
+            "conf_push": "小程序输出量(配置)",
+            "db_insert_1": "虚拟仓入仓量",
+            "db_push_1": "符合推送频道配置的入仓",
+            "his_push_1": "his_push_1",
+            "his_pushV_1": "his_pushV_1",
+            "his_pushH_1": "his_pushH_1",
+            "his_implement_1": "his_implement_1",
+            "his_vr_1": "his_vr_1",
+            "his_vrV_1": "his_vrV_1",
+            "his_vrH_1": "his_vrH_1",
+            "statis.update.success.mv_cnt.1": "statis.update.success.mv_cnt.1\n上线成功量",
+            "db_channelsCreateAt_1": "db_channelsCreateAt_1",
+        }
+    };
+    t = {
+        "title": "小程序增量统计{ymd}",
+        "sub_title": "小程序增量",
+        "no_channels": true,
+        "init_items": {
+            "db_push": 1,
+            "db_insert": 1,
+            'db_channelsCreateAt': 1,
+        },
+        "cols": {
+            "conf_push": "小程序输出量(配置)",
+            "db_insert_1": "虚拟仓入仓量",
+            "db_channelsCreateAt_1": "符合推送频道配置的入仓",
+        }
+    };
+    json_pre.innerHTML = '';
+    json_pre.appendChild(view_json(t));
+    var str = JSON.stringify(t);
+    var str0 = "\ncd /usr/website_server_alpha/fcgapi.funshion.com/v1/script/; /usr/local/php5.3.11/bin/php foc_api_report.php -api fhztb18,fo06wma,fb4m3nu,f21xwrg,f3jz4ev,f69jpgq,f5r4egu,fysu6d2,frfx0e6 -mail -mail sunmf@fun.tv,xiemd@fun.tv,lilu01@fun.tv,anst@fun.tv,liuxin@fun.tv,panya@fun.tv,yangkl@fun.tv,zhangxue@fun.tv,nrygl@fun.tv,leiyun1@fun.tv,louling@fun.tv,wangcf@fun.tv,yangjl02@fun.tv,limq@fun.tv -debug 1 -echolog 1 -opts /home/nginx/cron_params/applet_increase_counter.json\n";
+    var str1 = "\nphp foc_api_report_debug.php -api fhztb18,fo06wma,fb4m3nu,f21xwrg,f3jz4ev,f69jpgq,f5r4egu,fysu6d2,frfx0e6 -mail yangjl02@fun.tv -debug 1 -echolog 1 -opts '" + str + "'\n";
+    var str1 = "\nphp foc_api_report_debug.php -api fhztb18,fo06wma -mail yangjl02@fun.tv -debug 1 -echolog 1 -opts '" + str + "'\n";
+
+    var str2 = "\ncd /usr/website_server_alpha/fcgapi.funshion.com/v1/script/; /usr/local/php5.3.11/bin/php foc_api_report.php -api fhztb18,fo06wma,fb4m3nu,f21xwrg,f3jz4ev,f69jpgq,f5r4egu,fysu6d2,frfx0e6 -mail yangjl02@fun.tv -debug 1 -echolog 1 -opts '" + str + "'\n";
+    //document.write(str1,str2);
+    console.log(str1, str2);
+    box.textContent = str0 + str1 + "\n" + str2 + "\n" + JSON.stringify(t, null, 4);
+</script>
+</body>
+</html>

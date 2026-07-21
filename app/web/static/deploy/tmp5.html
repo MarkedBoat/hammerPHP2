@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>版权商接口</title>
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <style>
+        .div_projects {
+            width: 1020px;
+            margin: 0px auto;
+        }
+
+        #input, .tb_doc {
+            width: 100%;
+            float: left;
+            background: #000;
+        }
+
+        #div_input_json, #div_refund_json {
+            background: #FFF;
+        }
+
+        .row {
+            margin-top: 1px;
+            width: 100%;
+            background: #FFF;
+        }
+
+
+        .row > div {
+            background: #FFF;
+            height: 100%;
+        }
+
+        .row .key {
+            width: 150px;
+        }
+
+        .row .label {
+            width: 150px;
+        }
+
+        .row .dt {
+            width: 130px;
+        }
+
+        .row .need {
+            width: 100px;
+        }
+
+        .row .desc {
+            width: 400px;
+            overflow-y: auto;
+        }
+
+        td {
+            background: #FFF;
+            padding: 7px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        tr:nth-child(1) {
+            background: #DDD;
+            font-weight: 900;
+        }
+
+        tr:nth-child(1) > td {
+            background: #DDD;
+        }
+
+        #doc2 {
+            width: 100%;
+            min-height: 10000px;
+        }
+
+        #doc2 > textarea {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div id="div_projects" class="div_projects">
+
+
+    </div>
+    <div class="div_projects">
+
+
+    </div>
+    <script></script>
+
+
+    <script>
+        var copyright_vendor = {
+            table: 'fmg_copyright_vendor#版权方',
+            attrs: {
+                vendor_id: '版权方id',
+                name: '版权方名字',
+                code: 'code',
+                icon: '版权方图标',
+            }
+        };
+        var copyright_provider = {
+            table: 'fmg_copyright#版权授权表',
+            attrs: {
+                vendor_id: '版权方id',
+                owner_id: '版权ID',
+                owner: '版权名称',
+                icon: '版权方图标',
+            },
+            vendor: copyright_vendor
+        };
+        //(.*),(\w+),\w+,\w+,\w+,\w+
+        var copy_media = {
+            table: 'fmg_copyright_media#版权媒体信息表(核心,灵魂)',
+            attrs: {
+                cm_id: '版权媒体ID',
+                media_id: '媒体id',
+                owner_id: '版权ID',
+            }
+        };
+
+        var cp_media_op = {
+            table: 'fmg_copyright_media_oper#版权方媒体运营表',
+            attrs: {
+                cm_oper_id: '运营ID',
+                cm_id: '媒体版权ID',
+                platform_id: '平台ID',
+                copyright_starttm: '开始时间',
+                copyright_endtm: '结束时间',
+                illegal_area: '版权屏蔽地域',
+            }
+        };
+
+        var used_plat = {
+            table: 'fmg_copyright_platform#版权使用平台',
+            attrs: {
+                platform_id: '平台ID',
+                code: '平台标识',
+                name: '平台名称',
+                disable: '禁用标识',
+            }
+        };
+
+
+        var policy_media = {
+            table: 'fmg_media_output_policy#渠道版权媒体输出策略',
+            attrs: {
+                cm_policy_id: '策略ID',
+                cm_id: '媒体版权ID',
+                api_id: '渠道ID',
+                follow_vendor_rule: '是否遵循版权运营商规则',
+                fee_mode: '收费模式',
+                fee_starttm: '收费开始时间',
+                fee_endtm: '收费结束时间',
+                vod_days: '单点付费的权益天数',
+                price: '单点价格',
+                downloadable: '是否可下载',
+                is_sole: '是否独播',
+                disable: '禁用标识',
+                creater: '创建人',
+                create_time: '创建时间',
+                update_time: '更新时间',
+            }
+        };
+        var t2 = {
+            table: 'fmg_episode_output_policy#渠道版权分集输出策略',
+            attrs: {
+                ce_policy_id: '策略ID',
+                ce_id: '版权分集ID',
+                api_id: '渠道ID',
+                open_time: '开启时间',
+                fee_start: '收费开始时间',
+                fee_end: '收费结束时间',
+                disab: '禁用标识',
+                create_time: '创建时间',
+                update_time: '更新时间',
+            }
+        };
+        var media_info = {
+            table: 'fmg_media#原始媒体信息表',
+            attrs: {
+                media_id: '媒体ID',
+                name: '名称',
+                alias: '别名',
+                aword: '一句话推荐',
+                poster: '海报',
+                still: '剧照',
+                focus_img: '焦点图',
+                director: '导演',
+                actor: '主演',
+                description: '简介',
+                source: '评分',
+                release_date: '上映日期',
+                release_year: '上映年代',
+                totalnum: '总集数',
+                schedule: '??????更新频率',
+                extend: '扩展字段',
+                experts: '专家评语',
+                channel: '频道ID',
+                channel_name: '频道名称',
+                year: '年代',
+                category: '题材',
+                area: '地域',
+                class: '分级',
+                eu_time: '分集更新时间',
+                out_switch: '输出开关',
+                disable: '禁用标识',
+                creater: '创建人',
+                create_time: '创建时间',
+                update_time: '更新时间',
+            }
+        };
+
+        /**
+         * 输出渠道
+         * @type {{}}
+         */
+        var partner_info = {
+            table: '输出渠道表foc_api',
+            attrs: {
+                'api_id': '输出渠道id',
+                'api_code': '渠道code',
+                'name': '渠道名',
+            }
+        };
+        var list_ele = {
+            cm_id: '媒体版权ID',
+            media_id: "原始媒体ID",
+            name: "媒体中文名",
+            still: "横图",
+            poster: "竖图",
+            release_date: "上映日期",
+            score: "媒体评分",
+            director: "导演",
+            actor: "主演1,主演2",
+            area: "产地1,产地2",
+            channel: "媒体频道（例如：电影 电视剧 动画 ）",
+            aword: "一句话推荐",
+            copyright: {
+                owner_id: "版权ID",
+                owner_name: "版权名称",
+                owner_icon: "版权图标",
+                vendor_id: "版权代理商ID",
+                vendor_name: "版权代理商名称",
+                vendor_icon: "版权代理商图标"
+            },
+            fee_mode: "收费模式",
+            fee_starttm: "收费开始时间",
+            fee_endtm: "收费结束时间",
+            parnters: [
+                partner_info.attrs
+            ],
+            __raw: {
+                _media: function (obj) {
+                    let tag_obj = {id: '标签id', name: '标签名'};
+                    obj._area = [tag_obj];
+                    obj._category = [tag_obj];
+                    obj._year = [tag_obj];
+                    obj._channel = [tag_obj];
+                    return obj;
+                }(media_info.attrs),
+                _copyright: function (obj) {
+                    obj._vendor = copyright_vendor.attrs;
+                    return obj;
+                }(copyright_provider.attrs)
+            }
+
+        };
+
+
+        var texts = [
+            {
+                title: '全部代理商接口',
+                api: '/api/common/common/view_vendors',
+                desc: '获取版权代理商的列表',
+                input: [],
+                data: {
+                    list: [
+                        copyright_vendor.attrs,
+                        copyright_vendor.attrs,
+                    ]
+                }
+            },
+            {
+                title: '版权代理商_平台_所有媒体列表',
+                api: '/api/vendor/oper/view_all',
+                desc: '版权代理商_平台_所有媒体列表',
+                method: 'POST',
+                input: [
+                    {k: 'vendor_id', n: '版权方Id,', t: 'int', yn: false},
+                    {k: 'platform_id', n: '大小屏标识', t: 'int', yn: true},
+                    {k: 'sz', n: '分页大小', t: 'int', yn: false, desc: '默认20'},
+                    {k: 'pg', n: '页码', t: 'int', yn: false, desc: '默认1'},
+                    {k: 'field_name', n: '媒体信息字段名', t: 'string', yn: false},
+                    {k: 'field_value', n: '媒体信息字段值', t: 'string', yn: false},
+                ],
+                data: {
+                    total: '总条数',
+                    pg: '页码',
+                    sz: '分页大小',
+                    list: [
+                        list_ele,
+                    ]
+                },
+                return_doc: [
+                    {k: 'data.__raw', n: '相关的原始数据', t: 'obj', yn: false, desc: '不使用的情况下无需关注'},
+                ]
+            },
+            {
+                title: '版权代理商_平台_输出媒体列表',
+                api: '/api/vendor/oper/view_hasout',
+                desc: '版权代理商_平台_输出媒体列表',
+                method: 'POST',
+                input: [
+                    {k: 'vendor_id', n: '版权方Id,', t: 'int', yn: false},
+                    {k: 'platform_id', n: '大小屏标识', t: 'int', yn: true},
+                    {k: 'sz', n: '分页大小', t: 'int', yn: false, desc: '默认20'},
+                    {k: 'pg', n: '页码', t: 'int', yn: false, desc: '默认1'},
+                    {k: 'field_name', n: '媒体信息字段名', t: 'string', yn: false},
+                    {k: 'field_value', n: '媒体信息字段值', t: 'string', yn: false},
+                ],
+                data: {
+                    total: '总条数',
+                    pg: '页码',
+                    sz: '分页大小',
+                    list: [
+                        list_ele,
+                    ]
+                },
+                return_doc: [
+                    {k: 'data.__raw', n: '相关的原始数据', t: 'obj', yn: false, desc: '不使用的情况下无需关注'},
+                ]
+            },
+            {
+                title: '版权代理商_平台_未输出媒体列表',
+                api: '/api/vendor/oper/view_notout',
+                desc: '版权代理商_平台_未输出媒体列表',
+                method: 'POST',
+                input: [
+                    {k: 'vendor_id', n: '版权方Id,', t: 'int', yn: false},
+                    {k: 'platform_id', n: '大小屏标识', t: 'int', yn: true},
+                    {k: 'sz', n: '分页大小', t: 'int', yn: false, desc: '默认20'},
+                    {k: 'pg', n: '页码', t: 'int', yn: false, desc: '默认1'},
+                    {k: 'field_name', n: '媒体信息字段名', t: 'string', yn: false},
+                    {k: 'field_value', n: '媒体信息字段值', t: 'string', yn: false},
+                ],
+                data: {
+                    total: '总条数',
+                    pg: '页码',
+                    sz: '分页大小',
+                    list: [
+                        list_ele,
+                    ]
+                },
+                return_doc: [
+                    {k: 'data.__raw', n: '相关的原始数据', t: 'obj', yn: false, desc: '不使用的情况下无需关注'},
+                ]
+            },
+            {
+                title: '查询版权代理商_平台_媒体_输出渠道列表',
+                api: '/api/vendor/oper/view_partners',
+                desc: '查询版权代理商_平台_媒体_输出渠道列表',
+                input: [
+                    {k: 'platform_id', n: '大小屏标识', t: 'string', yn: true},
+                    {k: 'cm_id', n: '版权媒体ID', t: 'string', yn: false, desc: '版权媒体ID，转化之后的版权方 媒体id对应的标识，如果不传，则是平台对应的可输出渠道列表'},
+                ],
+                data: {
+                    has_out_partners: [partner_info.attrs, partner_info.attrs],
+                    not_out_partners: [partner_info.attrs, partner_info.attrs]
+                },
+                return_doc: [
+                    {k: 'data.__raw', n: '相关的原始数据', t: 'obj', yn: false, desc: '不使用的情况下无需关注'},
+                    {k: 'data.has_out_partners', n: '已经输出的渠道', t: '数组', yn: true, desc: '可能为空'},
+                    {k: 'data.not_out_partners', n: '未输出的渠道', t: '数组', yn: true, desc: '可能为空'},
+                ]
+            },
+            {
+                title: '单个设置版权代理商_平台_媒体_设置输出渠道列表',
+                api: '/api/vendor/oper/modify_partners',
+                desc: '单个设置版权代理商_平台_媒体_设置输出渠道列表',
+                input: [
+                    {k: 'platform_id', n: '大小屏标识', t: 'string', yn: true},
+                    {k: 'cm_id', n: '版权媒体ID', t: 'string', yn: true, desc: '版权媒体ID，转化之后的版权方 媒体id对应的标识'},
+                    {k: 'partner_ids', n: '增加输出的渠道id,逗号分隔', t: 'string', yn: true, desc: ''},
+                ],
+                data: {
+                    result: {
+                        has_out_partners: [partner_info.attrs, partner_info.attrs],
+                        disable_partners: [partner_info.attrs, partner_info.attrs],
+                        unknown_error: [partner_info.attrs, partner_info.attrs]
+                    }
+                },
+                return_doc: [
+                    {k: 'data.__raw', n: '相关的原始数据', t: 'obj', yn: false, desc: '不使用的情况下无需关注'},
+                    {k: 'data.result.has_out_partners', n: '已经输出的渠道', t: '数组', yn: true, desc: '可能为空'},
+                    {k: 'data.result.disable_partners', n: '本次disable的渠道', t: '数组', yn: true, desc: '可能为空'},
+                    {k: 'data.result.unknown_error', n: '异常的渠道', t: '数组', yn: true, desc: '可能输出渠道本身已经disable了，或者渠道的platform_id不是我们想要的'},
+                ]
+            },
+            {
+                title: '批量设置版权代理商_平台_媒体_设置输出渠道列表',
+                api: '/api/vendor/oper/modify_partnersbatch',
+                desc: '批量设置版权代理商_平台_媒体_设置输出渠道列表',
+                input: [
+                    {k: 'platform_id', n: '大小屏标识', t: 'string', yn: true},
+                    {k: 'cm_ids', n: '版权媒体ID', t: 'string', yn: true, desc: '版权媒体ID，逗号隔开'},
+                    {k: 'partner_ids', n: '增加输出的渠道id,逗号分隔', t: 'string', yn: true, desc: 'parter[].api_id'},
+                ],
+                data: {
+                    result: [
+                        {
+                            'cm_id': '版权媒体id',
+                            'ok': [partner_info.attrs, partner_info.attrs],
+                            'error': [partner_info.attrs, partner_info.attrs],
+                        },
+                        {
+                            'cm_id': '版权媒体id',
+                            'ok': [partner_info.attrs, partner_info.attrs],
+                            'error': [partner_info.attrs, partner_info.attrs],
+                        }
+                    ]
+                },
+                return_doc: [
+                    {k: 'data.__raw', n: '相关的原始数据', t: 'obj', yn: false, desc: '不使用的情况下无需关注'},
+                    {k: 'data.result.[].cm_id', n: '版权媒体的id', t: 'string', yn: true, desc: ''},
+                    {k: 'data.result.[].ok', n: '设置成功的渠道', t: '数组', yn: true, desc: '可能为空'},
+                    {k: 'data.result.[].error', n: '设置失败的渠道', t: '数组', yn: true, desc: '可能为空'},
+                ]
+            }
+        ];
+        var docs = new Emt('pre');
+        var docs2 = new Emt('div').setPros({id: 'doc2'});
+        kl.id('div_projects').appendChild(docs);
+        kl.id('div_projects').appendChild(docs2);
+        var links = [];
+        texts.forEach(function (setting) {
+
+            var str1 = 'h1. ' + setting.title + '\n' +
+                '\n' +
+                'h2. 功能描述\n' +
+                '\n' +
+                '* ' + (setting.desc || '###') + '\n' +
+                '\n' +
+                'h2. 请求链接 \n' +
+                '\n' +
+                '* 请求路径: ' + (setting.api || '###') + '\n' +
+                '* 请求方式: ' + (setting.method || 'POST') + '\n' +
+                '* 请求参数: \n' +
+                '|参数名|参数含义|类型|是否必须|备注|\n';
+
+            setting.input.forEach(function (arg_opt) {
+                str1 += '|' + arg_opt.k + '|' + arg_opt.n + '|' + arg_opt.t + '|' + (arg_opt.yn ? '是' : '否') + '|' + (arg_opt.desc || '') + "|\n";
+            });
+
+            var str2 = '\n' +
+                'h2. 返回结果: \n' +
+                '\n' +
+                '* 成功返回，__raw为原始数据，在某些情况下会有出现，不使用的情况下无需关注，未在文档中出现的字段也无需关注\n' +
+                '<pre>\n' +
+                JSON.stringify({status: 200, retcode: 'ok', retmsg: 'ok', data: setting.data}, null, 4) +
+                '</pre>\n' +
+                '* 失败返回 :\n' +
+                '<pre>\n' +
+                '<code class="ruby">\n' +
+                '{ \n' +
+                '    "status":"返回状态码",\n' +
+                '    "retcode": "返回业务处理结果",\n' +
+                '    "retmsg": "返回状态描述" \n' +
+                '}\n' +
+                '</code>\n' +
+                '</pre>\n' +
+                '\n';
+
+            var str_res_desc = '* 返回说明: \n' +
+                '|参数名|参数含义|类型|是否必返|备注|\n';
+            (setting.return_doc || []).forEach(function (arg_opt) {
+                str_res_desc += '|' + arg_opt.k + '|' + arg_opt.n + '|' + arg_opt.t + '|' + (arg_opt.yn ? '是' : '否') + '|' + (arg_opt.desc || '') + "|\n";
+            });
+            str2 += str_res_desc;
+            str2 += '\n\n h2. 业务逻辑';
+            var str4 = str1 + "\n\n\n" + str2;
+            docs2.addNodes([new Emt('h1').setPros({textContent: setting.title}), new Emt('textarea').setPros({
+                value: str4,
+                rows: (str4.split("\n")).length
+            })]);
+            //   docs.textContent += "\n\n\n----------------------------------------\n\n" + str1 + "\n\n\n" + str2;
+            console.log('[[' + setting.title + '+' | '+' + setting.title + ']]' + setting.api);
+            var str3 = '[[' + setting.title.toString() + '|' + setting.title.toString() + ']]' + setting.api.toString();
+
+
+            links.push(str3);
+
+        });
+        console.log(links);
+        docs.textContent += links.join("\n");
+
+    </script>
+</body>
+</html>

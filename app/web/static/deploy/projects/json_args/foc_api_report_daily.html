@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="/static/file/js/kl-hammer-json.js" charset="UTF-8"></script>
+    <title>小视频-短视频推送渠道库存余量日报 {ymd}</title>
+    <style>
+        #text {
+            width: 90%;
+            min-height: 600px;
+        }
+    </style>
+    <link href="/static/file/css/kl-hammer-json.css" media="all" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div>
+    <div id="boxer">
+        <a href="/static/deploy/projects/json_args/index.html" target="_blank"><h1>json参数调试</h1></a>
+    </div>
+    <div id="dev_opts">
+        <div id="dev_opts_error">
+
+        </div>
+    </div>
+
+</div>
+<script></script>
+<script>
+
+    var box = new Emt('textarea').setPros({id: 'text'});
+    kl.id('boxer').appendChild(box);
+    var json_pre = new Emt('div');
+    kl.id('boxer').appendChild(json_pre);
+    t = {
+        "title": "小视频-短视频推送渠道库存余量日报 {ymd}",
+        "sub_title": "短视频推送渠道库存余量日报 ",
+        "db_range": 3,
+        "his_range": 3,
+        "no_channels": false,
+        "init_items": {"db_push": 3, "db_left": 1, "db_increase": 3, "his_push": 3},
+        "row_vars": {
+            "db_incr_3days": [["db_increase_1", "+", "db_increase_2"], "+", "db_increase_3"],
+            "avg_incr": [["db_incr_3days", "/", {"val": 3}], "floor"],
+            "his_push_3days": [["his_push_1", "+", "his_push_2"], "+", "his_push_3"],
+            "his_avg_push": ["his_push_3days", "/", {"val": 3}],
+            "avg_push": [["conf_push", ">", {"val": 0}], "if_else", "conf_push", "his_avg_push"],
+            "avg_cost": [["avg_push", "-", "avg_incr"], "floor"],
+            "day_left": [["avg_cost", "<=", {"val": 0}], "if_else", {"val": -1}, [["db_left_1", "/", "avg_cost"], "floor"]]
+        },
+        "cols": {
+            "channel_name": "渠道",
+            "db_left_1": "库存剩余",
+            "conf_push": "配置推送数量",
+            "avg_push": "每日推送量",
+            "avg_cost": "每日消耗库存",
+            "day_left": {"text": "剩余天数", "val": "day_left", "red": ["day_left", "<", {"val": 15}]},
+            "avg_incr": "每日新增量"
+        }
+    };
+    t = {
+        "title": "小视频-短视频推送渠道库存余量日报 {ymd}",
+        "sub_title": "短视频推送渠道库存余量日报 ",
+        "db_range": 3,
+        "his_range": 3,
+        "no_channels": false,
+        "init_items": {"db_push": 3, "db_left": 1, "db_increase": 3, "his_push": 3},
+        "row_vars": {
+            "db_incr_3days": [["db_increase_1", "+", "db_increase_2"], "+", "db_increase_3"],
+            "avg_incr": [["db_incr_3days", "/", {"val": 3}], "floor"],
+            "his_push_3days": [["his_push_1", "+", "his_push_2"], "+", "his_push_3"],
+            "his_avg_push": ["his_push_3days", "/", {"val": 3}],
+            "avg_push": [["conf_push", ">", {"val": 0}], "if_else", "conf_push", "his_avg_push"],
+            "avg_cost": [["avg_push", "-", "avg_incr"], "floor"],
+            "day_left": [["avg_cost", "<=", {"val": 0}], "if_else", {"val": -1}, [["db_left_1", "/", "avg_cost"], "floor"]]
+        },
+        "cols": {
+            "channel_name": "渠道",
+            "db_left_1": "库存剩余",
+            "conf_push": "配置推送数量",
+            "avg_push": "每日推送量",
+            "avg_cost": "每日消耗库存",
+            "day_left": {"text": "剩余天数", "val": "day_left", "red": ["day_left", "<", {"val": 15}]},
+            "avg_incr": "每日新增量"
+        }
+    };
+    t = {
+        "title": "小视频-短视频推送渠道库存余量日报 {ymd}",
+        "sub_title": "短视频推送渠道库存余量日报 ",
+        "db_range": 3,
+        "his_range": 3,
+        "statis_range": 3,
+        "no_channels": false,
+        "init_items": {"db_push": 1, "db_left": 1, "db_increase": 1, "his_push": 1,"statis_push":1},
+        "row_vars": {
+
+        },
+        "cols": {
+            "channel_name": "渠道",
+            "db_left_1": "库存剩余",
+            "db_push_1": "db推送数量",
+            "his_push": "redis推送量",
+            "statis_push": "statis推送量",
+            "db_increase_1": "db新增量"
+        }
+    };
+    json_pre.innerHTML = '';
+    json_pre.appendChild(view_json(t));
+    var json = JSON.stringify(t);
+    var prod_params_file = '/home/nginx/cron_params/foc_api_report_daily_push_left_short_video.json';
+    var prod_prefix = 'cd /usr/website_server_alpha/fcgapi.funshion.com/v1/script/; /usr/local/php5.3.11/bin/php  foc_api_report.php -api fue90xh,fo5snv6,fw7zj6k,ftob83x,f8xeo2d,f6p1rcq  -mail pdgs-mobile@fun.tv,fmpg@fun.tv,sixp@fun.tv,xukai@fun.tv,limq@fun.tv,daily@fun.tv,jiaoqian@fun.tv,sunmf@fun.tv,dongxq@fun.tv,zhangxue@fun.tv,qdyyz@fun.tv,shenxin@fun.tv,anst@fun.tv -debug 0 -echolog 0 -opts ';
+    var pro_prefix_debug = 'cd /usr/website_server_alpha/fcgapi.funshion.com/v1/script/; /usr/local/php5.3.11/bin/php  foc_api_report_debug.php -api fue90xh,fo5snv6,fw7zj6k,ftob83x,f8xeo2d,f6p1rcq  -mail yangjl02@fun.tv -debug 1 -echolog 1 -opts';
+
+    var str1 = "\nphp /data/code/poseidon_server/psms.funshion.com/v1/script/send_counter_debug.php '" + json + "'\n";
+
+    console.log(str1);
+    box.textContent = '';
+    box.textContent = box.textContent + "\nprod file style\n" + prod_prefix + prod_params_file + "\n";
+    box.textContent = box.textContent + "\nprod line style\n" + prod_prefix + " '" + json + "'\n";
+
+    box.textContent = box.textContent + "\nprod file style\n" + pro_prefix_debug + prod_params_file + "\n";
+    box.textContent = box.textContent + "\nprod line style\n" + pro_prefix_debug + " '" + json + "'\n";
+
+    box.textContent = box.textContent + "\n json \n" + JSON.stringify(t, null, 4);
+
+
+
+    function ajax(opts) {
+        var request = new XMLHttpRequest();
+        request.addEventListener("load", function () {
+            if (request.status == 200) {
+                var result = opts.type == 'json' ? JSON.parse(request.responseText) : request.responseText;
+                opts.success(result);
+            } else {
+                if (opts.error) {
+                    opts.error(request.status + ':' + request.statusText);
+                }
+            }
+        }, false);
+        request.addEventListener("error", function () {
+            console.log('出错了');
+        }, false);
+        request.addEventListener("abort", function () {
+            console.log('中断了');
+        }, false);
+
+        //request.onreadystatechange = requestCallback;
+        request.open((opts.method || "POST"), opts.url, true);
+        if (opts.isAjax !== false) request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        //request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        if (opts.form) {
+            request.send(opts.form);
+        } else {
+            var fromData = new FormData();
+            for (var k in opts.data) {
+                fromData.append(k, opts.data[k]);
+            }
+            request.send(fromData);
+        }
+
+    }
+
+</script>
+</body>
+</html>

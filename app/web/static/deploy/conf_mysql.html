@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../file/js/kl-hammer-dom-data.js" charset="UTF-8"></script>
+
+    <title>DB配置</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+
+
+        #dev_opts > div {
+            display: block;
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            margin: 0.1em;
+        }
+
+        #dev_opts > div > div {
+            width: 100%;
+        }
+
+        #dev_opts > div > div > label {
+            display: block;
+            width: 600px;
+            /* height: 2em; */
+            /* margin-top: 0.5em; */
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            background: #EEE;
+            margin: 0.1em;
+            min-height: 1.5em;
+        }
+
+        #dev_opts > div > div > label:hover {
+            background: #DDD;
+        }
+
+        #dev_opts_db_conf > div > label > span {
+            display: block;
+            float: left;
+            width: 200px;
+        }
+
+        #dev_opts_db_conf > div > label > div {
+            display: block;
+            float: left;
+        }
+
+        #dev_opts_db_conf > div > label > div > label {
+            padding-left: 50px;
+        }
+
+        #dev_opts_db_conf > div > label > div > label > input[type="radio"] {
+            display: none;
+        }
+
+        #dev_opts_db_conf > div > label > div > label > span {
+            cursor: pointer;
+        }
+
+        #dev_opts_db_conf > div > label > div > label > input[type="radio"]:checked + span {
+            background: #000;
+            color: #FFF;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div><a href="tool.html" target="_blank"><h1>工具箱</h1></a></div>
+    <div><h1>数据库配置</h1></div>
+
+    <div id="dev_opts">
+        <div id="dev_opts_db_conf">
+
+        </div>
+
+    </div>
+
+</div>
+<script></script>
+<script>
+    domLoaded(function () {
+        var box = kl.id('dev_opts_db_conf');
+
+        ajax({
+            url: '/dev/v1/funtv/conf/db/opts',
+            data: {},
+            success: function (file_result) {
+                console.log(file_result);
+                if (file_result.status === 200 && file_result.code === 'ok') {
+                    ajax({
+                        url: '/dev/v1/funtv/conf/db/map',
+                        data: {},
+                        success: function (file_result) {
+                            console.log(file_result);
+                        },
+                        type: 'json'
+                    });
+                    var data_tmp = {};
+                    file_result.data.forEach(function (row) {
+                        data_tmp[row.key] = row.val;
+                    });
+                    var domData = new HammerDomData(data_tmp);
+                    var box = kl.id('dev_opts_db_conf');
+                    //var is_all = new Emt('input').setPros({type: 'checkbox'}).bindData({path: 'is_all', domData: domData});
+                    //box.appendChild(new Emt('label').setPros({textContent: '全部'}).addNodes([is_all]));
+                    var list = domData.createRadioList([["test", "test"], ["slave", "slave"], ["master", "master"]]);
+                    list.bindData({path: 'all_env', domData: domData});
+                    box.appendChild(new Emt('div').addNodes([
+                        new Emt('label').addNodes([
+                            new Emt('span').setPros({textContent: 'all'}),
+                            list,
+                            new Emt('em')
+                        ])
+                    ]));
+                    list.changeCall = function () {
+                        event.preventDefault(); //阻止冒泡
+                        domData.dataBinded.is_all=true;
+                        console.log(JSON.stringify(domData.dataBinded, null, 2));
+                        ajax({
+                            url: '/dev/v1/funtv/conf/db/set',
+                            data: {
+                                opts: JSON.stringify(domData.dataBinded),
+                            },
+                            success: function (file_result) {
+                                console.log(file_result);
+                                document.location.reload();
+                            },
+                            type: 'json'
+                        });
+
+                    };
+                    file_result.data.forEach(function (row) {
+                        var em = new Emt('em');
+                        box.appendChild(new Emt('div').addNodes([
+                            new Emt('label').addNodes([
+                                new Emt('span').setPros({textContent: row.key}),
+                                function () {
+
+                                    var list = domData.createRadioList([["test", "test"], ["slave", "slave"], ["master", "master"]], row.key);
+                                    list.bindData({path: row.key, domData: domData});
+                                    // var select = new Emt('select').bindData({
+                                    //     path: row.key,
+                                    //     domData: domData
+                                    // });
+                                    // select.add(new Option("test", "test"));
+                                    // select.add(new Option("slave", "slave"));
+                                    // select.value = row.val;
+
+                                    list.changeCall = function () {
+                                        event.preventDefault(); //阻止冒泡
+                                        console.log(JSON.stringify(domData.dataBinded, null, 2));
+                                        //return false;
+                                        ajax({
+                                            url: '/dev/v1/funtv/conf/db/set',
+                                            data: {
+                                                opts: JSON.stringify(domData.dataBinded),
+                                            },
+                                            success: function (file_result) {
+                                                console.log(file_result);
+                                                if (file_result.status === 200 && file_result.code === 'ok') {
+                                                    // alert('ok');
+                                                    em.textContent = '【ok' + '】' + ((new Date()).toLocaleTimeString()) + '';
+                                                } else {
+                                                    // alert(file_result.msg);
+                                                    em.textContent = '【' + file_result.msg + '】' + ((new Date()).toLocaleTimeString()) + '';
+
+                                                }
+                                            },
+                                            type: 'json'
+                                        });
+
+                                    };
+                                    return list;
+                                }(),
+                                em
+                            ])
+                        ]))
+
+                    });
+
+
+                } else {
+                    alert(file_result.msg);
+                }
+            },
+            type: 'json'
+        });
+
+        //cat /home/kinglone/poseidon_server_mysql_conf_files |xargs -I F ln -s /data/code/debug/poseidon.conf_mysql F
+        // cat /home/kinglone/poseidon_server_mysql_conf_files |xargs -I F rm -f F
+
+
+    })
+
+</script>
+</body>
+</html>

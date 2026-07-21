@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-dom-data2.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-json2.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-logic-nodes.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-api-param.js" charset="UTF-8"></script>
+    <script src="../../file/js/kl-hammer-dialog.js" charset="UTF-8"></script>
+    <script src="../../file/js/string.js" charset="UTF-8"></script>
+    <script src="../../file/js/md5.js" charset="UTF-8"></script>
+    <script src="../../file/js/html2canvas.js" charset="UTF-8"></script>
+
+    <title>API REQUEST</title>
+    <link href="../../file/css/kl-hammer-json2.css" rel="stylesheet">
+    <link href="../../file/css/kl-hammer-logic-nodes.css" rel="stylesheet">
+    <link href="../../file/css/kl-hammer-api-param.css" rel="stylesheet">
+    <link href="../../file/css/kl-hammer-dialog.css" rel="stylesheet">
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+
+
+        #dev_opts > div {
+            display: block;
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            margin: 0.1em;
+        }
+
+        #dev_opts > div > div {
+            width: 100%;
+        }
+
+        #dev_opts > div > div > label {
+            display: block;
+            width: 400px;
+            /* height: 2em; */
+            /* margin-top: 0.5em; */
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            background: #EEE;
+            margin: 0.1em;
+        }
+
+        #dev_opts_mysql_env {
+            margin-top: 50px;
+        }
+
+        #dev_opts_mysql_env > div {
+            display: block;
+            float: left;
+            padding-top: 20px;
+        }
+
+        #dev_opts_mysql_env > div > * {
+            display: block;
+            float: left;
+        }
+
+        #dev_opts_mysql_env > div > strong {
+            width: 100px;
+        }
+
+        #dev_opts_mysql_env > div > em {
+            width: 500px;
+        }
+
+        #dev_opts_mysql_env > div > span {
+            width: 190px;
+        }
+
+        .collapse {
+
+        }
+
+        .json_lines {
+            width: 50px;
+            display: block;
+            float: left;
+        }
+
+        .json_lines > div {
+            text-align: right;
+        }
+
+        .json_root {
+            width: 80%;
+            display: block;
+            float: left;
+            color: #55A;
+        }
+
+        .json_root > * {
+            width: 100%;
+            display: inline;
+            float: left;
+        }
+
+        .json_collapse {
+            display: none;
+        }
+
+        .json_extend_flag > .json_expand_label {
+            display: inline;
+        }
+
+        .json_expand_label {
+            display: none;
+        }
+
+        .json_extend_flag > .json_collapse_label {
+            display: none;
+        }
+
+        .json_root:hover {
+            background: #EEE;
+        }
+
+        .json_extend_btn {
+            cursor: pointer;
+            min-width: 10px;
+            display: inline-block;
+        }
+
+        .json_root:hover .json_extend_btn {
+            background: #666;
+        }
+
+        .trace_block {
+            border-bottom: 1px solid #000;
+            overflow-y: auto;
+        }
+
+        .pre_code_view > pre {
+            -background: #EEE;
+            -color: #666;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .pre_code_view {
+            -background: #EEE;
+            -color: #666;
+            color: #9876aa;
+            background: #232525;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .trace_title {
+            display: inline;
+        }
+
+        .trace_toggle {
+            margin-left: 20px;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #cmd_selector, #cmds {
+            width: 100%;
+        }
+
+        #cmds > * {
+            width: 100%;
+        }
+
+        option {
+            display: block;
+            width: 100%;
+        }
+
+        .row {
+            float: left;
+            width: 100%;
+        }
+
+        .input_area {
+
+        }
+
+        .input_area .input_url {
+            display: block;
+            float: left;
+            width: 100%;
+            height: 30px;
+        }
+
+        .adv_opt {
+            display: block;
+            float: left;
+            padding: 2px;
+            margin: 5px;
+            border: 1px solid #DDD;
+            margin-left: 10px;
+        }
+
+        .adv_param_opts_div {
+            width: 100%;
+            float: left;
+        }
+
+        .adv_opt_json {
+            width: 100%;
+            float: left;
+        }
+
+        .adv_opt_json textarea {
+            min-width: 600px;
+            min-height: 150px;
+        }
+
+        .dump_string {
+            color: #55C;
+            background: #DDC;
+        }
+
+        .code_notice {
+            background: #3b514d;
+        }
+
+        .notice {
+            background: #3b514d;
+            color: #fff228;
+        }
+
+        .ifr_for_request {
+            width: 100%;
+            height: 900px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div>
+        <a href="../console.html" target="_blank"><h1>返回</h1></a>
+        <h1>GET 请求</h1>
+        <p>
+        <div id="tmp">
+
+        </div>
+
+        <button id="btn_cmd">执行</button>
+        </p>
+
+    </div>
+    <div id="dev_opts">
+        <div id="dev_opts_error">
+
+        </div>
+
+    </div>
+
+</div>
+<script></script>
+<script>
+    var doc_title = document.title;
+    var doc_href = document.location.href;
+    var box = new Emt('div');
+    box.setStyle({width: '100%', height: '100%', minHeight: '600px', minWidth: '600px'});
+    var blocks = [];
+
+
+    /********************************************************************************************************************************************************
+     *
+     * ____ ____ _  _ ___  ____ ____     ___  ____ ___  _  _ ____     ___  _    ____ ____ _  _     _  _  _ ____ ____
+     * |__/ |___ |\ | |  \ |___ |__/     |  \ |___ |__) |  | | __     |__) |    |    |  | |_/      |  |\ | |___ |  |
+     * |  \ |___ | \| |__/ |___ |  \     |__/ |___ |__) |_/| |__]     |__) |___ |___ |__| | \_     |  | \| |    |__|
+     *
+     * 渲染debug info block,信息主要来自于目标页的message
+     *
+     *******************************************************************************************************************************************************/
+    function new_message(json) {
+        //cli.log(json);
+        try {
+            let block = render(json);
+            blocks.push(block);
+            box.addNodes([block]);
+        } catch (e) {
+
+        }
+    }
+
+    function all_code_to_pic() {
+        var len = blocks.length;
+        blocks.forEach(function (block, index) {
+            console.log(index, len, block);
+            block.code_to_pic();
+        })
+    }
+
+    function render(input) {
+        var show_div = new Emt('div').setPros({className: 'trace_block'});
+        var pre_t = new Emt('pre').setPros({className: 'trace_title'});
+        var div_code = new Emt('pre').setPros({className: 'pre_code_view'});
+        var pre_code = new Emt('pre').setPros({className: 'pre_code_view'});
+        var btn1 = new Emt('button').setPros({textContent: '收起/展开', className: 'trace_toggle', is_render: false, div_dump_string: false});
+
+        var label_p = new Emt('p').addNodes([pre_t, btn1]);
+        show_div.addNodes([
+            label_p,
+            div_code
+        ]);
+
+        pre_t.textContent = input.data.line;
+        var the_call_line = parseInt(input.data.code.length / 2);
+        div_code.addNodes([
+            new Emt('pre').setPros({className: 'pre_code_view', textContent: input.data.code.slice(0, the_call_line).join("\n")}),
+            new Emt('pre').setPros({className: 'pre_code_view code_notice', textContent: input.data.code[the_call_line]}),
+            new Emt('pre').setPros({className: 'pre_code_view', textContent: input.data.code.slice(the_call_line + 1).join("\n")}),
+        ]);
+
+        show_div.code_to_pic = function () {
+            html2canvas(div_code).then(function (canvas) {
+                div_code.innerHTML = '';   //移除页面上的该元素
+                div_code.addNodes([canvas]);    //像页面中添加转为canvas之后的元素
+            })
+        };
+
+
+        console.log(input.data.code, the_call_line, pre_code, input.data.code.slice(0, the_call_line), input.data.code.slice(the_call_line + 1));
+        // pre_var.textContent = JSON.stringify(input.data.args, null, 2);
+        //cli.log('---->view_json');
+
+        console.log(input.data.args);
+        if (input.data.title.length === 0) {
+            if (input.data.args.length === 1 && (typeof input.data.args[0].val === 'string')) {
+                btn1.div_dump = new Emt('pre').setPros({textContent: input.data.args[0].val, className: 'dump_string notice'});
+                btn1.div_dump.classList.remove('hide');
+                show_div.addNodes([btn1.div_dump]);
+                btn1.is_render = true;
+            }
+        } else {
+            btn1.div_dump_string = new Emt('pre').setPros({textContent: '*' + input.data.title, className: 'dump_string notice'});
+            btn1.div_dump_string.classList.remove('hide');
+            show_div.addNodes([btn1.div_dump_string]);
+        }
+
+
+        btn1.addEventListener('click', function () {
+            if (btn1.div_dump_string !== false) {
+                btn1.div_dump_string.classList.toggle('hide');
+            }
+            if (btn1.is_render === false) {
+                btn1.div_dump = view_json(input.data.args);
+                show_div.addNodes([btn1.div_dump]);
+                btn1.is_render = true;
+            } else {
+                btn1.div_dump.classList.toggle('hide');
+            }
+        }, false);
+        if (input.data.unfold) {
+            btn1.click();
+        }
+
+        if (input.data.traces && input.data.traces.length > 0) {
+            var btn2 = new Emt('button').setPros({textContent: 'traces', className: 'trace_toggle', is_render: false});
+            label_p.addNodes([btn2]);
+            //div_trace.classList.add('hide');
+            btn2.addEventListener('click', function () {
+                if (btn2.is_render === false) {
+                    btn2.div_trace = new Emt('div').setPros({className: 'row'}).addNodes([
+                        new Emt('pre').setPros({textContent: 'traces:'}),
+                        new Emt('div').addNodes([view_json(input.data.traces)])
+                    ]);
+                    show_div.addNodes([btn2.div_trace]);
+                    btn2.is_render = true;
+                } else {
+                    btn2.div_trace.classList.toggle('hide');
+                }
+            }, false);
+
+        }
+        //cli.log('render', show_div);
+        //  show_div.textContent = input.data.join('');
+        //cli.log(show_div);
+        return show_div;
+    }
+
+
+    var splitUrl = function (url) {
+
+        let ar = [];
+        if (url.indexOf('http:') !== -1) {
+            // 有http  没有?
+            if (url.indexOf('?') === -1) {
+                ar = url.replace(/^http:\/\/(\w+)\.\w+\.com\/(.*)/g, "$1#####$2").split('#####');
+                if (ar.length !== 2) {
+                    throw  new Error('url 有问题  有http  没有?');
+                }
+                ar[2] = '';
+            } else {
+                // 有http  有?
+                ar = url.replace(/^http:\/\/(\w+)\.\w+\.com\/(.*)\?(.*)/g, "$1#####$2#####$3").split('#####');
+                if (ar.length !== 3) {
+                    throw  new Error('url 有问题  有http  有?');
+                }
+            }
+        } else {
+            //没有http  没有?
+            if (url.indexOf('?') === -1) {
+                ar = url.replace(/^(\w+)\.\w+\.com\/(.*)/g, "$1#####$2").split('#####');
+                if (ar.length !== 2) {
+                    throw  new Error('url 有问题  没有http  没有?');
+                }
+                ar[2] = '';
+            } else {
+                //没有http  有?
+                ar = url.replace(/^(\w+)\.\w+\.com\/(.*)\?(.*)/g, "$1#####$2#####$3").split('#####');
+                if (ar.length !== 3) {
+                    throw  new Error('url 有问题  没有http  有?');
+                }
+            }
+        }
+
+
+        let prefix = ar[0];
+        let version = parseInt(ar[1].replace(/^v(\d+).*?$/g, "$1"));
+        version = isNaN(version) ? 0 : version;
+        let api_name = ar[1];
+        let uri_ar = ar[2].split('&');
+        let params = [];
+        uri_ar.forEach(function (uri_part_str) {
+            if (uri_part_str.length > 0) {
+                let ar2 = uri_part_str.replace(/^(.*)=(.*)$/g, "$1#####$2").split('#####');
+                if (ar2.length !== 2) {
+                    throw  new Error('uri_part_str 有问题:' + uri_part_str);
+                }
+                params.push({k: ar2[0], v: ar2[1]});
+            }
+
+        });
+        console.log(prefix, version, api_name, params);
+        return {
+            path: url.split('?')[0],
+            prefix: prefix,
+            version: version,
+            api_name: api_name,
+            params: params
+        };
+    };
+
+
+    var adv_param_opts = [
+        {key: 'adv_fcgi_url', title: '通讯接口', dt: 'string', default: document.location.origin, readonly: true},
+        {key: 'adv_debug', title: '#', dt: 'bool', default: true, readonly: true},
+        {key: 'adv_echo_pretty', title: '针对配套web打印', dt: 'bool', default: true, readonly: true},
+        {key: 'adv_push_data', title: '推送', dt: 'bool', default: false},
+        {key: 'adv_use_mock', title: '使用mock', dt: 'bool', default: false},
+        {key: 'adv_dump_trace', title: 'dump trace', dt: 'bool', default: true},
+        {key: 'adv_tabecho', title: 'tab echo ', dt: 'bool', default: true, readonly: true},
+        {key: 'adv_env_flag', title: 'env flag', dt: 'string', default: 'test'},
+        {key: 'adv_runner_debug', title: '入口是否debug', dt: 'bool', default: true},
+        {key: 'adv_reg_shutdown', title: '兜底', dt: 'bool', default: true},
+        {key: 'ca', title: 'ca', dt: 'string', default: 'funshionappbest'},
+        {key: 'adv_runner_debug_keywords_json', title: '逻辑debug关键词', dt: 'json', default: '{}', eleName: 'debug_json'},
+        {key: 'adv_dump_deny_jsonstr', title: '屏蔽dump', dt: 'json', default: '["log_notice","log_warning","log_fatal"]',},
+    ];
+
+
+    domLoaded(function () {
+
+        var msg_dialog = (new HammerDialog()).setAsMsg();
+
+        var div = new Emt('div').setPros({id: 'input_area', className: 'input_area'});
+        kl.id('tmp').appendChild(div);
+
+
+        var input_url = new Emt('input').setPros({id: 'input_url', type: 'text', className: 'input_url'});
+        var input_url_domain_list = new Emt('select').setPros({className: 'input_url_domain_list'});
+        var input_api_list = new Emt('select').setPros({className: 'input_api_list'});
+        var input_url_hist_list = new Emt('select').setPros({className: 'input_url_hist_list'});
+
+
+        var request_title = new Emt('input').setPros({id: 'request_title', type: 'text', className: 'request_title'});
+        var request_brief = new Emt('input').setPros({id: 'request_brief', type: 'text', className: 'request_brief'});
+        var input_url_requset_type = new Emt('select').setPros({className: 'input_url_requset_type'});
+        input_url_requset_type.appendChild(new Option('GET', 'get'));
+        input_url_requset_type.appendChild(new Option('POST', 'post'));
+
+        var input_url_his_desc = new Emt('select').setPros({className: 'input_url_his_desc'});
+        input_url_his_desc.appendChild(new Option('id', 'id'));
+        input_url_his_desc.appendChild(new Option('最后请求', 'update_at'));
+        input_url_his_desc.appendChild(new Option('api_name', 'api_name'));
+        input_url_his_desc.appendChild(new Option('次数', 'times'));
+
+        var input_record_url_requset = new Emt('input').setPros({type: 'checkbox', checked: true});
+        var input_url_div = new Emt('div').setPros({className: 'input_url_div'});
+        var api_params_div = new Emt('div').setPros({className: 'api_params_div'});
+        var adv_param_opts_div = new Emt('div').setPros({className: 'adv_param_opts_div'}).addNodes([new Emt('h3').setPros({textContent: 'adv_opt 参数列表，控制debug'})]);
+        var adv_logic_div = new Emt('div').setPros({className: 'adv_logic_div'}).addNodes([new Emt('h3').setPros({textContent: 'adv_opt名下的逻辑控制'})]);
+
+        var api_params_form = new Emt('form').setPros({target: 'ifr_for_request'}).setAttrs({target: 'ifr_for_request'});
+        div.addNodes([
+            input_url_div.addNodes([
+                new Emt('div').setPros({className: 'input_url_div'}).addNodes([
+                    new Emt('label').setPros({className: 'adv_opt', textContent: '请求类型:'}).addNodes([
+                        input_url_requset_type
+                    ]),
+                    new Emt('label').setPros({className: 'adv_opt', textContent: '排序:'}).addNodes([
+                        input_url_his_desc
+                    ]),
+                    new Emt('label').setPros({className: 'adv_opt'}).addNodes([
+                        input_record_url_requset,
+                        new Emt('span').setPros({textContent: '记录请求'})
+                    ]),
+                    new Emt('label').setPros({className: 'adv_opt', textContent: 'title:'}).addNodes([
+                        request_title
+                    ]),
+                    new Emt('label').setPros({className: 'adv_opt', textContent: 'desc:'}).addNodes([
+                        request_brief,
+                    ]),
+                    input_url,
+                ]),
+                input_url_domain_list,
+                input_api_list,
+                input_url_hist_list
+            ]),
+            api_params_form.addNodes([api_params_div]),
+            adv_param_opts_div,
+            adv_logic_div
+        ]);
+
+        input_url.value = 'http://papi.kl_funtv.com/cp/syncmv?cp=fy3ju2l&mtype=video&access_token=ZnkzanUybCwxNjA4Nzc3MTE5LDcxMzI2NGI1MDlhOTBiMTg1MmY5MTM3MDAxZjVlODlj&page_size=40&page_no=1&id=13590359&page=40&szie=1&ca=funshionappbest';
+        input_url.value = 'http://papi.kl_funtv.com/cp/syncmvdebug?access_token=ZjZ5N3JwaiwxNjA5MjY3NTExLDE4MWIzZDllM2Y1ZmQzZDI4NDM2NDljYTRjYTdiZTE0&cp=f6y7rpj&mtype=media&id=13722';
+
+        loadapis(input_url_domain_list, input_api_list);
+
+        var advSetting = {inputs: [], debug_json: {}};//adv_参数列表
+        var currcentLogicInfo = {};  //逻辑数据
+        var logicRoot = new HammerLogicRoot();
+        var urlInfo = splitUrl(input_url.value);
+
+        var apiParamsSetting = new ApiParamsControl();
+
+        input_url.addEventListener('change', function () {
+            urlInfo = splitUrl(input_url.value);
+            if (input_url_requset_type.value === 'get') {
+                apiParamsSetting.reload();
+            }
+            input_url_hist_list.reload();
+            logicRoot.reload();
+        });
+
+
+        api_params_div.addNodes([apiParamsSetting.dom]);
+        apiParamsSetting.afterChangeOut = function () {
+            console.log(apiParamsSetting.vals);
+            //input_url.value = urlInfo.path + '?' + apiParamsSetting.getUrlString();
+        };
+
+        apiParamsSetting.reload = function () {
+            apiParamsSetting.clearAll();
+            urlInfo = splitUrl(input_url.value);
+            var url_params = [];
+            urlInfo.params.forEach(function (opt) {
+                url_params.push({k: opt.k, v: opt.v, fun: '', vals: [], brief: ''});
+            });
+
+            adv_param_opts.forEach(function (opt) {
+                url_params.push({k: opt.key, v: opt.default, fun: '', vals: [], brief: opt.title});
+            });
+            console.log(url_params);
+
+            apiParamsSetting.loadParamList(url_params);
+        };
+        apiParamsSetting.reload();
+
+
+        input_url_hist_list.addEventListener('change', function () {
+            selectHisUrl();
+        });
+        input_url_hist_list.reload = function () {
+            reloadHis(urlInfo.prefix, urlInfo.version, urlInfo.api_name);
+        };
+        input_url_hist_list.reload();
+
+        input_url_his_desc.addEventListener('change', function () {
+            input_url_hist_list.reload();
+        });
+        /**
+         *
+         * sysadv 参数
+         *
+         */
+        adv_param_opts.forEach(function (opt_conf) {
+            if (opt_conf.dt === 'bool') {
+                var input_tmp = new Emt('input').setPros({type: 'checkbox', checked: opt_conf.default, dt: opt_conf.dt, key: opt_conf.key});
+            } else if (opt_conf.dt === 'json') {
+                var md5_key = hex_md5(document.location.origin + ':adv_opt:' + opt_conf.key);
+                var input_tmp = new Emt('textarea').setPros({value: opt_conf.default, dt: opt_conf.dt, key: opt_conf.key});
+            } else {
+                var input_tmp = new Emt('input').setPros({type: 'text', value: opt_conf.default, dt: opt_conf.dt, key: opt_conf.key});
+            }
+            if (opt_conf.eleName) {
+                advSetting[opt_conf.eleName] = input_tmp;
+            }
+            advSetting.inputs.push(input_tmp);
+            adv_param_opts_div.addNodes([
+                function (label, input) {
+                    if (input.dt === 'json') {
+                        return new Emt('div').setPros({className: 'adv_opt_json'}).addNodes([label])
+                    } else {
+                        return label;
+                    }
+                }(
+                    new Emt('label').setPros({className: 'adv_opt', textContent: opt_conf.title}).addNodes([
+                        input_tmp
+                    ]),
+                    input_tmp
+                )
+            ])
+        });
+
+
+        logicRoot.setData({"name": "root", "desc": "根节点，必须要有", "debug": true, "type": "node", "val": "", "val_type": "", "nodes": []});
+        logicRoot.loadData();
+
+        var debug_json_kw = new Emt('input').setPros({list: 'debug_jsons'}).setAttrs({list: 'debug_jsons'});
+        var debug_json = new Emt('datalist').setPros({id: 'debug_jsons'});
+        var btn_save_json = new Emt('button').setPros({textContent: '保存修改条数数据'});
+        var btn_add_json = new Emt('button').setPros({textContent: '新建调试数据'});
+        var btn_flush_json = new Emt('button').setPros({textContent: 'flush json'});
+        //<option value="BMW111">
+        adv_logic_div.addNodes([
+            new Emt('div').addNodes([
+                debug_json_kw,
+                debug_json,
+                btn_add_json,
+                btn_save_json,
+                btn_flush_json
+            ]),
+            logicRoot.dom
+        ]);
+        debug_json.addNodes([
+            //new Emt('option').setPros({textConent: 'yyyyy'}).setAttrs({value: 'xxxx'})
+        ]);
+
+
+        var getDomData = function () {
+            var tmp_data = logicRoot.getData();
+            currcentLogicInfo.name = tmp_data.name;
+            currcentLogicInfo.brief = tmp_data.desc;
+
+            var php_data = logicRoot.getConvPhpData(tmp_data);
+            console.log(tmp_data, php_data);
+            advSetting.debug_json.value = JSON.stringify(php_data.root, null, 4);
+            advSetting.debug_json.scrollTop = 0; //防抖动
+            advSetting.debug_json.style.height = advSetting.debug_json.scrollHeight + 'px';
+
+            return tmp_data;
+        };
+
+        btn_add_json.addEventListener('click', function () {
+            var php_data_json = JSON.stringify(getDomData());
+            console.log(php_data_json, currcentLogicInfo);
+            ajax({
+                url: '/dev/v1/devtool/runner/args/keywords/add',
+                data: {
+                    prefix: urlInfo.prefix,
+                    version: urlInfo.version,
+                    api_name: urlInfo.api_name,
+                    args_json: php_data_json,
+                    title: currcentLogicInfo.name,
+                    brief: currcentLogicInfo.brief
+                },
+                success: function (list_data) {
+                    console.log(list_data);
+                    if (list_data.status === 200) {
+                        document.location.reload();
+                    } else {
+                        alert('毛病1');
+                    }
+                },
+                error: function (data) {
+
+                },
+                type: 'json'
+            });
+
+        });
+
+        btn_save_json.addEventListener('click', function () {
+            if (typeof currcentLogicInfo.id === 'undefined') {
+                alert('不能保存，没有目标Id');
+                return false;
+            }
+            var php_data_json = JSON.stringify(getDomData());
+            console.log(php_data_json, currcentLogicInfo);
+            ajax({
+                url: '/dev/v1/devtool/runner/args/keywords/save',
+                data: {
+                    prefix: urlInfo.prefix,
+                    version: urlInfo.version,
+                    api_name: urlInfo.api_name,
+                    args_json: php_data_json,
+                    title: currcentLogicInfo.name,
+                    brief: currcentLogicInfo.brief, logic_id: currcentLogicInfo.id
+                },
+                success: function (list_data) {
+                    console.log(list_data);
+                    if (list_data.status === 200) {
+
+                    } else {
+                        alert('毛病1');
+                    }
+                },
+                error: function (data) {
+
+                },
+                type: 'json'
+            });
+
+        });
+        btn_flush_json.addEventListener('click', function () {
+            console.log(logicRoot.getData());
+            getDomData();
+        });
+
+        console.log(logicRoot, logicRoot.dom, logicRoot.data, logicRoot.dom.dom, 'xxxx');
+        //div.addNodes([logicRoot.dom]);
+
+        logicRoot.reload = function () {
+            ajax({
+                url: '/dev/v1/devtool/runner/args/keywords/list',
+                data: {prefix: urlInfo.prefix, version: urlInfo.version, api_name: urlInfo.api_name,},
+                success: function (list_data) {
+                    console.log(list_data);
+                    if (list_data.status === 200) {
+                        debug_json.innerHTML = '';
+                        var debug_jsons_list = list_data.data;
+                        list_data.data.forEach(function (ele, index) {
+                            debug_json.addNodes([
+                                new Emt('option').setAttrs({value: index + '####' + ele.title + ele.brief})
+                            ]);
+                        });
+                        debug_json_kw.addEventListener('change', function () {
+                            var index = debug_json_kw.value.replace(/^(\d+).*/g, "$1");
+                            currcentLogicInfo = debug_jsons_list[index];
+                            console.log('对应索引', index);
+                            logicRoot.dom.remove();
+                            logicRoot.setData(debug_jsons_list[index].args_json);
+                            logicRoot.loadData();
+                            console.log(logicRoot, logicRoot.dom, logicRoot.data, logicRoot.dom.dom, 'xxxx');
+                            adv_logic_div.addNodes([logicRoot.dom]);
+                            getDomData();
+                        });
+                    } else {
+                        alert('毛病1');
+                    }
+                },
+                error: function (data) {
+
+                },
+                type: 'json'
+            });
+        };
+        logicRoot.reload();
+
+
+        console.log(div, adv_param_opts_div);
+
+
+        var input_kw = new Emt('input').setPros({type: 'text'});
+        var btn_hide_all = new Emt('button').setPros({textContent: '隐藏'});
+        var btn_show_all = new Emt('button').setPros({textContent: '展示'});
+        kl.id('dev_opts').appendChild(input_kw);
+        kl.id('dev_opts').appendChild(btn_hide_all);
+        kl.id('dev_opts').appendChild(btn_show_all);
+        btn_hide_all.addEventListener('click', function () {
+            if (input_kw.value.length) {
+
+            } else {
+                blocks.forEach(function (block, index) {
+                    //block.classList.add('collapse');
+                    block.toggle('hide', 1);
+                });
+            }
+        }, false);
+
+        btn_show_all.addEventListener('click', function () {
+            if (input_kw.value.length) {
+
+            } else {
+                blocks.forEach(function (block, index) {
+                    block.classList.remove('collapse');
+                });
+            }
+        }, false);
+
+        kl.id('dev_opts').appendChild(box);
+
+
+        var ifr = new Emt('iframe').setPros({id: 'ifr_for_request', className: 'ifr_for_request', name: 'ifr_for_request'})
+        kl.id('dev_opts').appendChild(ifr);
+        window.ifr = ifr;
+        kl.id('btn_cmd').addEventListener('click', function () {
+            requestUrl();
+        });
+
+        window.addEventListener('message', function (e) {
+            console.log(e);
+            try {
+                // var msg_data=JSON.parse(e.data);
+                // cli.log(msg_data);
+                window.new_message(e.data);
+            } catch (e) {
+                console.log(e, e.message);
+            }
+        }, false);
+
+
+        function loadapis(input_url_domain_list, input_api_list) {
+            ajax({
+                url: '/dev/v1/devtool/runner/params/apis',
+                data: {},
+                success: function (api_list_data) {
+                    console.log(api_list_data);
+                    if (api_list_data.status === 200) {
+                        var domains = [];
+                        var domains_str = [];
+                        var obj_tmp = {};
+                        input_url_domain_list.innerHTML = '';
+                        input_url_domain_list.appendChild(new Option('#', '#'));
+                        api_list_data.data.forEach(function (ele, index) {
+                            if (domains_str.indexOf(ele.domain_prefix) === -1) {
+                                obj_tmp[ele.domain_prefix] = domains.length;
+                                domains.push({domain: ele.domain_prefix, infos: []});
+                                domains_str.push(ele.domain_prefix);
+                            }
+                            domains[obj_tmp[ele.domain_prefix]].infos.push(ele);
+                        });
+                        console.log(domains);
+                        domains.forEach(function (ele, index) {
+                            var option_tmp = new Option(ele.domain, ele.domain);
+                            option_tmp.info = ele;
+                            input_url_domain_list.appendChild(option_tmp);
+                        });
+                        input_url_domain_list.addEventListener('change', function () {
+                            input_api_list.innerHTML = '#';
+                            input_api_list.appendChild(new Option('#', '#'));
+                            input_url_domain_list.item(input_url_domain_list.selectedIndex).info.infos.forEach(function (api) {
+                                var str = (api.v ? ('v' + api.v) : '') + '/' + api.api_name;
+                                var option_tmp = new Option(str);
+                                option_tmp.info = api;
+                                input_api_list.appendChild(option_tmp);
+                            });
+                        });
+
+                        input_api_list.addEventListener('change', function () {
+                            var tmp_info = input_api_list.item(input_api_list.selectedIndex).info;
+                            console.log(tmp_info);
+                            reloadHis(tmp_info.domain_prefix, tmp_info.version, tmp_info.api_name);
+                        });
+
+                    } else {
+                        alert('毛病1');
+                    }
+                },
+                error: function (data) {
+
+                },
+                type: 'json'
+            });
+        }
+
+        function reloadHis(prefix, ver, api_name) {
+            ajax({
+                url: '/dev/v1/devtool/runner/params/his',
+                data: {prefix: prefix || '', ver: ver || '', api_name: api_name || '', order_by: input_url_his_desc.value},
+                success: function (list_data) {
+                    console.log(list_data);
+                    if (list_data.status === 200) {
+                        input_url_hist_list.innerHTML = '';
+                        input_url_hist_list.appendChild(new Option('#', '#'));
+                        list_data.data.forEach(function (ele, index) {
+                            var option_tmp = new Option(ele.id + '...' + ele.title + '/' + ele.domain_prefix + ':' + ele.version + ':' + ele.api_name, ele.id);
+                            option_tmp.info = ele;
+                            input_url_hist_list.appendChild(option_tmp);
+                        });
+                    } else {
+                        alert('毛病1');
+                    }
+                },
+                error: function (data) {
+
+                },
+                type: 'json'
+            });
+        };
+
+
+        function requestUrl() {
+            if (!input_record_url_requset.checked) {
+                //alert('注意历史没有保存');
+                msg_dialog.showMsg('注意历史没有保存', 500);
+            }
+            box.innerHTML = '';
+            var ifr_src = input_url.value;
+            //document.title = input_url.value;
+            //window.history.pushState(200, input_url.value, doc_href + '?api=' + input_url.value.urlencode());
+            setTimeout(function () {
+                // document.title = doc_title;
+                // window.history.pushState(200, doc_title, doc_href);
+                //window.history.pushState(200, doc_title, window.location.href);
+                //  window.history.back();
+            }, 2000);
+            var request_params = apiParamsSetting.getParamList();
+            console.log(request_params);
+            advSetting.inputs.forEach(function (adv_opt_input) {
+                if (adv_opt_input.dt === 'bool') {
+                    if (adv_opt_input.checked) {
+                        ifr_src += '&' + adv_opt_input.key + '=true';
+                        request_params.push({k: adv_opt_input.key, v: 'true'});
+                    }
+                } else if (adv_opt_input.dt === 'json') {
+                    try {
+                        var obj_tmp = JSON.parse(adv_opt_input.value);
+                        var str = JSON.stringify(obj_tmp);
+                        ifr_src += '&' + adv_opt_input.key + '=' + str.urlencode();
+                        request_params.push({k: adv_opt_input.key, v: str});
+                    } catch (e) {
+                        ifr_src += '&' + adv_opt_input.key + '={}';
+                        request_params.push({k: adv_opt_input.key, v: '{}'});
+                    }
+                } else {
+                    ifr_src += '&' + adv_opt_input.key + '=' + adv_opt_input.value;
+                    request_params.push({k: adv_opt_input.key, v: adv_opt_input.value});
+                }
+            });
+            //api_params_form.submit();
+            api_params_form.action = input_url.value;
+            api_params_form.method = input_url_requset_type.value;
+            api_params_form.submit();
+
+            if (input_record_url_requset.checked) {
+                apiParamsSetting.afterChangeInput();
+                var request_params = apiParamsSetting.getParamList();
+                var save_url = '/dev/v1/devtool/runner/params/add';
+                console.log('保存请求历史', save_url, request_params);
+                window.apiParamsSetting = apiParamsSetting;
+                ajax({
+                    url: save_url,
+                    data: {
+                        prefix: urlInfo.prefix,
+                        version: urlInfo.version,
+                        api_name: urlInfo.api_name,
+                        params_json: JSON.stringify(request_params),
+                        title: request_title.value,
+                        brief: request_brief.value
+                    },
+                    success: function (list_data) {
+                        console.log(list_data);
+                        if (list_data.status === 200) {
+                            //document.location.reload();
+                            console.log('保存请求历史 ok');
+                        } else {
+                            alert('保存请求历史的时候出现了问题');
+                        }
+                    },
+                    error: function (data) {
+                    },
+                    type: 'json'
+                });
+            }
+
+
+            //url_requset(input_url_requset_type.value, input_url.value, request_params, ifr);
+            //ifr.src = ifr_src;
+        };
+
+        function selectHisUrl() {
+            if (this.value === '#') {
+                return false;
+            }
+            var info = input_url_hist_list.item(input_url_hist_list.selectedIndex).info;
+            console.log(info);
+            document.title = doc_title + ':' + info.title;
+            apiParamsSetting.clearAll();
+            apiParamsSetting.loadParamList(info.args_json);
+            input_url.value = 'http://' + info.domain_prefix + '.kl_funtv.com/' + info.api_name;
+            request_title.value = info.title;
+            request_brief.value = info.brief;
+            urlInfo.prefix = info.domain_prefix;
+            urlInfo.version = info.version;
+            urlInfo.api_name = info.api_name;
+            console.log('ok');
+        }
+
+    });
+
+    var domains = [
+        {title: 'po', domains: {dev: 'po.funtv_kl.com', prod: 'po.funshion.com'}},
+        {title: 'psmart', domains: {dev: 'psmart.funtv_kl.com', prod: 'psmart.funshion.com'}},
+    ];
+
+
+</script>
+
+<script>
+
+    function url_requset(method, url) {
+        var formDom = kl.id('form_for_request');
+        formDom.action = url;
+        formDom.method = method;
+        formDom.innerHTML = '';
+        formDom.submit();
+        //if (opts.isAjax !== false) request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        //request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    }
+</script>
+</body>
+</html>

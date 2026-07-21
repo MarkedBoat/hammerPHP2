@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小米-华视网聚订单接收接口文档-待定2020-11-05</title>
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <style>
+        .div_projects {
+            width: 1020px;
+            margin: 0px auto;
+        }
+
+        #input, .tb_doc {
+            width: 100%;
+            float: left;
+            background: #000;
+        }
+
+        #div_input_json, #div_refund_json {
+            background: #FFF;
+        }
+
+        .row {
+            margin-top: 1px;
+            width: 100%;
+            background: #FFF;
+        }
+
+
+        .row > div {
+            background: #FFF;
+            height: 100%;
+        }
+
+        .row .key {
+            width: 150px;
+        }
+
+        .row .label {
+            width: 150px;
+        }
+
+        .row .dt {
+            width: 130px;
+        }
+
+        .row .need {
+            width: 100px;
+        }
+
+        .row .desc {
+            width: 400px;
+            overflow-y: auto;
+        }
+
+        td {
+            background: #FFF;
+            padding: 7px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        tr:nth-child(1) {
+            background: #DDD;
+            font-weight: 900;
+        }
+
+        tr:nth-child(1) > td {
+            background: #DDD;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div id="div_projects" class="div_projects">
+
+        <p>#</p>
+
+    </div>
+    <div class="div_projects">
+        <h1>3.签名及请求</h1>
+        <h2>3.1</h2>
+        <pre>
+            双方约定了密钥 secert_key
+            无论是同步通知接口都是两个参数 data和sign
+            data_list_json_string:为数据主题 json序列化后的字符串，即List<Order> 或者 List<RefundInfo> 的JSON字符串
+            sign:将data与 secert_key  连接成新的字符串后,取md5值可得，即md5(cp_id+req_time+secert_key+data_list_json_string)
+        </pre>
+       <!-- <h1>4.修正与待定</h1>
+        <pre>
+            修正:
+            1.退款接口 增加refund_time,refund_status,移除goods_type参数
+            待定：
+            1.会不会退款多次
+            2.接口名、域名
+        </pre>-->
+
+    </div>
+    <script></script>
+
+
+    <script>
+
+
+        var order_items = {
+            title: '订单上报',
+            params_list: [
+                {key: '字段', label: '字段名', dt: '类型', len: '长度', need: '必传', desc: '说明'},
+                {key: 'cp_id', label: '渠道id,cp_id', dt: 'String', len: 16, need: true, desc: '由funshion给定的渠道合作标识'},
+                {key: 'req_time', label: '请求时间', dt: 'Int', len: 10, need: true, desc: '当前时间戳，精度:秒'},
+                {key: 'order_list', label: '订单表', dt: 'List<Order>', len: 100, need: true, desc: '订单列表，数组，最多100个订单'},
+                {key: 'sign', label: '签名', dt: 'String', len: 255, need: true, desc: '参见签名算法'},
+            ],
+            ext_list: [
+                {
+                    title: 'Order',
+                    pkey: 'order_list',
+                    list: [
+                        {key: '字段', label: '字段名', dt: '类型', len: '长度', need: '必传', desc: '说明'},
+                        {key: 'cp_order_id', label: '渠道订单号', dt: 'String', len: 64, need: true, desc: '渠道的订单号,同一【订单号】信息只接收第一次的'},
+                        {key: 'goods_type', label: '商品类型', dt: 'String', len: 16, need: true, desc: '商品类型，vip：购买会员；tvod：购买单片；epvod购买单片下某个分集'},
+                        {key: 'goods_id', label: '商品ID', dt: 'String', len: 32, need: false, desc: '商品类型为tvod/epvod时必传，分别传对应的媒体id和分集id'},
+                        {key: 'cp_user_id', label: '渠道用户id', dt: 'String', len: 32, need: true, desc: '#'},
+                        {key: 'order_create_time', label: '订单创建时间', dt: 'Int', len: 10, need: true, desc: '时间戳，精度:秒'},
+                        {key: 'permit_start_time', label: '权益开始时间', dt: 'Int', len: 10, need: true, desc: '时间戳，精度:秒'},
+                        {key: 'permit_end_time', label: '权益结束时间', dt: 'Int', len: 10, need: true, desc: '时间戳，精度:秒'},
+                        {key: 'goods_price', label: '商品(会员)价格', dt: 'Int', len: 6, need: false, desc: '单位：分，货币:人民币'},
+                        {key: 'goods_name', label: '商品(会员)名称', dt: 'String', len: 32, need: false, desc: '商品名'},
+                        {key: 'order_sum', label: '订单金额', dt: 'Int', len: 6, need: true, desc: '单位：分，货币:人民币'}
+                    ]
+                }
+            ],
+            respone_list: [
+                {key: '字段', label: '字段名', dt: '类型', len: '长度', need: '是否必返', desc: '说明'},
+                {key: 'retcode', label: '响应码', dt: 'String', len: '', need: true, desc: '200:代表响应成功,不代表业务处理结果，其它值：未能正确响应'},
+                {key: 'retmsg', label: '响应信息', dt: 'String', len: '', need: true, desc: 'ok:代表响应成功，不代表业务处理结果，其它值：未能正常响应'},
+                //  {            key: 'data.status',            label: '处理结果',            dt: 'String',            len: '',            need: true,            desc: ['描述业务处理结果', 'order_accepted:订单已经接收', 'order_has_existed:订单已经存在,不会修改已经存在的订单信息', '其余值：业务处理失败']        },
+                {key: 'data.accept', label: '接收的订单号', dt: 'List<String>', len: '', need: true, desc: '数组元素为订单号'},
+                {key: 'data.repeat', label: '已经存在的订单号', dt: 'List<String>', len: '', need: true, desc: '数组元素为订单号，已经接收过的订单了，不再接收'},
+                {key: 'data.deny', label: '拒绝的订单号', dt: 'List<String>', len: '', need: true, desc: '数组元素为订单号,被认为信息缺失的订单，我方仍会入库这些参数'},
+            ],
+            eg: {
+                retcode: "200",
+                retmsg: "ok",
+                data: {
+                    accept: ['XiaoMiOrder123456_0', 'XiaoMiOrder123456_1'],
+                    repeat: ['XiaoMiOrder123456_2', 'XiaoMiOrder123456_3'],
+                    deny: ['XiaoMiOrder123456_4', 'XiaoMiOrder123456_5'],
+                }
+            }
+        };
+
+        var refund_items = {
+            title: '退款',
+            params_list: [
+                {key: '字段', label: '字段名', dt: '类型', len: '长度', need: '必传', desc: '说明'},
+                {key: 'cp_id', label: '渠道id,cp_id', dt: 'String', len: 16, need: true, desc: '由funshion给定的渠道合作标识'},
+                {key: 'req_time', label: '请求时间', dt: 'Int', len: 10, need: true, desc: '当前时间戳，精度:秒'},
+                {key: 'refund_list', label: '退款列表', dt: 'List<RefundInfo>', len: 100, need: true, desc: '退款列表，数组，最多100个'},
+                {key: 'sign', label: '签名', dt: 'String', len: 255, need: true, desc: '参见签名算法'},
+            ],
+            ext_list: [
+                {
+                    title: 'RefundInfo',
+                    pkey: 'refund_list',
+                    list: [
+                        {key: '字段', label: '字段名', dt: '类型', len: '长度', need: '必传', desc: '说明'},
+                        {key: 'cp_refund_no', label: '渠道退款操作流水号', dt: 'String', len: 32, need: true, desc: '渠道退款操作流水号，方便查询'},
+                        {key: 'cp_order_id', label: '渠道订单号', dt: 'String', len: 64, need: true, desc: '渠道的订单号，权益来源的原始订单号'},
+                        {key: 'refund_sum', label: '退款金额', dt: 'Int', len: 6, need: true, desc: '退款金额，单位：分'},
+                        {key: 'refund_time', label: '退款时间', dt: 'Int', len: 10, need: true, desc: '时间戳，精度:秒'},
+                        {key: 'refund_status', label: '退款状态', dt: 'String', len: 16, need: true, desc: 'success:退款成功;fail:退款失败;'},
+
+                    ]
+                }
+            ],
+            respone_list: [
+                {key: '字段', label: '字段名', dt: '类型', len: '长度', need: '是否必返', desc: '说明'},
+                {key: 'retcode', label: '响应码', dt: 'String', len: '', need: true, desc: '200:代表响应成功,不代表业务处理结果，其它值：未能正确响应'},
+                {key: 'retmsg', label: '响应信息', dt: 'String', len: '', need: true, desc: 'ok:代表响应成功，不代表业务处理结果，其它值：未能正常响应'},
+                //  {            key: 'data.status',            label: '处理结果',            dt: 'String',            len: '',            need: true,            desc: ['描述业务处理结果', 'order_not_exist:订单不存在,需要先把订单同步过来', 'refund_accepted:退款已经记录', 'order_had_refunded:退款订单已经记录过了，不会更改已有信息', '其余值：业务处理失败']        },
+                {key: 'data.not_exist', label: '不存在的订单', dt: 'List<String>', len: '', need: true, desc: '数组元素为订单号,订单并未同步过来，需要先同步订单'},
+                {key: 'data.accept', label: '接收的订单号', dt: 'List<String>', len: '', need: true, desc: '数组元素为订单号'},
+                {key: 'data.repeat', label: '已经存在的订单号', dt: 'List<String>', len: '', need: true, desc: '数组元素为订单号，已经接收过的订单了，不再接收'},
+                {key: 'data.deny', label: '拒绝的订单号', dt: 'List<String>', len: '', need: true, desc: '数组元素为订单号,被认为信息缺失的订单，我方仍会入库这些参数'},
+            ],
+            eg: {
+                retcode: "200",
+                retmsg: "ok",
+                data: {
+                    not_exist: ['XiaoMiOrder123456_6', 'XiaoMiOrder123456_7'],
+                    accept: ['XiaoMiOrder123456_0', 'XiaoMiOrder123456_1'],
+                    repeat: ['XiaoMiOrder123456_2', 'XiaoMiOrder123456_3'],
+                    deny: ['XiaoMiOrder123456_4', 'XiaoMiOrder123456_5'],
+                }
+            }
+        };
+        var items = [{title: '订单上报', opts: order_items}, {title: '订单退款', opts: refund_items}];
+        //退款状态，
+        domLoaded(function () {
+            var doc_table = function (rows) {
+                var tb = new Emt('table').setPros({className: 'tb_doc'});
+                rows.forEach(function (ele) {
+                    var tr = tb.insertRow();
+                    tr.className = 'row';
+                    var td_key = tr.insertCell();
+                    td_key.textContent = ele.key;
+                    td_key.className = 'key';
+
+                    var td_label = tr.insertCell();
+                    td_label.textContent = ele.label;
+                    td_label.className = 'label';
+
+                    var td_dt = tr.insertCell();
+                    td_dt.textContent = ele.dt + (parseInt(ele.len)>0 ? ('(' + ele.len + ')') : '');
+                    td_dt.className = 'dt';
+
+                    var td_need = tr.insertCell();
+                    td_need.textContent = ele.need === true ? '是' : (ele.need === false ? '否' : ele.need);
+                    td_need.className = 'need';
+
+                    var td_desc = tr.insertCell();
+                    td_desc.textContent = ele.desc;
+                    td_desc.className = 'desc';
+                });
+                console.log(tb);
+                return tb;
+            };
+            var doc_root = new Emt('div');
+            kl.id('div_projects').appendChild(doc_root);
+            items.forEach(function (type_item, type_index) {
+                type_index += 1;
+                type_index = type_index.toString();
+                doc_root.addNodes([new Emt('h1').setPros({textContent: type_index + '.' + type_item.title})]);
+                doc_root.addNodes([new Emt('h2').setPros({textContent: type_index + '.1 请求参数'})]);
+                doc_root.addNodes([new Emt('h3').setPros({textContent: type_index + '.1.1 请求参数列表'})]);
+                doc_root.addNodes([doc_table(type_item.opts.params_list)]);
+                type_item.opts.ext_list.forEach(function (ext_item, ext_index) {
+                    ext_index = type_index + '.1.' + (ext_index + 2).toString();
+                    doc_root.addNodes([new Emt('h3').setPros({textContent: ext_index + '<' + ext_item.title + '>说明'})]);
+                    console.log(ext_item);
+                    doc_root.addNodes([doc_table(ext_item.list)]);
+                });
+
+                var egstrs = [];
+                var eg_requset = {};
+                var sign_strs = ['cp_id', 'req_time', 'secert_key'];
+                type_item.opts.params_list.forEach(function (ele) {
+                    if (ele.key !== '字段') {
+                        eg_requset[ele.key] = ele.key.toUpperCase();
+                    }
+                });
+                type_item.opts.ext_list.forEach(function (ext_item) {
+                    if (sign_strs.indexOf(ext_item.pkey) === -1) {
+                        sign_strs.push(ext_item.pkey);
+                    }
+                    eg_requset[ext_item.pkey] = [];
+                    console.log(ext_item.pkey);
+                    var ext_obj = {};
+                    ext_item.list.forEach(function (ele) {
+                        if (ele.key !== '字段') {
+                            ext_obj[ele.key] = ele.key.toUpperCase();
+                        }
+                    });
+                    eg_requset[ext_item.pkey].push(ext_obj, ext_obj);
+                });
+                console.log(eg_requset);
+                //egstrs.push(type_item.opts.ext_list[0].title + "示例:");
+                //egstrs.push(type_item.opts.ext_list[0].title + "数据结构示例:");
+                //egstrs.push(JSON.stringify(eg_requset.ext_list, null, 4));
+                egstrs.push('数据主题:');
+                for (var key in eg_requset) {
+                    if ((typeof eg_requset[key] === 'object')) {
+                        egstrs.push(key + "示例");
+                        egstrs.push(JSON.stringify(eg_requset[key], null, 2));
+                    }
+                }
+                egstrs.push('请求示例:');
+                for (var key in eg_requset) {
+                    if ((typeof eg_requset[key] === 'object')) {
+                        egstrs.push(key + ':' + JSON.stringify(eg_requset[key]).substr(0, 120) + '……');
+                    } else {
+                        egstrs.push(key + ':' + eg_requset[key]);
+                    }
+                }
+                egstrs.push('#');
+                egstrs.push('签名获取方式:');
+                egstrs.push('md5(' + sign_strs.join('+') + ')');
+
+                doc_root.addNodes([
+                    new Emt('pre').setPros({
+                        className: 'eg_params',
+                        textContent: egstrs.join("\n")
+                    })
+                ]);
+
+                doc_root.addNodes([new Emt('h2').setPros({textContent: type_index + '.2 响应'})]);
+                doc_root.addNodes([new Emt('h3').setPros({textContent: type_index + '.2.1 响应示例'})]);
+                doc_root.addNodes([new Emt('pre').setPros({className: 'eg_respone', textContent: JSON.stringify(type_item.opts.eg, null, 4)})]);
+
+                doc_root.addNodes([new Emt('h3').setPros({textContent: type_index + '.2.2 响应说明'})]);
+                doc_root.addNodes([doc_table(type_item.opts.respone_list)]);
+            });
+
+        });
+
+    </script>
+</body>
+</html>

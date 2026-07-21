@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue DataGrid 从0到1</title>
+    <style>
+        /* -------------------- 全局重置 & 字体 -------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f7fb;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        #app {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* -------------------- 卡片容器 -------------------- */
+        .demo-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            padding: 28px 24px 32px;
+            transition: box-shadow 0.2s;
+        }
+        .demo-card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .demo-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0b1a33;
+            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+        }
+        .demo-sub {
+            color: #6b7a8f;
+            font-size: 15px;
+            margin-bottom: 24px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 14px;
+            background: #f8faff;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+        }
+        .demo-sub code {
+            background: #eef2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1e3a6f;
+        }
+
+        /* -------------------- 工具栏 (筛选 + 分页控制) -------------------- */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .filter-area {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+        .filter-area label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2a41;
+        }
+        .filter-area input,
+        .filter-area select {
+            padding: 8px 14px;
+            border: 1px solid #dce1ea;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #ffffff;
+            transition: 0.2s;
+            outline: none;
+            min-width: 160px;
+            color: #0b1a33;
+        }
+        .filter-area input:focus,
+        .filter-area select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .filter-area input::placeholder {
+            color: #aab3c5;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pagination-controls button {
+            padding: 6px 16px;
+            border: 1px solid #dce1ea;
+            background: white;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2a41;
+            cursor: pointer;
+            transition: 0.15s;
+            min-width: 44px;
+        }
+        .pagination-controls button:hover:not(:disabled) {
+            background: #f0f4fe;
+            border-color: #3b82f6;
+            color: #1a4c8a;
+        }
+        .pagination-controls button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination-controls button.active-page {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .pagination-controls .page-info {
+            font-size: 14px;
+            color: #4a5a72;
+            padding: 0 6px;
+        }
+        .pagination-controls select {
+            padding: 6px 10px;
+            border: 1px solid #dce1ea;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* -------------------- 表格容器 (响应式滚动) -------------------- */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid #e9edf4;
+            background: #ffffff;
+        }
+
+        /* -------------------- 表格核心样式 -------------------- */
+        .datagrid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 600px;
+        }
+
+        /* 表头 */
+        .datagrid thead tr {
+            background: #f8fafd;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .datagrid th {
+            padding: 14px 18px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f2a41;
+            white-space: nowrap;
+            position: relative;
+            user-select: none;
+            transition: background 0.1s;
+        }
+        .datagrid th.sortable {
+            cursor: pointer;
+        }
+        .datagrid th.sortable:hover {
+            background: #eef3fc;
+        }
+        .datagrid th .th-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .datagrid th .sort-icon {
+            font-size: 16px;
+            color: #8a9bb0;
+            transition: 0.2s;
+            display: inline-block;
+            line-height: 1;
+        }
+        .datagrid th .sort-icon.active {
+            color: #3b82f6;
+        }
+        .datagrid th .sort-icon.desc {
+            transform: rotate(180deg);
+        }
+
+        /* 表体 */
+        .datagrid tbody tr {
+            border-bottom: 1px solid #edf1f7;
+            transition: background 0.12s;
+        }
+        .datagrid tbody tr:last-child {
+            border-bottom: none;
+        }
+        .datagrid tbody tr:hover {
+            background: #f8faff;
+        }
+        .datagrid td {
+            padding: 12px 18px;
+            color: #1f2a41;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+
+        /* 空状态 */
+        .datagrid .empty-row td {
+            padding: 48px 18px;
+            text-align: center;
+            color: #8a9bb0;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+        }
+        .datagrid .empty-row td::before {
+            content: '📭 ';
+            font-size: 20px;
+        }
+
+        /* 状态标签 (示例) */
+        .status-badge {
+            display: inline-block;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .status-badge.active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .status-badge.inactive {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #a16207;
+        }
+
+        /* -------------------- 响应式微调 -------------------- */
+        @media (max-width: 700px) {
+            .demo-card {
+                padding: 18px 14px;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-area {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-area input,
+            .filter-area select {
+                min-width: unset;
+                width: 100%;
+            }
+            .pagination-controls {
+                justify-content: center;
+                margin-top: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="demo-card">
+
+            <!-- 标题 -->
+            <h1 class="demo-title">📋 Vue DataGrid</h1>
+            <p class="demo-sub">
+                从零构建 · 支持 <code>排序</code> <code>筛选</code> <code>分页</code> ·
+                完全响应式 · Vue 3 Composition API
+            </p>
+
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <div class="filter-area">
+                    <label for="filterInput">🔍 筛选</label>
+                    <input
+                    id="filterInput"
+                    type="text"
+                    placeholder="姓名 / 邮箱 / 部门..."
+                    v-model="filterText"
+                    />
+                    <label for="statusFilter">状态</label>
+                    <select id="statusFilter" v-model="statusFilter">
+                        <option value="all">全部</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+
+                <div class="pagination-controls">
+                    <button @click="goToPage(1)" :disabled="currentPage === 1">⏮</button>
+                    <button @click="prevPage" :disabled="currentPage === 1">◀</button>
+
+                    <span class="page-info">
+                        第 {{ currentPage }} / {{ totalPages }} 页
+                    </span>
+
+                    <button @click="nextPage" :disabled="currentPage === totalPages">▶</button>
+                    <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages">⏭</button>
+
+                    <select v-model="pageSize" @change="currentPage = 1">
+                        <option :value="5">5 条/页</option>
+                        <option :value="10">10 条/页</option>
+                        <option :value="20">20 条/页</option>
+                        <option :value="50">50 条/页</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 表格 -->
+            <div class="table-wrapper">
+                <table class="datagrid">
+                    <thead>
+                        <tr>
+                            <!--
+                            列配置：使用 v-for 动态渲染，
+                            每一列都绑定排序功能
+                            -->
+                            <th
+                            v-for="col in columns"
+                            :key="col.key"
+                            :class="{ sortable: col.sortable }"
+                            @click="col.sortable && handleSort(col.key)"
+                            >
+                            <span class="th-inner">
+                                {{ col.label }}
+                                <span
+                                v-if="col.sortable"
+                                class="sort-icon"
+                                :class="{
+                                active: sortKey === col.key,
+                                desc: sortKey === col.key && sortOrder === 'desc'
+                                }"
+                                >
+                                {{ sortKey === col.key ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅' }}
+                            </span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 数据行 -->
+                <tr v-for="(row, idx) in paginatedData" :key="row.id || idx">
+                    <td v-for="col in columns" :key="col.key">
+                        <!-- 特殊列：状态列使用 badge 渲染 -->
+                        <template v-if="col.key === 'status'">
+                            <span class="status-badge" :class="row[col.key]">
+                                {{ row[col.key] }}
+                            </span>
+                        </template>
+                        <!-- 普通列直接显示 -->
+                        <template v-else>
+                            {{ row[col.key] }}
+                        </template>
+                    </td>
+                </tr>
+                <!-- 空状态 -->
+                <tr v-if="paginatedData.length === 0" class="empty-row">
+                    <td :colspan="columns.length">没有匹配的数据</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 底部统计 -->
+    <div style="margin-top: 18px; font-size: 14px; color: #6b7a8f; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <span>共 <strong>{{ filteredData.length }}</strong> 条记录</span>
+        <span>当前显示 <strong>{{ paginatedData.length }}</strong> 条</span>
+    </div>
+</div>
+</div>
+
+<!-- ==================== Vue 3 ==================== -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js">
+</script>
+
+<script>
+    const { createApp, ref, computed, watch } = Vue;
+
+    const app = createApp({
+        setup() {
+            // ----------------------------------------------------------------
+            // 1. 原始数据 (模拟接口数据)
+            // ----------------------------------------------------------------
+            const rawData = ref([
+                { id: 1, name: '张伟', email: 'zhang.wei@company.com', department: '技术部', status: 'active' },
+                { id: 2, name: '李娜', email: 'li.na@company.com', department: '产品部', status: 'active' },
+                { id: 3, name: '王强', email: 'wang.qiang@company.com', department: '设计部', status: 'inactive' },
+                { id: 4, name: '刘洋', email: 'liu.yang@company.com', department: '技术部', status: 'pending' },
+                { id: 5, name: '陈静', email: 'chen.jing@company.com', department: '市场部', status: 'active' },
+                { id: 6, name: '赵磊', email: 'zhao.lei@company.com', department: '产品部', status: 'inactive' },
+                { id: 7, name: '孙悦', email: 'sun.yue@company.com', department: '设计部', status: 'active' },
+                { id: 8, name: '周婷', email: 'zhou.ting@company.com', department: '技术部', status: 'pending' },
+                { id: 9, name: '吴迪', email: 'wu.di@company.com', department: '市场部', status: 'active' },
+                { id: 10, name: '郑凯', email: 'zheng.kai@company.com', department: '产品部', status: 'inactive' },
+                { id: 11, name: '林峰', email: 'lin.feng@company.com', department: '技术部', status: 'active' },
+                { id: 12, name: '何雪', email: 'he.xue@company.com', department: '设计部', status: 'pending' },
+                { id: 13, name: '黄海', email: 'huang.hai@company.com', department: '市场部', status: 'inactive' },
+                { id: 14, name: '马丽', email: 'ma.li@company.com', department: '产品部', status: 'active' },
+                { id: 15, name: '朱浩', email: 'zhu.hao@company.com', department: '技术部', status: 'active' },
+            ]);
+
+            // ----------------------------------------------------------------
+            // 2. 列配置 (可扩展)
+            // ----------------------------------------------------------------
+            const columns = ref([
+                { key: 'id', label: 'ID', sortable: true },
+                { key: 'name', label: '姓名', sortable: true },
+                { key: 'email', label: '邮箱', sortable: true },
+                { key: 'department', label: '部门', sortable: true },
+                { key: 'status', label: '状态', sortable: true },
+            ]);
+
+            // ----------------------------------------------------------------
+            // 3. 筛选状态
+            // ----------------------------------------------------------------
+            const filterText = ref('');
+            const statusFilter = ref('all');
+
+            // ----------------------------------------------------------------
+            // 4. 排序状态
+            // ----------------------------------------------------------------
+            const sortKey = ref('id'); // 默认按 id 排序
+            const sortOrder = ref('asc'); // 'asc' 或 'desc'
+
+            // ----------------------------------------------------------------
+            // 5. 分页状态
+            // ----------------------------------------------------------------
+            const currentPage = ref(1);
+            const pageSize = ref(10);
+
+            // ----------------------------------------------------------------
+            // 6. 计算: 筛选 + 排序后的数据
+            // ----------------------------------------------------------------
+            const filteredData = computed(() => {
+                let data = [...rawData.value];
+
+                // ---- 6a. 文本筛选 (姓名 / 邮箱 / 部门 包含关键字) ----
+                const text = filterText.value.trim().toLowerCase();
+                if (text) {
+                    data = data.filter(row =>
+                        row.name.toLowerCase().includes(text) ||
+                        row.email.toLowerCase().includes(text) ||
+                        row.department.toLowerCase().includes(text)
+                    );
+                }
+
+                // ---- 6b. 状态筛选 ----
+                if (statusFilter.value !== 'all') {
+                    data = data.filter(row => row.status === statusFilter.value);
+                }
+
+                // ---- 6c. 排序 ----
+                const key = sortKey.value;
+                const order = sortOrder.value;
+                if (key) {
+                    data.sort((a, b) => {
+                        let va = a[key];
+                        let vb = b[key];
+                        // 对字符串做不区分大小写比较
+                        if (typeof va === 'string') va = va.toLowerCase();
+                        if (typeof vb === 'string') vb = vb.toLowerCase();
+
+                        if (va < vb) return order === 'asc' ? -1 : 1;
+                        if (va > vb) return order === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                }
+
+                return data;
+            });
+
+            // ----------------------------------------------------------------
+            // 7. 计算: 分页后的数据
+            // ----------------------------------------------------------------
+            const totalPages = computed(() =>
+                Math.ceil(filteredData.value.length / pageSize.value) || 1
+            );
+
+            const paginatedData = computed(() => {
+                const start = (currentPage.value - 1) * pageSize.value;
+                const end = start + pageSize.value;
+                return filteredData.value.slice(start, end);
+            });
+
+            // ----------------------------------------------------------------
+            // 8. 分页方法
+            // ----------------------------------------------------------------
+            function goToPage(page) {
+                if (page < 1) page = 1;
+                if (page > totalPages.value) page = totalPages.value;
+                currentPage.value = page;
+            }
+
+            function prevPage() {
+                if (currentPage.value > 1) currentPage.value--;
+            }
+
+            function nextPage() {
+                if (currentPage.value < totalPages.value) currentPage.value++;
+            }
+
+            // 当筛选或 pageSize 变化时，重置到第一页
+            watch([filterText, statusFilter, pageSize], () => {
+                currentPage.value = 1;
+            });
+
+            // 当总页数变化且当前页超出时，自动修正
+            watch(totalPages, (newTotal) => {
+                if (currentPage.value > newTotal) {
+                    currentPage.value = newTotal || 1;
+                }
+            });
+
+            // ----------------------------------------------------------------
+            // 9. 排序方法 (点击表头切换)
+            // ----------------------------------------------------------------
+            function handleSort(key) {
+                if (sortKey.value === key) {
+                    // 切换顺序: asc -> desc -> 取消排序 (此处我们保留 asc/desc 循环)
+                    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortKey.value = key;
+                    sortOrder.value = 'asc';
+                }
+                // 排序后重置到第一页 (可选)
+                currentPage.value = 1;
+            }
+
+            // ----------------------------------------------------------------
+            // 10. 暴露给模板
+            // ----------------------------------------------------------------
+            return {
+                rawData,
+                columns,
+                filterText,
+                statusFilter,
+                sortKey,
+                sortOrder,
+                currentPage,
+                pageSize,
+                filteredData,
+                totalPages,
+                paginatedData,
+                goToPage,
+                prevPage,
+                nextPage,
+                handleSort,
+            };
+        },
+    });
+
+    app.mount('#app');
+</script>
+</body>
+</html>

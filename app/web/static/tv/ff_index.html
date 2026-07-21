@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.20240811.js" charset="UTF-8"></script>
+
+    <title>ff index</title>
+    <style>
+        .menus {
+            width: 100%;
+            float: left;
+
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: #EEE;
+
+            a, button {
+                padding: 1em;
+                margin: 1em;
+            }
+        }
+
+        .input > textarea {
+            width: 50em;
+            height: 20em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .selected {
+            background: #000 !important;
+            color: #FFF !important;
+        }
+
+        #root_div {
+            margin-top: 5em;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div>
+
+    </div>
+    <div id="root_div">
+
+    </div>
+
+</div>
+<script></script>
+<script>
+
+
+    domLoaded(function () {
+        let rootDiv = kl.id('root_div');
+        let itemListDiv = new Emt('div', 'class="item_list"');
+
+        let configTaskA = kl.HTML.ANCHOR('', '任务配置', {target: '_blank', href: '/static/kl-pc/ffmpeg_tasks.html'});
+        let ffmpegedTasksA = kl.HTML.ANCHOR('', '已转码', {target: '_blank', href: '/static/kl-pc/ffmpeged_list.html'});
+
+        let a1 = kl.HTML.ANCHOR('', '转码后的/old', {target: '_blank', href: '/static/tv/ffmpeged.html'});
+        let moveFilesBtn = kl.HTML.BUTTON_BUTTON('', 'move files to tmp', {});
+
+        let cnofigResPre = kl.HTML.PRE();
+        let formatNameResPre = kl.HTML.PRE();
+        let tmp2phpResPre = kl.HTML.PRE();
+        let makeTaskResPre = kl.HTML.PRE();
+
+        let testConvResPre = kl.HTML.PRE();
+
+
+        let fetch1ResPre = kl.HTML.PRE();
+        let fetch2ResPre = kl.HTML.PRE();
+        let fetch3ResPre = kl.HTML.PRE();
+        let fetch4ResPre = kl.HTML.PRE();
+
+        let configsBtn = kl.HTML.BUTTON_BUTTON('', '输入/配置 ', {});
+
+        let callFormatTmpFilenameBtn = kl.HTML.BUTTON_BUTTON('', 'format filename -> tmp', {});
+        let tmp2phpBtn = kl.HTML.BUTTON_BUTTON('', 'tmp to php', {});
+        let callMakeTasksBtn = kl.HTML.BUTTON_BUTTON('', 'mark task', {});
+        let callFetchTasksBtn = kl.HTML.BUTTON_BUTTON('', 'fetch task', {});
+        let testConvBtn = kl.HTML.BUTTON_BUTTON('', 'test conv', {});
+
+
+        let advMenusDiv = kl.HTML.DIV('class="menus"', '');
+        let outsDiv = kl.HTML.DIV('class="out"', '');
+
+
+        let saveMoveFilenamesBtn = kl.HTML.BUTTON_BUTTON('', '保存到 tmp.txt ,并迁移', {});
+        let saveRubishAdTimesBtn = kl.HTML.BUTTON_BUTTON('', '保存垃圾广告配置 ', {});
+        let saveRubishWordsBtn = kl.HTML.BUTTON_BUTTON('', '保存垃圾关键词 ', {});
+
+        let addHigthDefinesBtn = kl.HTML.BUTTON_BUTTON('', 'new清晰度 ', {});
+        let saveHigthDefinesBtn = kl.HTML.BUTTON_BUTTON('', '保存清晰度 ', {});
+
+
+        let moveFilenamesTextarea = kl.HTML.TEXTAREA();
+        let rubishAdTimesTextarea = kl.HTML.TEXTAREA();
+        let rubishWordsTextarea = kl.HTML.TEXTAREA();
+        let heightDefinesTextarea = kl.HTML.TEXTAREA();
+        let heightDefinesDiv = kl.HTML.DIV('class="hd-items"');
+
+
+        let configsDiv = kl.HTML.DIV('class="input-lv1-div hidden"');
+        let configsMenusDiv = kl.HTML.DIV('class="input-lv1-div "');
+
+        let moveFileTaskDiv = kl.HTML.DIV('class="input-lv2-div input"');
+        let cfgADTimesDiv = kl.HTML.DIV('class="input-lv2-div input"');
+        let cfgRubishKwsDiv = kl.HTML.DIV('class="input-lv2-div input"');
+        let cfgHDsDiv = kl.HTML.DIV('class="input-lv2-div input"');
+
+
+        let advMenus = [
+            {startBtn: configsBtn, resPre: cnofigResPre, inputDiv: configsDiv, text: '', detail: ''},
+            {startBtn: callFormatTmpFilenameBtn, resPre: formatNameResPre, text: '', detail: ''},
+            {startBtn: tmp2phpBtn, resPre: tmp2phpResPre, text: '', detail: ''},
+            {startBtn: callMakeTasksBtn, resPre: makeTaskResPre, text: '', detail: ''},
+            {startBtn: testConvBtn, resPre: testConvResPre, text: '', detail: ''},
+            //   {startBtn:callFetchTasksBtn,resPre:fetch1ResPre,text:'',detail:''},
+        ];
+        advMenus.forEach((item, i) => {
+            let btn = kl.HTML.BUTTON_BUTTON('', item.text || item.startBtn.textContent, {});
+            advMenusDiv.addNodes([btn])
+            advMenus[i].menuBtn = btn;
+        })
+
+
+        let hdItem = function (hdInfo) {
+            let itemDiv = kl.HTML.DIV();
+            let heightInput = kl.HTML.INPUT_NUMBER();
+            let maxRateKInput = kl.HTML.INPUT_NUMBER();
+            let fpsInput = kl.HTML.INPUT_NUMBER();
+            let csfInput = kl.HTML.INPUT_NUMBER();
+            let hdTitleInput = kl.HTML.INPUT_TEXT();
+            let resAsInput = kl.HTML.INPUT_TEXT();
+            let isCopyInput = kl.HTML.CHECKBOX();
+            let resVerInput = kl.HTML.INPUT_TEXT();
+
+            let hdError = kl.HTML.LABEL();
+            Object.assign(itemDiv, {
+                get: function () {
+                    if (!(heightInput.value.length > 0 && maxRateKInput.value.length > 0 && fpsInput.value.length > 0 && hdTitleInput.value.trim().length > 0)) {
+                        hdError.textContent = 'error';
+                        return false;
+                    }
+                    return {
+                        height: parseInt(heightInput.value),
+                        maxRateK: parseInt(maxRateKInput.value),
+                        fps: parseInt(fpsInput.value),
+                        csf: parseInt(csfInput.value),
+                        title: hdTitleInput.value.trim(),
+                        resAs: resAsInput.value.trim(),
+                        isCopy: isCopyInput.checked,
+                        resVer: resVerInput.value.trim(),
+                    };
+                },
+                set: function (itemInfo) {
+                    let h = (itemInfo.height || 0);
+                    heightInput.value = h;
+                    maxRateKInput.value = itemInfo.maxRateK || 0;
+                    fpsInput.value = itemInfo.fps || 0;
+                    csfInput.value = itemInfo.csf || 22;
+                    resAsInput.value = itemInfo.resAs || 'h265';
+                    resVerInput.value = itemInfo.resVer || '';
+                    isCopyInput.checked = itemInfo.isCopy === true;
+                    /**
+                     CRF 对照（NVENC HEVC）：
+                     CRF	画质	码率
+                     23	偏省	低
+                     22	默认	中
+                     20	高	↑
+                     18	非常高	↑↑*/
+                    hdTitleInput.value = itemInfo.title || '';
+                },
+            });
+            itemDiv.set(hdInfo || {});
+            heightDefinesDiv.addNodes([itemDiv]);
+            return itemDiv.addNodes([
+                kl.HTML.LABEL('class="hd-item-attr hd-height"').addNodes([
+                    kl.HTML.SPAN('', 'height:'),
+                    heightInput,
+                ]),
+                kl.HTML.LABEL('class="hd-item-attr hd-max-rate"').addNodes([
+                    kl.HTML.SPAN('', 'max rate K:'),
+                    maxRateKInput,
+                ]),
+                kl.HTML.LABEL('class="hd-item-attr hd-fps"').addNodes([
+                    kl.HTML.SPAN('', 'fps:'),
+                    fpsInput,
+                ]),
+                kl.HTML.LABEL('class="hd-item-attr hd-csf"').addNodes([
+                    kl.HTML.SPAN('', 'csf:'),
+                    csfInput,
+                ]),
+                kl.HTML.LABEL('class="hd-item-attr hd-type"').addNodes([
+                    kl.HTML.SPAN('', 'type:'),
+                    resAsInput,
+                ]),
+                kl.HTML.LABEL('class="hd-item-attr hd-title"').addNodes([
+                    kl.HTML.SPAN('', 'title:'),
+                    hdTitleInput,
+                ]),
+                kl.HTML.LABEL('class="hd-item-attr hd-is-copy"').addNodes([
+                    kl.HTML.SPAN('', 'is copy:'),
+                    isCopyInput,
+                ]),
+                kl.HTML.LABEL('class="hd-item-attr hd-copy-ver"').addNodes([
+                    kl.HTML.SPAN('', 'copy ver:'),
+                    resVerInput,
+                ]),
+                hdError,
+            ]);
+
+        };
+
+        document.body.append(advMenusDiv.addNodes([
+            //  configsBtn,
+            //a1,
+            // moveFilesBtn,
+            //   callFormatTmpFilenameBtn, tmp2phpBtn, callMakeTasksBtn, callFetchTasksBtn,
+            //a4,
+            configTaskA, ffmpegedTasksA
+        ]));
+
+        rootDiv.addNodes([
+
+            configsDiv.addNodes([
+                new Emt('h1', '', '输入'),
+                configsMenusDiv,
+                moveFileTaskDiv.addNodes([
+                    moveFilenamesTextarea,
+                    saveMoveFilenamesBtn,
+                    kl.HTML.HR(),
+                ]),
+                cfgADTimesDiv.addNodes([
+                    rubishAdTimesTextarea,
+                    saveRubishAdTimesBtn,
+                    kl.HTML.HR(),
+                ]),
+                cfgRubishKwsDiv.addNodes([
+
+                    rubishWordsTextarea,
+                    saveRubishWordsBtn,
+                    kl.HTML.HR(),
+                ]),
+                cfgHDsDiv.addNodes([
+                    heightDefinesDiv,
+                    heightDefinesTextarea,
+                    addHigthDefinesBtn,
+                    saveHigthDefinesBtn,
+                    kl.HTML.HR(),
+                ]),
+            ]),
+
+            kl.HTML.DIV('class="out"', '').addNodes([
+                new Emt('h1', '', '输出'),
+                kl.HTML.HR(),
+                outsDiv.addNodes([]),
+
+            ]),
+
+        ]);
+
+
+        function startSimpleSSE(url, resPre) {
+            resPre.textContent = '';
+
+            let es = new EventSource(url);
+
+            es.addEventListener('output', function (e) {
+                if (e.data.substr(-4) === '<br>') {
+                    resPre.textContent += e.data.replace(/\<br\>/g, '\n');
+                } else {
+                    resPre.textContent += e.data.replace(/\<br\>/g, '\n') + '\n';
+                }
+            });
+
+            es.addEventListener('complete', function (e) {
+                resPre.textContent += '\n' + e.data;
+                es.close();
+            });
+
+            es.onerror = function () {
+                es.close();
+            };
+        }
+
+        kl.ajax({
+            url: '/dev/v1/KL_PC/readFile',
+            data: {file: '/data/sysadv.debug'},
+            success: function (file_result) {
+                console.log(file_result);
+                let list = kl.getValByPath(file_result, 'data.list');
+                if (list && Array.isArray(list)) {
+                    console.log(file_result);
+                    list.forEach((item, i) => {
+
+
+                    });
+                } else {
+                    alert(file_result.msg || '未知');
+                }
+            },
+            type: 'json'
+        });
+        saveMoveFilenamesBtn.addEventListener('click', async () => {
+
+            return startSimpleSSE('/dev/v1/KL_PC/saveMoveTaskFilenames?sse=yes&text=' + encodeURIComponent(moveFilenamesTextarea.value.trim()), cnofigResPre);
+        });
+
+
+        tmp2phpBtn.addEventListener('click', async () => {
+            await kl.ajax({
+                url: '/dev/v1/KL_PC/tmp2php',
+                data: {},
+                // type: 'json',
+                async: true,
+            }).then(aysncRes => {
+                console.log(aysncRes.result);
+                let op_res = aysncRes.result;
+                tmp2phpResPre.textContent = op_res;
+            });
+        });
+
+
+        callMakeTasksBtn.addEventListener('click', async () => {
+
+            return startSimpleSSE('/dev/v1/KL_PC/makeConvTasks', makeTaskResPre);
+
+        });
+        testConvBtn.addEventListener('click', async () => {
+
+            return startSimpleSSE('/dev/v1/KL_PC/testConv', testConvResPre);
+        });
+        callFetchTasksBtn.addEventListener('click', async () => {
+            await kl.ajax({
+                url: '/dev/v1/KL_PC/fetchConvTasks',
+                data: {},
+                // type: 'json',
+                async: true,
+            }).then(aysncRes => {
+                console.log(aysncRes.result);
+                let op_res = aysncRes.result;
+                cnofigResPre.textContent = op_res;
+            });
+        });
+
+
+        callFormatTmpFilenameBtn.addEventListener('click', async () => {
+
+            return startSimpleSSE('/dev/v1/KL_PC/callFormatFilenames', formatNameResPre);
+
+        });
+
+
+        kl.ajax({
+            url: '/dev/v1/KL_PC/getRubishAdTimes',
+            data: {},
+            type: 'json',
+            success: function (cfg_res) {
+                console.log(cfg_res);
+                let rubishAdTimes = kl.getValByPath(cfg_res, 'data.rubishAdTimes');
+                if (Array.isArray(rubishAdTimes)) {
+                    rubishAdTimesTextarea.value = JSON.stringify(rubishAdTimes).replace(/},/ig, "},\n").replace('[', '[\n').replace(']', "\n]");
+                } else {
+                    let err_msg = kl.getValByPath(cfg_res, 'msg', '未知错误');
+                    rubishAdTimesTextarea.value = err_msg;
+
+                    throw err_msg;
+                }
+            },
+            error: (error) => {
+                console.error(error);
+            }
+        });
+
+
+        saveRubishAdTimesBtn.addEventListener('click', async () => {
+            cnofigResPre.textContent = '';
+            await kl.ajax({
+                url: '/dev/v1/KL_PC/saveRubishAdTimes',
+                data: {text: rubishAdTimesTextarea.value},
+                // type: 'json',
+                async: true,
+            }).then(aysncRes => {
+                console.log(aysncRes.result);
+                let op_res = aysncRes.result;
+                cnofigResPre.textContent = op_res;
+            });
+        });
+
+
+        kl.ajax({
+            url: '/dev/v1/KL_PC/getRubishWords',
+            data: {},
+            type: 'json',
+            success: function (cfg_res) {
+                console.log(cfg_res);
+                let rubishWords = kl.getValByPath(cfg_res, 'data.rubishWords');
+                if (Array.isArray(rubishWords)) {
+                    rubishWordsTextarea.value = rubishWords.join("\n");
+                } else {
+                    let err_msg = kl.getValByPath(cfg_res, 'msg', '未知错误');
+                    rubishWordsTextarea.value = err_msg;
+
+                    throw err_msg;
+                }
+            },
+            error: (error) => {
+                console.error(error);
+            }
+        });
+
+
+        saveRubishWordsBtn.addEventListener('click', async () => {
+            cnofigResPre.textContent = '';
+            await kl.ajax({
+                url: '/dev/v1/KL_PC/saveRubishWords',
+                data: {text: rubishWordsTextarea.value},
+                // type: 'json',
+                async: true,
+            }).then(aysncRes => {
+                console.log(aysncRes.result);
+                let op_res = aysncRes.result;
+                cnofigResPre.textContent = op_res;
+            });
+        });
+
+
+        kl.ajax({
+            url: '/dev/v1/KL_PC/getHdItems',
+            data: {},
+            type: 'json',
+            success: function (cfg_res) {
+                console.log(cfg_res);
+                let hdItems = kl.getValByPath(cfg_res, 'data.hdItems');
+                if (Array.isArray(hdItems)) {
+                    hdItems.forEach(hdItemInfo => {
+                        hdItem(hdItemInfo);
+                    });
+                } else {
+                    let err_msg = kl.getValByPath(cfg_res, 'msg', '未知错误');
+                    heightDefinesTextarea.value = err_msg;
+
+                    throw err_msg;
+                }
+            },
+            error: (error) => {
+                console.error(error);
+            }
+        });
+
+        saveHigthDefinesBtn.addEventListener('click', async () => {
+            cnofigResPre.textContent = '';
+            let items = [];
+            let hasError = false;
+            Object.values(heightDefinesDiv.childNodes).forEach(itemDiv => {
+                let info = itemDiv.get();
+                if (info === false) {
+                    hasError = true;
+                } else {
+                    items.push(info);
+                }
+
+            });
+            if (hasError) {
+                heightDefinesTextarea.value = 'has error';
+                return false;
+            }
+            await kl.ajax({
+                url: '/dev/v1/KL_PC/saveHdItems',
+                data: {json: JSON.stringify(items)},
+                // type: 'json',
+                async: true,
+            }).then(aysncRes => {
+                console.log(aysncRes.result);
+                let op_res = aysncRes.result;
+                cnofigResPre.textContent = op_res;
+            });
+        });
+
+
+        addHigthDefinesBtn.addEventListener('click', () => {
+            hdItem();
+        });
+
+        configsBtn.addEventListener('click', () => {
+            configsDiv.classList.toggle('hidden');
+        });
+
+        let configsMenusAR = [[moveFileTaskDiv, '移动任务'],
+            [cfgADTimesDiv, '垃圾广告时间'],
+            [cfgRubishKwsDiv, '垃圾词'],
+            [cfgHDsDiv, '清晰度'],];
+        configsMenusAR.forEach((ar, i) => {
+            ar[0].classList.add('hidden');
+            let btn = kl.HTML.BUTTON_BUTTON('', ar[1], {});
+            configsMenusDiv.addNodes([btn]);
+            configsMenusAR[i].push(btn);
+        });
+        configsMenusAR.forEach((ar) => {
+            ar[2].addEventListener('click', () => {
+                configsMenusAR.forEach((ar2) => {
+                    if (ar2[1] === ar[1]) {
+                        ar[2].classList.add('selected');
+                        ar[0].classList.toggle('hidden');
+                    } else {
+                        ar2[2].classList.remove('selected');
+                        ar2[0].classList.add('hidden');
+                    }
+                })
+            })
+        });
+
+
+        advMenus.forEach(item => {
+            //  item.resPre.textContent = item.startBtn.textContent;
+            outsDiv.addNodes([item.resPre]);
+            item.menuBtn.addEventListener('click', () => {
+                console.log(item.menuBtn.classList.contains('selected'));
+                if (item.menuBtn.classList.contains('selected') || item.resPre.textContent.length === 0) {
+                    item.startBtn.click();
+                }
+                advMenus.forEach(item_new => {
+                    if (item_new === item) {
+                        item.menuBtn.classList.add('selected');
+                        item.resPre.classList.remove('hidden');
+                        if (item.inputDiv) {
+                            item.inputDiv.classList.remove('hidden');
+                        }
+                    } else {
+                        item_new.menuBtn.classList.remove('selected');
+                        item_new.resPre.classList.add('hidden');
+                        if (item_new.inputDiv) {
+                            item_new.inputDiv.classList.add('hidden');
+                        }
+                    }
+                })
+            });
+        })
+
+
+    })
+
+</script>
+</body>
+</html>

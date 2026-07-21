@@ -1,0 +1,97 @@
+
+.hide {
+    display: none;
+}
+
+.hammer_dialog_bg_div {
+    position: fixed;
+    z-index: 9999;
+    background: rgba(200, 200, 200, 0.9);
+    top: 0px;
+    left: 0px;
+}
+
+.hammer_dialog_outter_div {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: 100%;
+    margin-left: 50%;
+}
+
+.hammer_dialog_inner_div {
+    width: 800px;
+    min-height: 400px;
+    margin-top: 100px;
+    margin-left: -400px;
+    background: #FFF;
+}
+
+.hammer_dialog_title_div, .hammer_dialog_content_div {
+    float: left;
+    width: 100%;
+}
+
+
+.hammer_dialog_title_div {
+    width: 100%;
+}
+
+
+.hammer_dialog_content_tmp_div {
+    height: 90%;
+    width: 90%;
+    margin-top: 5%;
+    margin-left: 5%;
+}
+
+.hammer_show_dailog{
+    animation:show 5s;
+    -webkit-animation:show 5s; /* Safari and Chrome */
+}
+
+.hammer_hide_dailog{
+    animation:hide 5s;
+    -webkit-animation:hide 5s; /* Safari and Chrome */
+}
+
+
+@keyframes show {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes show /* Safari 和 Chrome */
+{
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+
+@keyframes hide {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@-webkit-keyframes show /* Safari 和 Chrome */
+{
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+

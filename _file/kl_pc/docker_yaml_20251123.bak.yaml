@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  kl_desktop_php8:
+    image: php:8.2.2-fpm
+    container_name: kl_desktop_php8
+    privileged: true
+    user: "0:0"  # 使用 UID:GID 格式，0:0 表示 root
+    cap_add:
+      - ALL  # 添加所有 Linux 能力
+    security_opt:
+      - seccomp=unconfined  # 禁用安全配置
+    extra_hosts:  # 添加主机映射
+      - "kl-home-pc:172.17.0.1"
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /mnt/f/doc/bfcode/porter:/porter:rw
+      - /mnt/f:/mnt/f:rw
+    ports:
+      - "49082:9000"
+    command: >
+      sh -c "
+      ln -s /porter/hammer/hammer /hammer &&
+      chmod +x /hammer &&
+      ln -s /usr/local/bin/php /usr/bin/php &&
+      chown -R root:root /var/www/html &&
+      docker-php-ext-install pdo pdo_mysql &&
+      docker-php-ext-enable pdo pdo_mysql &&
+      php-fpm -R       
+      "
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: kl_desktop_nginx
+    privileged: true
+    user: "0:0"  # 使用 UID:GID 格式
+    cap_add:
+      - ALL
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /mnt/f/doc/bfcode/porter/_file/kl_pc/nginx.conf:/etc/nginx/nginx.conf:rw
+      - /mnt/f/doc/bfcode/porter:/porter:rw
+      - /mnt/f:/mnt/f:rw
+    ports:
+      - "8001:80"
+    depends_on:
+      - kl_desktop_php8
+    command: >
+      sh -c "
+      chown -R root:root /var/cache/nginx &&
+      chown -R root:root /var/log/nginx &&
+      nginx -g 'daemon off; user root; error_log /dev/stderr debug;'
+      "
+    restart: unless-stopped
+
+networks:
+  default:
+    name: kl_desktop_network
+    driver: bridge

@@ -1,0 +1,4 @@
+cd /usr/website_server_alpha/papi.funshion.com/script; /usr/local/php5.3.11/bin/php cp_mv_enqueue.php -mtype video -cps fod9r0e -idfile /home/nginx/yangjl/ids_98.txt -qid 1  -msleep 1000  -adv_tabecho 1 -adv_debug 1 -debug 1 -adv_runner_debug true
+
+
+cd /usr/website_server_alpha/papi.funshion.com/script/; /usr/local/php5.3.11/bin/php push_retry.php -mtype video -unit 0 -cp fod9r0e -qid 1 -adv_debug true -adv_dump_trace true -adv_tabecho true -adv_runner_debug true

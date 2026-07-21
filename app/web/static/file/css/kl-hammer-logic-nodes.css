@@ -1,0 +1,49 @@
+.logic_root{
+    width: 600%;
+    float: left;
+
+}
+
+.hammer_logic_node{
+    margin-top: 50px;
+    float: left;
+    min-width: 100%;
+    border: 1px solid #666;
+}
+.hammer_input_logic_node_inputs,.hammer_input_logic_node_btns{
+    width: 100%;
+}
+.hammer_logic_title{
+    width: 300px;
+    float: left;
+    border-right: 1px solid #666;
+    min-height: 150px;
+}
+.hammer_input_logic_node_btns>label{
+    display: block;
+    float: right;
+    margin-right: 10px;
+}
+.hammer_input_logic_node_name,.hammer_input_logic_node_desc{
+    width: 90%;
+    margin-top: 10px;
+    border: none;
+    min-height: 2.5em;
+    resize: vertical;
+}
+.hammer_input_logic_node_name{
+    text-align: right;
+    font-size: 1.2em;
+    font-weight: 900;
+}
+.hammer_input_logic_node_val{
+    width: 90%;
+    margin-top: 10px;
+    border: none;
+    min-height: 100px;
+}
+
+.hammer_logic_nodes{
+    float: left;
+    margin-left: 5px;
+}

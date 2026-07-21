@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../file/js/kl-hammer-dom-data.js" charset="UTF-8"></script>
+    <script src="../file/js/string.js" charset="UTF-8"></script>
+    <script src="../file/js/text2accii.js" charset="UTF-8"></script>
+    <script src="../file/js/md5.js" charset="UTF-8"></script>
+    <script src="../file/js/64code.js" charset="UTF-8"></script>
+    <title>dev工具箱</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+
+
+        #dev_opts > div {
+            display: block;
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            margin: 0.1em;
+        }
+
+        #dev_opts > div > div {
+            width: 100%;
+        }
+
+        #dev_opts > div > div > label {
+            display: block;
+            width: 400px;
+            /* height: 2em; */
+            /* margin-top: 0.5em; */
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            background: #EEE;
+            margin: 0.1em;
+        }
+
+        .tt {
+            width: 100%;
+            min-height: 150px;
+        }
+
+        .row_line {
+            width: 100%;
+            display: block;
+            float: left;
+            padding: 5px;
+        }
+
+        .row_line button {
+            display: block;
+            float: left;
+            width: 100px;
+        }
+
+        .row_doc {
+            display: block;
+            float: left;
+            max-width: 80%;
+        }
+
+        .row_doc em {
+            font-size: 0.8em;
+        }
+
+        .row_doc pre {
+            width: 80%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        em + pre {
+            display: none;
+            position: absolute;
+            z-index: 999;
+            background: #AAA;
+            padding: 5px;
+            border: 3px solid #000;
+        }
+
+        em:hover + pre {
+            display: block;
+        }
+
+        #box {
+            border-bottom: 200px;
+        }
+
+        .row_line_hover {
+            width: 40px;
+            float: left;
+        }
+
+        .row_line:hover {
+            background: #DDD;
+        }
+
+        .row_hovered {
+            background: #AAA;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .btn_label {
+            display: block;
+            float: left;
+            border: 1px solid #AAA;
+            padding: 5px;
+            margin: 5px;
+            box-shadow: 5px 5px 5px #333333;
+            background: #EEE;
+        }
+
+        .btn_label > input {
+            display: none;
+        }
+
+        .btn_label > input[type="radio"]:checked + span {
+            color: #FFF;
+            background-color: #000;
+        }
+
+        .op_input_label {
+            border: 1px solid #AAA;
+            margin: 3px;
+            padding: 3px;
+        }
+
+        .div_input {
+            padding: 5px;
+            border: 1px solid #AAA;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div id="box">
+
+
+</div>
+<script></script>
+<script>
+    domLoaded(function () {
+        var label1 = new Emt('label').setPros({textContent: 'label1'});
+        var label2 = new Emt('label').setPros({textContent: 'label2'});
+        var label3 = new Emt('label').setPros({textContent: 'label3'});
+        var tpl_input = new Emt('textarea').setPros({className: 'tt', placeholder: '在此输入模板,被替换词{rep}'});
+        var input = new Emt('textarea').setPros({className: 'tt', id: 'ta_in'});
+        var result = new Emt('textarea').setPros({className: 'tt', id: 'ta_out'});
+        var inputs = [tpl_input, input, result, new Emt('textarea').setPros({className: 'tt', id: 'ta_out'})];
+        var files = [
+            new Emt('input').setPros({type: 'file', index: 0}),
+            new Emt('input').setPros({type: 'file', index: 1}),
+            new Emt('input').setPros({type: 'file', index: 2}),
+            new Emt('input').setPros({type: 'file', index: 3})
+        ];
+        var labels = [label1, label2, label3, new Emt('label').setPros({textContent: 'label4'})];
+        var doc_pre = new Emt('pre').setStyle({float: 'left'});
+        var display_div = new Emt('div').setAttrs({'style': 'display: block; float: left;margin-bottom: 10px;width:100%;'});
+        var operat_div = new Emt('div').setAttrs({'style': 'display: block; float: left;margin-bottom: 10px;width:100%;'});
+        var btns_div = new Emt('div').setAttrs({'style': 'display: block; float: left;margin-bottom: 50px;'});
+        var btns_div_old = new Emt('div').setAttrs({'style': 'display: block; float: left;margin-bottom: 500px;'});
+        var input_divs = [
+            new Emt('div').setPros({className: 'div_input'}),
+            new Emt('div').setPros({className: 'div_input'}),
+            new Emt('div').setPros({className: 'div_input'}),
+            new Emt('div').setPros({className: 'div_input'}),
+        ];
+        kl.id('box').appendChild(new Emt('div').addNodes([
+            input_divs[0].addNodes([
+                label1,
+                tpl_input,
+                files[0],
+            ]),
+            input_divs[1].addNodes([
+                label2,
+                input,
+                files[1],
+            ]),
+            input_divs[2].addNodes([
+                label3,
+                result,
+                files[2],
+            ]),
+            input_divs[3].addNodes([
+                labels[3],
+                inputs[3],
+                files[3],
+            ]),
+
+            new Emt('h1').setPros({textContent: '文本框大小：'}),
+            display_div,
+            new Emt('h1').setPros({textContent: '业务选项：'}),
+            operat_div,
+            btns_div,
+            doc_pre,
+            btns_div_old
+        ]));
+        var saveChangeValue = function () {
+            var ar = [];
+            inputs.forEach(function (input) {
+                ar.push(input.value);
+            });
+            window.localStorage.setItem('saveChangeValue', JSON.stringify(ar));
+        };
+        var last_values = ['', '', '', '', ''];
+        try {
+            last_values = JSON.parse(window.localStorage.getItem('saveChangeValue'));
+        } catch (e) {
+        }
+        console.log(last_values);
+        inputs.forEach(function (input, index) {
+            input.addEventListener('change', function () {
+                saveChangeValue();
+            });
+            input.value = last_values && typeof last_values[index] === 'string' ? last_values[index] : '';
+        });
+        files.forEach(function (input, index) {
+            input.addEventListener('change', function () {
+                console.log(input);
+                var tmp_img = input.files[0];
+                console.log(tmp_img);
+                //var fileType = tmp_img.type;
+                var fr = new FileReader();
+                fr.file = tmp_img;
+                fr.onload = function (evt) {
+                    //cli.log(evt.target.file);
+                    //cli.log(evt.target.result);
+                    inputs[input.index].value = evt.target.result;
+                };
+                //fr.readAsDataURL(tmp_img);
+                fr.readAsText(fr.file);
+            });
+        });
+
+        var row_hovered = false;
+        var row_line = function (strs) {
+            var t = new Emt('div').setPros({className: 'row_line'});
+            var div_for_hover = new Emt('div').setPros({className: 'row_line_hover', textContent: '###'});
+            if (strs && typeof strs.forEach === 'function') {
+                div_for_hover.addEventListener('mouseover', function () {
+                    if (row_hovered !== false) {
+                        row_hovered.classList.remove('row_hovered');
+                    }
+                    t.classList.add('row_hovered');
+                    row_hovered = t;
+                    strs.forEach(function (str, index) {
+                        labels[index].textContent = str || '#';
+                    })
+                });
+            }
+            t.addNodes([div_for_hover]);
+            return t;
+        };
+        var row_doc = function (input_str, result_str, doc_str) {
+            var em = new Emt('em').setPros({textContent: doc_str});
+            var pre = new Emt('pre').setPros({textContent: "\n<----------->\n" + input_str + "\n<----------->\n" + result_str});
+            return new Emt('div').setPros({className: 'row_doc'}).addNodes([em, pre]);
+        };
+        var select_ele = function (array) {
+            var select0 = new Emt('select');
+            array.forEach(function (ar) {
+                select0.add(new Option(ar[0], ar[1]));
+            });
+            return select0;
+        };
+        //返回字符串input
+        var text_ele = function (str) {
+            var text = new Emt('input').setPros({type: 'text'});
+            var label = new Emt('label').setPros({textContent: str});
+            text.addEventListener('click', function () {
+                label.value = text.value;
+            });
+            label.addNodes([text]);
+            return label;
+        };
+        var btn_ele = function (str) {
+            return new Emt('button').setPros({textContent: str});
+        };
+        var opts = [
+            {
+                inputs_count: 1,
+                label: '回车->\\n',
+                inputs: {},
+                fun: function (row) {
+                    inputs[0].value = '"' + inputs[0].value.replace(/\n+/g, '\\' + 'n') + '"';
+                },
+                labels: ['', '', '结果输出'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 2,
+                label: '去除空格',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = inputs[0].value.replace(/\s+/g, "");
+                },
+                labels: ['', '带有空格的字符串', '结果输出'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 1,
+                label: '随机生成字符串',
+                inputs: {},
+                fun: function (row) {
+                    var s = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    var ar = [];
+                    for (var i = 0; i < 32; i++) {
+                        ar.push(s[parseInt(Math.random() * 100) % 62]);
+                    }
+                    var str = ar.join('');
+                    inputs[0].value = str;
+                },
+                labels: ['', '', '随机生成的字符串'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 3,
+                label: 'array:diff',
+                inputs: {
+                    str1_spliter: ['str1分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                    str2_spliter: ['str12分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                    is_trim: ['比较时是否trim', select_ele([['是', 'yes'], ['否', 'no']])],
+                    result_connecterr: ['结果连接符号', select_ele([['回车', "\n"], ['逗号', ','], ['转json', 'json']])]
+                },
+                fun: function (row) {
+                    var ar0 = inputs[0].value.split(row.str1_spliter.value);
+                    var ar1 = inputs[1].value.split(row.str2_spliter.value);
+                    console.log('ar0', ar0, 'ar1', ar1);
+                    var ar2 = [];
+                    var is_trim = row.is_trim.value === 'yes' ? true : false;
+                    console.log('is trim', is_trim);
+                    if (is_trim) {
+                        var ar3 = [];
+                        ar1.forEach(function (str) {
+                            ar3.push(str.trim());
+                        });
+                        console.log('ar3', ar3);
+                        ar0.forEach(function (str) {
+                            if (ar3.indexOf(str.trim()) === -1) ar2.push(str);
+                        });
+                    } else {
+                        ar0.forEach(function (str) {
+                            if (ar1.indexOf(str) === -1) ar2.push(str);
+                        });
+                    }
+                    inputs[2].value = ar2.join(row.result_connecterr.value);
+                    console.log(ar2);
+                },
+                labels: ['符串1', '字符串1', 'diff结果'],
+                doc_strs: ["1,2,3,4,5,6\n3,4,5", "1,2,6", 'input 0最多  input1 少'],
+            },
+            {
+                inputs_count: 3,
+                label: 'array:sort',
+                inputs: {
+                    str1_spliter: ['str分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                    is_trim: ['比较时是否trim', select_ele([['是', 'yes'], ['否', 'no']])],
+                    result_connecterr: ['结果连接符号', select_ele([['回车', "\n"], ['逗号', ','], ['转json', 'json']])]
+                },
+                fun: function (row) {
+                    var ar0 = inputs[0].value.split(row.str1_spliter.value);
+                    console.log('ar0', ar0);
+                    var ar2 = [];
+                    var is_trim = row.is_trim.value === 'yes' ? true : false;
+                    console.log('is trim', is_trim);
+                    if (is_trim) {
+                        ar0.forEach(function (str) {
+                            if (ar2.indexOf(str.trim()) === -1) ar2.push(str);
+                        });
+                    } else {
+                        ar2 = ar0;
+                    }
+                    ar2 = ar2.sort();
+
+                    inputs[2].value = ar2.join(row.result_connecterr.value);
+                    console.log(ar2);
+                },
+                labels: ['符串1', 'sort结果'],
+                doc_strs: ['排序'],
+            },
+            {
+                inputs_count: 2,
+                label: 'str=>map',
+                inputs: {
+                    str1_spliter: ['str1分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                },
+                fun: function (row) {
+                    var ar = inputs[0].value.split(row.str1_spliter.value);
+                    console.log(ar);
+                    var ar2 = [];
+                    ar.forEach(function (str) {
+                        var str2 = str.replace(/\s+/g, "");
+                        ar2.push("'" + str2 + "'=>'" + str2 + "',");
+                    });
+                    inputs[1].value = 'array(' + ar2.join("\n") + ')';
+                },
+                labels: ['str1 比如 逗号隔开 如：1,2,3', "结果输出:array('1'=>'1','23'=>'23','3'=>'3',)"],
+                doc_strs: ['1,2,3', "array('1'=>'1','23'=>'23','3'=>'3',)", '以【,】，切割，变成kv对等的map'],
+            },
+            {
+                inputs_count: 2,
+                label: 'code_eg',
+                inputs: {
+                    str1_spliter: ['str1分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                },
+                fun: function (row) {
+
+                },
+                labels: [],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 2,
+                label: 'sql=>array map',
+                inputs: {},
+                fun: function (row) {
+                    var ar = inputs[0].value.split(',');
+                    console.log(ar);
+                    var ar2 = [];
+                    ar.forEach(function (str) {
+                        console.log(str);
+                        var str2 = str.trim().toLowerCase();
+                        console.log(str2);
+                        if (str2.indexOf(' ') === -1) {
+                            ar2.push("'" + str2 + "'=>'" + str2 + "',");
+                        } else {
+                            if (str2.indexOf(' as ') === -1) {
+                                var ar3 = str2.replace(/\s+/g, " ").split(' ');
+                                ar2.push("'" + ar3[1] + "'=>'" + ar3[0] + "',");
+                            } else {
+                                var ar3 = str2.split(' as ');
+                                if (str2.indexOf('(') === -1) {
+                                    ar2.push("'" + ar3[1].trim() + "'=>'" + ar3[0].trim() + "',");
+                                } else {
+                                    ar2.push("'" + ar3[1].trim() + "'=>function($row){ return '" + ar3[0] + "';},");
+                                }
+                            }
+                        }
+                    });
+                    inputs[1].value = 'array(' + ar2.join("\n") + ')';
+                },
+                labels: ['sql', '结果输出'],
+                doc_strs: ['topic_id,name,description,template,icon,aword,poster,still,channel_id,num,disable', "array('topic_id'=>'topic_id',\n'name'=>'name',\n'description'=>'description',\n'template'=>'template',\n'icon'=>'icon',\n'aword'=>'aword',\n'poster'=>'poster',\n'still'=>'still',\n'channel_id'=>'channel_id',\n'num'=>'num',\n'disable'=>'disable',)", 'sql 语句转map 映射'],
+            },
+            {
+                inputs_count: 2,
+                label: 'str=>ASCII',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = text2ASCII(inputs[0].value);
+                },
+                labels: [],
+                doc_strs: ['abc', "/********************************************************************************************************************************************************\n *   _  ___  ____ \n *  /_\ |__) |    \n * /   \|__) |___ \n *\n *******************************************************************************************************************************************************/", '转化成ASCII'],
+            },
+            {
+                inputs_count: 2,
+                label: 'insert select',
+                inputs: {},
+                fun: function (row) {
+                    var ar = inputs[0].value.split(',');
+                    var ar2 = [];
+                    var ar3 = [];
+                    ar.forEach(function (str) {
+                        ar2.push('`' + str + '`');
+                        ar3.push('`' + str + '`=values(`' + str + '`)');
+                    });
+                    inputs[1].value = 'INSERT INTO {{new_table}} SELECT ' + ar2.join(',') + ' from {{old_table}} {{where}}  ON DUPLICATE KEY UPDATE ' + ar3.join(',');
+                },
+                labels: [],
+                doc_strs: ['topic_id,name,description,template,icon,aword,poster,still,channel_id,num,disable', 'INSERT INTO {{new_table}} SELECT `topic_id`,`name`,`description`,`template`,`icon`,`aword`,`poster`,`still`,`channel_id`,`num`,`disable` from {{old_table}} {{where}}  ON DUPLICATE KEY UPDATE `topic_id`=values(`topic_id`),`name`=values(`name`),`description`=values(`description`),`template`=values(`template`),`icon`=values(`icon`),`aword`=values(`aword`),`poster`=values(`poster`),`still`=values(`still`),`channel_id`=values(`channel_id`),`num`=values(`num`),`disable`=values(`disable`)', 'insert select '],
+            },
+            {
+                inputs_count: 3,
+                label: 'phpstorm git 文件对比辅助',
+                inputs: {},
+                fun: function (row) {
+                    var ar = inputs[0].value.split("\n");
+                    var ar2 = [];
+                    var dirs = [];
+                    var is_dir = false;
+                    ar.forEach(function (str) {
+                        var str2 = str.replace(/\s+/g, "");
+                        if (str2 === '') {
+                            dirs = [];
+                            is_dir = false;
+                            return false;
+                        }
+                        if (str2.indexOf('.php') === -1) {
+                            if (is_dir === false) {
+                                var last = dirs.length - 1;
+                                if (last < 0) last = 0;
+                                dirs[last] = str2;
+                            } else {
+                                dirs.push(str2);
+                            }
+                            is_dir = true;
+                        } else {
+                            is_dir = false;
+                            var str3 = str2 + "\t" + dirs.join('\\') + '\\' + str2;
+                            str3 = str3.replace(inputs[1].value, '');
+                            if (ar2.indexOf(str3) === -1) {
+                                ar2.push(str3);
+                            }
+                        }
+                    });
+                    inputs[2].value = ar2.sort().join("\n---------------------------------\n");
+                },
+                labels: ['原phpstrom,不同批次提交需要空一行', '输出结果中，要替换掉的字符串', '结果输出'],
+                doc_strs: ["phplib\common\nvipaction.php\npvip.funshion.com\nconf\nkey_conf.php\nv1\ndata\npromotion_da.php\nservice\promotion\nshareurl_sv.php", "key_conf.php	pvip.funshion.com\conf\key_conf.php\n---------------------------------\npromotion_da.php	pvip.funshion.com\v1\data\promotion_da.php\n---------------------------------\nshareurl_sv.php	pvip.funshion.com\v1\service\promotion\shareurl_sv.php\n---------------------------------\nvipaction.php	phplib\common\vipaction.php", '方便对比'],
+            },
+            {
+                inputs_count: 2,
+                label: 'array:去重',
+                inputs: {
+                    str1_spliter: ['str1分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                    str2_spliter: ['结果连接符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                },
+                fun: function (row) {
+                    var ar_unique = inputs[0].value.split(row.str1_spliter.value);
+                    var ar = [];
+                    ar_unique.forEach(function (str) {
+                        if (ar.indexOf(str) === -1) ar.push(str);
+                    });
+                    //var joiner = window.prompt('输入链接符', "\n");
+                    inputs[1].value = ar.join(row.str2_spliter.value);
+                },
+                labels: ['str1', '结果'],
+                doc_strs: ['1,2,2,2,3,3,4', '1,2,3,4', '去重'],
+            },
+            {
+                inputs_count: 3,
+                label: 'array:intersect',
+                inputs: {
+                    str1_spliter: ['str1分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                    str2_spliter: ['str2分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                    str3_spliter: ['结果连接符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                },
+                fun: function (row) {
+                    var ar0 = inputs[0].value.split(row.str1_spliter.value);
+                    var ar1 = inputs[1].value.split(row.str2_spliter.value);
+                    console.log(ar0, ar1);
+                    var ar2 = [];
+                    ar0.forEach(function (str) {
+                        if (ar1.indexOf(str) !== -1) ar2.push(str);
+                    });
+                    inputs[2].value = ar2.join(row.str3_spliter.value);
+                    console.log(ar2);
+                },
+                labels: ['str1', 'str2', '结果'],
+                doc_strs: ["1,2,3,4,5,6\n3,4,5", "1,2,6", 'input 0最多  input1 少'],
+            },
+            {
+                inputs_count: 2,
+                label: 'url to postman',
+                inputs: {},
+                fun: function (row) {
+                    var ar = inputs[0].value.replace(/\n/g, '').split('&');
+                    var ar2 = [];
+                    ar.forEach(function (str, index) {
+                        ar2.push((str.indexOf('%') === -1 ? str : str.urldecode()).replace(/(\w+)=(.*)?/, '$1:$2').replace("\n", '\n'))
+                    });
+                    console.log(ar2);
+                    inputs[1].value = ar2.join("\n");
+                },
+                labels: ['string with blank', 'postman trim'],
+                doc_strs: ["{\n "],
+            },
+            {
+                inputs_count: 2,
+                label: 'json/postman',
+                inputs: {},
+                fun: function (row) {
+                    var obj = JSON.parse(inputs[0].value);
+                    var ar2 = [];
+                    for (var k in obj) {
+                        ar2.push(k + ':' + obj[k]);
+                    }
+                    console.log(ar2);
+                    inputs[1].value = ar2.join("\n");
+                },
+                labels: ['json string', 'postman bulk'],
+                doc_strs: ["{\n    with_play:true,\n    with_play_detail:0,\n    with_tag:false,\n    with_more_fvvideo_fields:false,\n    api_id:251,\n    pg:1,\n    sz:1    \n}", "with_play:true\nwith_play_detail:0\nwith_tag:false\nwith_more_fvvideo_fields:false\napi_id:251\npg:1\nsz:1"],
+            },
+            {
+                inputs_count: 2,
+                label: 'postman/json',
+                inputs: {},
+                fun: function (row) {
+                    var str = inputs[0].value;
+                    var ar = str.split("\n");
+                    var obj = {};
+                    ar.forEach(function (str, index) {
+                        str = str.trim();
+                        if (str.length === 0) return false;
+                        str = str.replace(':', '#####');
+                        var ar2 = str.split('#####');
+                        if (ar2.length === 2) {
+                            obj[ar2[0].trim()] = ar2[1].trim();
+                        } else {
+                            console.log('异常切分', ar2);
+                        }
+                    });
+                    console.log(obj);
+                    inputs[1].value = JSON.stringify(obj);
+                },
+                labels: ['postman bull格式参数', '输出结果:json'],
+                doc_strs: ["with_play:true\nwith_play_detail:0\nwith_tag:false\nwith_more_fvvideo_fields:false\napi_id:251\npg:1\nsz:1", "{\n    with_play:true,\n    with_play_detail:0,\n    with_tag:false,\n    with_more_fvvideo_fields:false,\n    api_id:251,\n    pg:1,\n    sz:1    \n}"],
+            },
+            {
+                inputs_count: 2,
+                label: '清理postman bulk格式参数',
+                inputs: {
+                    yes_or_no: ['是否所有双引号也转化', new Emt('input').setPros({type: 'checkbox'})],
+                },
+                fun: function (row) {
+                    var str = inputs[0].value;
+                    var ar = str.split("\n");
+                    console.log(ar);
+                    var ar2 = [];
+                    ar.forEach(function (str, index) {
+                        str = str.trim();
+                        str = str.replace(/;$/g, "");
+                        str = str.replace(/ = /g, ":");
+                        str = str.replace(/\s?:\s/g, "");
+                        if (row.yes_or_no.checked) {
+                            str = str.replace(/\"/g, "");
+                        }
+                        ar2.push(str);
+                    });
+                    console.log(ar2);
+                    inputs[1].value = ar2.join("\n");
+                },
+                labels: ['postman bulk格式参数 不干净的', 'postman bulk格式参数 干净的'],
+                doc_strs: [],
+            },
+
+            {
+                inputs_count: 2,
+                label: 'urlencode',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = inputs[0].value.urlencode();
+                },
+                labels: ['原数据', 'url编码后'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 2,
+                label: 'urldecode',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = inputs[0].value.urldecode();
+                },
+                labels: ['url编码', 'url解码后'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 2,
+                label: 'md5',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = hex_md5(inputs[0].value);
+                },
+                labels: ['字符串', 'md5接轨哦'],
+                doc_strs: ['结果同mysql md5函数', '11111111', '1bbd886460827015e5d605ed44252251'],
+            },
+
+            {
+                inputs_count: 2,
+                label: 'base64_Encode',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = inputs[0].value.base64encode();
+                },
+                labels: ['原数据', 'base64编码后'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 2,
+                label: 'base64_Decode',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = inputs[0].value.base64decode();
+                },
+                labels: ['base64编码', 'base64解码后'],
+                doc_strs: [],
+            },
+
+            {
+                inputs_count: 3,
+                label: '查找缺失并补上',
+                inputs: {
+                    spliter: ['切割符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                    is_show_exist: ['已存在的是否展示', new Emt('input').setPros({type: 'checkbox'})],
+                    partten_not_exist: ['未匹配替换表达 模板 ', new Emt('input').setPros({type: 'text'})],
+                    partten_exist: ['匹配的替换表达 模板', new Emt('input').setPros({type: 'text'})],
+                    partten_str: ['匹配表达符号', new Emt('input').setPros({type: 'text', value: '#STR#'})],
+                },
+                fun: function (row) {
+                    var str = inputs[1].value;
+                    var strs = inputs[0].value.split(row.spliter.value);
+                    var is_show_exist = row.is_show_exist.checked;
+                    var reg = new RegExp(row.partten_str.value, 'g');//  row.partten_str.value== '#STR#' 时 replace(reg, str1) 就会相当于 .replace(/#STR#/g, str1)
+                    strs.forEach(function (str1, index) {
+                        console.log(str1, str.indexOf(str1));
+                        if (str.indexOf(str1) === -1) {
+                            inputs[2].value = inputs[2].value + (row.partten_not_exist.value ? row.partten_not_exist.value.replace(reg, str1) : str1) + "\n";
+                        } else {
+                            if (is_show_exist) {
+                                inputs[2].value = inputs[2].value + (row.partten_exist.value ? row.partten_exist.value.replace(reg, str1) : str1) + "\n";
+                            }
+                        }
+                    })
+                },
+                labels: ['str1 要被切成数组转化的', 'str2 被查找字符串', '结果: str3 查找出来和替换的'],
+                doc_strs: [' 字符串【 a,b,c】以逗号切分成数组 【array】', '循环查看 在字符串【ab】中是否存在 array的元素【ele】', '存在的表达式为[#STR#],不存在的表达式为!!!!#STR#---- ', '那么结果就是:', "[a]\n[b]\n!!!!c----\n"],
+            },
+            {
+                inputs_count: 2,
+                label: '获取时间戳',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = '';
+                    try {
+                        var input_ts = new Date(inputs[0].value.trim()).getTime();
+                        inputs[1].value += "输入时间" + inputs[0].value + "\n";
+                        inputs[1].value += "\n毫秒级" + input_ts.toString() + "\n";
+                        inputs[1].value += "\n秒级" + parseInt(input_ts / 1000).toString() + "\n";
+                    } catch (e) {
+                        inputs[1].value += "输入时间" + inputs[0].value + "---->错误\n";
+                    }
+                    // var date_now=(new Date(+new Date() + 8 * 3600 * 1000)).toISOString().replace(/([TZ]|.000)/ig, ' ').replace(/(^\d+-\d+-)|(\.(.*)?$)/ig, '');
+                    var date_now = new Date().toISOString().replace(/([TZ]|.000)/ig, ' ').substring(0, 19);
+
+                    var input_now = new Date(date_now).getTime();
+                    inputs[1].value += "当前时间\n" + date_now + "\n";
+                    inputs[1].value += "毫秒级\n" + input_now.toString() + "\n";
+                    inputs[1].value += "秒级\n" + parseInt(input_now / 1000).toString() + "\n";
+                },
+                labels: ['date，yyyy-mm-dd H:i:s 格式，可以不填写', '结果'],
+                doc_strs: ['结果同mysql md5函数', '11111111', '1bbd886460827015e5d605ed44252251'],
+            },
+            {
+                inputs_count: 2,
+                label: '时间戳转date',
+                inputs: {},
+                fun: function (row) {
+                    inputs[1].value = '';
+                    try {
+                        var input_ts = new Date((parseInt(inputs[0].value.trim()) + 8 * 3600) * 1000);
+                        inputs[1].value += input_ts.toISOString().replace(/([TZ]|.000)/ig, ' ').substring(0, 19);
+                    } catch (e) {
+                        inputs[1].value += "输入时间" + inputs[0].value + "---->错误\n";
+                    }
+
+                },
+                labels: ['时间戳', '结果'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 3,
+                label: '对比两个字符串',
+                inputs: {},
+                fun: function (row) {
+                    inputs[2].value = '';
+                    var ar = [inputs[0].value, inputs[1].value, [], []];
+                    var len1 = inputs[0].value.length;
+                    var len2 = inputs[1].value.length;
+                    for (var i = 0; i < len1; i++) {
+                        if (i < len2 && ar[0][i] === ar[1][i]) {
+                            ar[2].push('*');
+                        } else {
+                            //ar[2][i] = ar[0][i];
+                            ar[2].push(ar[0][i]);
+                        }
+                    }
+
+                    for (var i = 0; i < len2; i++) {
+                        if (i < len1 && ar[1][i] === ar[0][i]) {
+                            //ar[3][i] = '*';
+                            ar[3].push('*');
+                        } else {
+                            ar[3][i] = ar[1][i];
+                            //ar[2].push(ar[1][i]);
+                        }
+                    }
+                    console.log(ar);
+                    ar[2] = ar[2].join('');
+                    ar[3] = ar[3].join('');
+
+                    inputs[2].value = ar.join("\n");
+                },
+                labels: ['str1', 'str2', '对比结果'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 2,
+                label: 'csv二维数组替换',
+                inputs: {
+                    csv: ['上传文件', new Emt('input').setPros({type: 'file'})],
+                    tpl: ['替换模板', new Emt('input').setPros({type: 'text'})],
+                },
+                fun: function (row) {
+                    if (row.csv.files.length === 0) {
+                        alert('没上传文件');
+                        return false;
+                    }
+                    var fr = new FileReader();
+                    //  fr.file = row.csv.files[0];
+                    fr.onload = function (evt) {
+                        var tpl_str = row.tpl.value;
+                        inputs[0].value = evt.target.result.trim();
+                        var strs1 = inputs[0].value.split("\n");
+                        var ar = [];
+                        strs1.forEach(function (str1, index) {
+                            var strs2 = str1.split(',');
+                            var str = tpl_str;
+                            strs2.forEach(function (str2, index) {
+                                str = str.replace('$' + index.toString(), str2);
+                            });
+                            ar.push(str);
+                        });
+                        inputs[1].value = ar.join("\n");
+                    };
+                    // fr.readAsDataURL(tmp_img);
+                    fr.readAsText(row.csv.files[0], 'GBK');
+                },
+                labels: ['csv内容', '替换结果'],
+                doc_strs: ['$0 代表 row[0],$2代表row[2]'],
+            },
+            {
+                inputs_count: 2,
+                label: '逐行正则替换',
+                inputs: {
+                    search: ['正则替换', new Emt('input').setPros({type: 'text'})],
+                    replace: ['输出', new Emt('input').setPros({type: 'text'})],
+                    is_ignore_splace: ['是否忽略空格', new Emt('input').setPros({type: 'checkbox'})],
+                },
+                fun: function (row) {
+                    var strs1 = inputs[0].value.trim().split("\n");
+                    console.log('正则', row.search.value, row.replace.value);
+                    var s = new RegExp(row.search.value, 'g');
+                    var r = row.replace.value;
+                    var ar = [];
+                    inputs[1].value = '';
+                    if (row.is_ignore_splace.checked) {
+                        console.log();
+                        strs1.forEach(function (str1, index) {
+                            ar.push(str1.trim().replace(/\s+/g, "").replace(s, r));
+                        });
+                    } else {
+                        strs1.forEach(function (str1, index) {
+                            ar.push(str1.trim().replace(s, r));
+                        });
+                    }
+
+                    inputs[1].value = ar.join("\n");
+                },
+                labels: ['内容输入', '替换结果'],
+                doc_strs: ["/data/log/vip/vipscript.log.wf2020082901-  'order_code' => 's202008271737285480241713339',\n", "2020082901 202008271737285480241713339',\n", ".*?wf(\\d+).*?(\\d+)", "$1 $2", "/data/log/vip/vipscript.log.wf(\\d+)-  'order_code' => '(\\w\\d+)', <$1><$2> 两个\d之外的都被当成空气(不在结果中出现)", '(\d+).*?(\d+) 转换结果还会有其他字符'],
+            },
+            {
+                inputs_count: 2,
+                label: 'json美化/注释',
+                inputs: {
+                    space_amount: ['缩进个数', new Emt('input').setPros({type: 'number', value: 4})],
+                    is_comment: ['是否为注释', new Emt('input').setPros({type: 'checkbox'})],
+                    add_comment: ['附加注释', function () {
+                        var btn = new Emt('input').setPros({type: 'checkbox'});
+                        btn.addEventListener('change', function () {
+                            if (btn.checked) {
+                                labels[2].classList.remove('hide');
+                                inputs[2].classList.remove('hide');
+                            } else {
+                                inputs[2].classList.add('hide');
+                                labels[2].classList.add('hide');
+                            }
+                        });
+                        return btn;
+                    }()],
+                },
+                fun: function (row) {
+                    try {
+                        var obj = JSON.parse(inputs[0].value.trim());
+                        var str = JSON.stringify(obj, null, parseInt(row.space_amount.value));
+                        if (row.is_comment.checked) {
+                            str = '* ' + str.replace(/\n/g, '\n* ');
+                        }
+                        if (row.add_comment.checked) {
+                            str = '* ' + str.replace(/\n/g, '\n* ');
+                        }
+                        //t.replace(/\:(.*)?/g,'');  取json冒号以后的东西
+                        //t.replace(/"(.*)?/g,''); //取json每行缩进多少，进行排序
+                        inputs[1].value = str;
+                    } catch (e) {
+                        console.log(e.message);
+                        alert(e.message);
+                    }
+                },
+                labels: ['json', '美化之后的', 'json注释'],
+                doc_strs: [],
+            },
+            {
+                inputs_count: 2,
+                label: 'code_tpl',
+                inputs: {
+                    str1_spliter: ['str1分隔符', select_ele([['回车', "\n"], ['逗号', ','], ['原本是json', 'json']])],
+                },
+                fun: function (row) {
+
+                },
+                labels: [],
+                doc_strs: [],
+            },
+        ];
+        btns_div.addNodes([new Emt('h1').setPros({textContent: '选择业务：'})]);
+        var operat_divs = [];
+        opts.forEach(function (opt, index) {
+            //   var row = row_line(opt.labels);
+            var row = new Emt('div').setPros({className: 'row_line'});
+            var b = new Emt('button').setPros({textContent: opt.label});
+            b.addEventListener('click', function () {
+                opt.fun(row);
+            });
+            row.addNodes([b]);
+            for (var key in opt.inputs) {
+                row.addNodes([
+                    new Emt('label').setPros({
+                        textContent: opt.inputs[key][0],
+                        className: 'op_input_label'
+                    }).addNodes([opt.inputs[key][1]])
+                ]);
+                row[key] = opt.inputs[key][1];
+            }
+            btns_div.addNodes([row]);
+            operat_div.addNodes([row]);
+            operat_divs.push(row);
+            var b2 = new Emt('span').setPros({textContent: opt.label, div_index: index});
+            b2.title = opt.doc_strs.join("\n*****************************\n");
+
+            row.classList.add('hide');
+            b2.addEventListener('click', function () {
+                doc_pre.textContent = b2.title;
+                inputs.forEach(function (input, index) {
+                    if (index < opt.inputs_count) {
+                        //inputs[index].classList.remove('hide');
+                        //labels[index].classList.remove('hide');
+                        input_divs[index].classList.remove('hide');
+                    } else {
+                        //inputs[index].classList.add('hide');
+                        //labels[index].classList.add('hide');
+                        input_divs[index].classList.add('hide');
+                    }
+                });
+                opt.labels.forEach(function (str, index) {
+                    labels[index].textContent = str || '#';
+                });
+                operat_divs.forEach(function (div, index) {
+                    if (b2.div_index === index) {
+                        div.classList.remove('hide');
+                    } else {
+                        div.classList.add('hide');
+                    }
+                });
+            });
+            btns_div.addNodes([new Emt('label').setPros({className: 'btn_label'}).addNodes([
+
+                new Emt('input').setPros({type: 'radio', name: 'btns_label'}),
+                b2
+                //new Emt('span').setPros({textContent: b2.textContent})
+            ])]);
+        });
+
+        inputs.forEach(function (input, index) {
+            var small = new Emt('button').setPros({textContent: '缩小'});
+            var bigger = new Emt('button').setPros({textContent: '扩大'});
+            small.addEventListener('click', function () {
+                input.style.height = (input.clientHeight - 150).toString() + 'px';
+            });
+            bigger.addEventListener('click', function () {
+                input.style.height = (input.clientHeight + 150).toString() + 'px';
+            });
+            display_div.addNodes([new Emt('label').setPros({textContent: 'inputs' + index.toString()}).addNodes([small, bigger])]);
+        })
+    });
+
+
+</script>
+</body>
+</html>

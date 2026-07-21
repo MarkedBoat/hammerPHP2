@@ -1,0 +1,2372 @@
+﻿<<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>职位list</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, sans-serif;
+            background: #f5f7fb;
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        /* ===== 卡片 ===== */
+        .card {
+            flex: 1;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            padding: 20px 22px 24px;
+            /*display: flex;*/
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0b1a33;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .card-sub {
+            color: #6b7a8f;
+            font-size: 14px;
+            margin-bottom: 14px;
+            padding-left: 14px;
+            border-left: 4px solid #3b82f6;
+            background: #f8faff;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+            flex-shrink: 0;
+        }
+
+        .card-sub code {
+            background: #eef2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1e3a6f;
+        }
+
+        /* ===== 错误提示 ===== */
+        .error-msg {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .error-msg::before {
+            content: '⚠️';
+            font-size: 18px;
+        }
+
+        /* ===== 工具栏 ===== */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2a41;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 5px 10px;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            min-width: 100px;
+            color: #0b1a33;
+            transition: 0.2s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .filter-group input::placeholder {
+            color: #aab3c5;
+        }
+
+        /* ===== 自定义公司下拉组件 ===== */
+        .company-select-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .company-select-wrapper input {
+            padding: 5px 10px;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            min-width: 200px;
+            color: #0b1a33;
+            transition: 0.2s;
+        }
+
+        .company-select-wrapper input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .company-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .company-dropdown.show {
+            display: block;
+        }
+
+        .company-dropdown .option {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.1s;
+        }
+
+        .company-dropdown .option:hover {
+            background: #f0f4fe;
+        }
+
+        .company-dropdown .option:active {
+            background: #dbeafe;
+        }
+
+        .company-dropdown .no-result {
+            padding: 8px 12px;
+            color: #8a9bb0;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* ===== 分页 ===== */
+        .pager {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .pager button {
+            padding: 3px 10px;
+            border: 1px solid #dce1ea;
+            background: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2a41;
+            cursor: pointer;
+            transition: 0.15s;
+            min-width: 32px;
+        }
+
+        .pager button:hover:not(:disabled) {
+            background: #f0f4fe;
+            border-color: #3b82f6;
+            color: #1a4c8a;
+        }
+
+        .pager button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pager .page-info {
+            font-size: 13px;
+            color: #4a5a72;
+            padding: 0 4px;
+        }
+
+        .pager select {
+            padding: 3px 6px;
+            border: 1px solid #dce1ea;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .pager .count-info {
+            font-size: 13px;
+            color: #4a5a72;
+            margin-right: 4px;
+        }
+
+        /* ===== 列控制面板 ===== */
+        .col-panel {
+            background: #f8fafd;
+            border: 1px solid #e9edf4;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            padding: 6px 14px;
+            flex-shrink: 0;
+        }
+
+        .col-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .col-panel-header button {
+            background: none;
+            border: 1px solid #dce1ea;
+            padding: 0 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .col-panel-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-top: 6px;
+        }
+
+        .col-check {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+        }
+
+        .col-check input[type="checkbox"] {
+            margin: 0;
+        }
+
+        /* ===== 表格容器 ===== */
+        .table-wrap {
+            flex: 1;
+            overflow: visible; /* 关键：内部滚动，表头固定生效 */
+            border: 1px solid #e9edf4;
+            border-radius: 14px;
+            background: #fff;
+            min-height: 200px;
+        }
+
+        /* ===== 表格 ===== */
+        .grid {
+            /*width: 100%;*/
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            table-layout: fixed; /* 使各列按比例分配宽度，撑满容器 */
+        }
+
+        /* 为各列分配宽度（根据内容合理设置） */
+        .grid th:nth-child(1), .grid td:nth-child(1) {
+            width: 60px;
+        }
+
+        /* ID */
+
+        /* 操作列固定宽度 */
+        .grid th:last-child, .grid td:last-child {
+            width: 80px;
+        }
+
+        .grid thead {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+
+        .grid tfoot {
+            position: sticky;
+            bottom: 0;
+            z-index: 5;
+        }
+
+        .grid thead th {
+            background: #f8fafd;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f2a41;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            user-select: none;
+            transition: background 0.1s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .grid thead th.sortable {
+            cursor: pointer;
+        }
+
+        .grid thead th.sortable:hover {
+            background: #eef3fc;
+        }
+
+        .grid thead th .th-inner {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .grid thead th .sort-icon {
+            font-size: 13px;
+            color: #8a9bb0;
+            transition: 0.2s;
+            line-height: 1;
+        }
+
+        .grid thead th .sort-icon.active {
+            color: #3b82f6;
+        }
+
+        .grid thead th .sort-icon.desc {
+            transform: rotate(180deg);
+        }
+
+        /* 列宽拖放调整 */
+        .grid thead th {
+            position: relative;
+        }
+
+        .col-resizer {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            cursor: col-resize;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .col-resizer:hover,
+        .col-resizer:active {
+            background: #3b82f6;
+        }
+
+        .grid tbody td {
+            padding: 6px 10px;
+            color: #1f2a41;
+            vertical-align: middle;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .grid tbody tr {
+            border-bottom: 1px solid #edf1f7;
+            transition: background 0.12s;
+        }
+
+        .grid tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .grid tbody tr:hover {
+            background: #DDD;
+        }
+
+        .grid tbody tr:nth-child(even) {
+            background: #efedef;
+        }
+
+        .grid tbody tr:nth-child(even):hover {
+            background: #DDD;
+        }
+
+        /* ===== 固定列（ID和操作列） ===== */
+        .grid thead th:first-child,
+        .grid tbody td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            background: #fff;
+            min-width: 60px;
+            border-right: 1px solid #edf1f7;
+        }
+
+        .grid tfoot th:first-child,
+        .grid thead th:first-child {
+            background: #f8fafd;
+            z-index: 6;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .grid thead th:last-child,
+        .grid tbody td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 3;
+            background: #fff;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .grid thead th:last-child {
+            background: #f8fafd;
+            z-index: 6;
+        }
+
+        /* ===== 状态标签 ===== */
+        .badge {
+            display: inline-block;
+            padding: 1px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge.active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge.inactive {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge.pending {
+            background: #fef3c7;
+            color: #a16207;
+        }
+
+        /* ===== 空/加载 ===== */
+        .grid .empty-row td,
+        .grid .loading-row td {
+            padding: 30px 14px;
+            text-align: center;
+            color: #8a9bb0;
+            font-size: 14px;
+        }
+
+        .grid .loading-row td::after {
+            content: ' ⏳';
+        }
+
+        /* ===== 按钮 ===== */
+        .btn {
+            padding: 2px 8px;
+            border: 1px solid #dce1ea;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.15s;
+        }
+
+        .btn:hover {
+            background: #eef3fc;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn-sm {
+            padding: 1px 6px;
+            font-size: 11px;
+        }
+
+        /* ===== 编辑弹窗 ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px 24px;
+            /*max-width: 720px;*/
+            max-width: 1200px;
+            width: 92%;
+            max-height: 85vh;
+            overflow: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-header .close-x {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            color: #6b7a8f;
+        }
+
+        .modal-header .close-x:hover {
+            color: #1f2a41;
+        }
+
+        .modal pre {
+            background: #f5f7fb;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 50vh;
+            overflow: auto;
+            line-height: 1.8em;
+        }
+
+        .modal .field-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .modal .field-row label {
+            min-width: 70px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal .switch-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .modal .switch-group .sw {
+            padding: 2px 12px;
+            border: 1px solid #dce1ea;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.15s;
+        }
+
+        .modal .switch-group .sw.active {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        .modal .switch-group .sw:hover:not(.active) {
+            background: #f0f4fe;
+        }
+
+        .modal textarea {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            font-size: 13px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .modal .modal-actions .btn {
+            padding: 6px 18px;
+            font-size: 14px;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 700px) {
+            #app {
+                padding: 8px;
+            }
+
+            .card {
+                padding: 12px 10px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group input,
+            .filter-group select,
+            .company-select-wrapper input {
+                min-width: unset;
+                width: 100%;
+            }
+
+            .pager {
+                justify-content: center;
+                margin-top: 4px;
+            }
+
+            .table-wrap {
+                min-height: 150px;
+            }
+
+            .modal {
+                padding: 14px;
+                max-width: 96%;
+            }
+        }
+
+        .items-one-div {
+            width: 100%;
+            display: flex;
+
+            label {
+                flex: 1;
+
+                input {
+                    display: none;
+                }
+
+                span {
+                    width: 100%;
+                    display: block;
+                    padding-top: 0.5em;
+                    padding-bottom: 0.5em;
+                    text-align: center;
+                }
+
+                input:checked + span {
+                    background: #3b82f6;
+
+                }
+            }
+        }
+
+        .is_yn {
+
+        }
+
+        .is_yn + select {
+            padding-right: 3em;
+        }
+    </style>
+    <script src="/static/file/js/kl-hammer.js" charset="UTF-8"></script>
+
+</head>
+<body>
+
+<div id="app">
+    <div class="card">
+
+        <!-- 标题 -->
+        <h1 class="card-title">📋 职位 DataGrid </h1>
+        <p class="card-sub">
+            <code>
+                用以展示html/vue能力,联动 / 筛选 / 排序 / 分页 / 列控制 / 编辑 / 弹窗
+            </code>
+        </p>
+
+        <!-- 错误 -->
+        <div v-if="error" class="error-msg">{{ error }}</div>
+
+        <!-- ====== 工具栏 ====== -->
+        <div class="toolbar">
+            <div class="filter-group">
+                <template v-for="col in columns" :key="col.key">
+                    <template v-if="col.isAllowQuery">
+                        <!-- 特殊处理 com_id：使用可搜索下拉 -->
+                        <template v-if="col.key === 'is_php' || col.key === 'fav_lev'">
+                            <hr style="width: 100%">
+                        </template>
+
+                        <template v-if="col.key === 'com_id'">
+                            <label :for="'f-' + col.key">{{ col.label }}</label>
+                            <div class="company-select-wrapper">
+                                <input
+                                        type="text"
+                                        :id="'f-' + col.key"
+                                        :placeholder="'搜索公司名或ID'"
+                                        v-model="companySearch"
+                                        @input="onCompanySearch"
+                                        @focus="onCompanyFocus"
+                                        @blur="onCompanyBlur"
+                                        autocomplete="off"
+                                />
+                                <div class="company-dropdown" :class="{ show: companyDropdownOpen && filteredCompanies.length > 0 }">
+                                    <div
+                                            v-for="item in filteredCompanies"
+                                            :key="item.com_id"
+                                            class="option"
+                                            @mousedown.prevent="selectCompany(item)"
+                                    >
+                                        {{ item.title }}
+                                    </div>
+                                    <div v-if="filteredCompanies.length === 0 && companySearch.trim() !== ''" class="no-result">
+                                        无匹配公司
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <!-- 其他字段保持原样 -->
+                        <template v-else>
+                            <label :for="'f-' + col.key" :class="{ is_yn: col.isTinyInt===true }">{{ col.label }}</label>
+                            <input v-if="!col.isTinyInt"
+                                   :id="'f-' + col.key"
+                                   type="text"
+                                   :placeholder="col.label"
+                                   v-model="queryMap[col.key]"
+                                   @input="onQueryChange"/>
+                            <select v-else
+                                    :id="'f-' + col.key"
+                                    v-model="queryMap[col.key]"
+                                    @change="onQueryChange">
+                                <template v-if="col.items">
+                                    <option value="">全部</option>
+                                    <option
+                                            v-for="item in col.items"
+                                            :key="item.val"
+                                            :value="item.val"
+                                    >
+                                        {{ item.text }}
+                                    </option>
+                                </template>
+                                <template v-else>
+                                    <option value="">全部</option>
+                                    <option value="1">是</option>
+                                    <option value="2">否</option>
+                                </template>
+
+                            </select>
+                        </template>
+                    </template>
+                </template>
+                <hr>
+                <button @click="openJobInTabs()">获取即时信息</button>
+
+            </div>
+
+            <div class="pager">
+                <span class="count-info">共 <strong>{{ total }}</strong> 条</span>
+                <button @click="goPage(1)" :disabled="currentPage===1||loading">⏮</button>
+                <button @click="goPage(currentPage-1)" :disabled="currentPage===1||loading">◀</button>
+                <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                <button @click="goPage(currentPage+1)" :disabled="currentPage===totalPages||loading">▶</button>
+                <button @click="goPage(totalPages)" :disabled="currentPage===totalPages||loading">⏭</button>
+                <select v-model.number="pageSize" @change="onPageSizeChange">
+                    <option :value="5">5</option>
+                    <option :value="10">10</option>
+                    <option :value="20">20</option>
+                    <option :value="50">50</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ====== 列控制 ====== -->
+        <div class="col-panel">
+            <div class="col-panel-header" @click="panelOpen = !panelOpen">
+                <span>📋 列显示控制</span>
+                <button>{{ panelOpen ? '收起' : '展开' }}</button>
+            </div>
+            <div v-if="panelOpen" class="col-panel-body">
+                <div v-for="col in columns" :key="col.key" class="col-check">
+                    <input type="checkbox" :id="'c-'+col.key" v-model="col.isShowInGrid" @change="onColumnsChange"/>
+                    <label :for="'c-'+col.key">{{ col.label }}</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== 表格 + 底部翻页（table-area 包裹，底部悬浮） ====== -->
+        <div class="table-area">
+            <!-- ====== 表格 ====== -->
+            <div class="table-wrap">
+                <table class="grid">
+                    <thead>
+                    <tr>
+                        <th v-for="col in visibleCols" :key="col.key"
+                            :class="{ sortable: col.sortable }"
+                            :style="col.width ? {width: col.width} : {}"
+                            @click="col.sortable && handleSort(col.key)">
+                                <span class="th-inner">
+                                    {{ col.label }}
+                                    <span v-if="col.sortable" class="sort-icon"
+                                          :class="{ active: sortKey===col.key, desc: sortKey===col.key && sortOrder==='desc' }">
+                                        {{ sortKey === col.key ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅' }}
+                                    </span>
+                                </span>
+                            <span class="col-resizer" @mousedown.stop.prevent="onColResizerDown($event, col)"></span>
+                        </th>
+                        <th style="text-align:center;width:80px;">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-if="loading" class="loading-row">
+                        <td :colspan="visibleCols.length+1">加载中</td>
+                    </tr>
+                    <tr v-else v-for="row in dataList" :key="row.id">
+                        <td v-for="col in visibleCols" :key="col.key"
+                            @click="handleCellClick(col, row)">
+                            <template v-if="col.render">
+                                <span v-html="getRender(col, row)"></span>
+                            </template>
+                            <template v-else-if="col.isLongText">
+                                <span :title="row[col.key]">{{ truncate(row[col.key], 20) }}</span>
+                            </template>
+                            <template v-else-if="col.isTinyInt">
+                                <template v-if="col.itemVal2Text">
+                                    <span>{{ col.itemVal2Text[row[col.key]] || '未知' }}</span>
+                                </template>
+                                <template v-else>
+                                    <span>{{ row[col.key] === 1 ? '✔️' : '❌' }}</span>
+                                </template>
+
+                            </template>
+                            <template v-else>
+                                {{ row[col.key] }}
+                            </template>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm" @click.stop="showJson(row)">修改</button>
+                            <button class="btn btn-sm" @click.stop="openEdit(row)">编辑</button>
+                        </td>
+                    </tr>
+                    <tr v-if="!loading && dataList.length===0" class="empty-row">
+                        <td :colspan="visibleCols.length+1">没有匹配的数据</td>
+                    </tr>
+                    </tbody>
+                    <
+                    <tfoot>
+                    <!-- ====== 底部翻页 ====== -->
+                    <tr>
+                        <th colspan="100">
+                            <div class="toolbar" flag="2">
+                                <div></div>
+                                <div class="pager">
+                                    <span class="count-info">共 <strong>{{ total }}</strong> 条</span>
+                                    <button @click="goPage(1)" :disabled="currentPage===1||loading">⏮</button>
+                                    <button @click="goPage(currentPage-1)" :disabled="currentPage===1||loading">◀</button>
+                                    <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                                    <button @click="goPage(currentPage+1)" :disabled="currentPage===totalPages||loading">▶</button>
+                                    <button @click="goPage(totalPages)" :disabled="currentPage===totalPages||loading">⏭</button>
+                                    <select v-model.number="pageSize" @change="onPageSizeChange">
+                                        <option :value="5">5</option>
+                                        <option :value="10">10</option>
+                                        <option :value="20">20</option>
+                                        <option :value="50">50</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- ====== JSON 模态窗 ====== -->
+    <div v-if="jsonModal" class="modal-overlay" @click.self="jsonModal=false">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>行数据 (JSON)</h3>
+                <button class="close-x" @click="jsonModal=false">×</button>
+            </div>
+            <pre>{{ jsonData }}</pre>
+            <div class="modal-actions">
+                <button class="btn btn-primary" @click="jsonModal=false">关闭</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ====== 详情弹窗 ====== -->
+    <div v-if="detailModal" class="modal-overlay" @click.self="closeDetail">
+        <div class="modal" id="detail-modal">
+            <div class="modal-header">
+                <h3><a target="_blank" :href=`${detailForm.job_link}`>岗位详情
+                    {{ detailForm.msg }}</a></h3>
+                <button class="close-x" @click="closeDetail">×</button>
+            </div>
+            <div style="width: 100%;float:left;">
+                <div style="width: 50%;float:left;">
+                    <div style="margin-bottom:8px;">
+                        <strong>标题：</strong><span>[{{ detailForm.id }}] {{ detailForm.title }}</span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong>公司：</strong><span>{{ detailForm.com_name }}</span>
+                        <button @click="openUrlInNewWindow(`https://www.google.com/search?q=${detailForm.area_title} ${detailForm.com_name}+是IT外包吗?`)"> search</button>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong>区域：</strong><span>{{ detailForm.area_title }}</span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong>薪资：</strong><span>{{ detailForm.salary_text }}</span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong>HR活跃：</strong><span>{{ detailForm.hr_active_time }}</span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong>create：</strong><span>{{ detailForm.create_date }}</span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong>update：</strong><span>{{ detailForm.update_date }}</span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong>times：</strong><span>{{ detailForm.spider_times }}</span>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <strong>标签：</strong>
+                        <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                             v-html="detailForm.tags"></pre>
+                    </div>
+                </div>
+                <div style="width: 50%;float:left;">
+                    <div v-for="f in editIsFields" :key="f.key" class="field-row">
+                        <label>{{ f.label }}</label>
+                        <div class="switch-group">
+                            <button class="sw" :class="{ active: detailForm[f.key] === 1 }"
+                                    @click="detailForm[f.key]=1">是
+                            </button>
+                            <button class="sw" :class="{ active: detailForm[f.key] === 2 }"
+                                    @click="detailForm[f.key]=2">否
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom:6px;">
+                <input type="hidden" v-model="detailForm.fav_lev">
+                <div class="items-one-div">
+                    <label v-for="favLev in favLevs">
+                        <input type="checkbox" :value="favLev.val" :checked="detailForm.fav_lev === favLev.val"
+                               @change="onFavLevChange(favLev.val, $event)">
+                        <span v-text="favLev.label"></span>
+                    </label>
+                </div>
+            </div>
+            <div style="margin-bottom:10px;">
+                <strong>详情：</strong>
+                <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                     v-html="detailForm.detail"></pre>
+            </div>
+
+
+            <div style="position:sticky;bottom:0;background: #FFF;padding-bottom: 1em;padding-top: 1em">
+                <label style="display:block;margin-bottom:2px;font-weight:500;">拒绝原因</label>
+                <textarea v-model="detailForm.deny_reason" rows="3"></textarea>
+                <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <label style="font-weight:500;">🎤 语音输入：</label>
+                    <span v-if="isRecording" style="color:#e53e3e;font-size:13px;">● 录音中...</span>
+                    <span v-if="isVoiceProcessing" style="color:#3b82f6;font-size:13px;">⏳ 处理中...</span>
+                    <span style="font-size:12px;color:#8a9bb0;">长按 ` 键录制（浏览器 + API 识别结果均记录）</span>
+                </div>
+
+            </div>
+
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" @click="submitEdit2">提交</button>
+                <button class="btn" @click="closeDetail">关闭</button>
+            </div>
+            <div style="margin-bottom:10px;">
+                <strong>deepseek意见：</strong>
+                <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                     v-html="detailForm.ds_deny_reason"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 编辑模态窗 ====== -->
+    <div v-if="editModal" class="modal-overlay" @click.self="closeEdit">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>编辑岗位</h3>
+                <button class="close-x" @click="closeEdit">×</button>
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <strong>标题：</strong><span>{{ editForm.title }}</span>
+            </div>
+            <div style="margin-bottom:10px;">
+                <strong>详情：</strong>
+                <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                     v-html="editForm.detail"></pre>
+            </div>
+
+            <div v-for="f in editIsFields" :key="f.key" class="field-row">
+                <label>{{ f.label }}</label>
+                <div class="switch-group">
+                    <button class="sw" :class="{ active: editForm[f.key] === 1 }"
+                            @click="editForm[f.key]=1">是
+                    </button>
+                    <button class="sw" :class="{ active: editForm[f.key] === 2 }"
+                            @click="editForm[f.key]=2">否
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="display:block;margin-bottom:2px;font-weight:500;">拒绝原因</label>
+                <textarea v-model="editForm.deny_reason" rows="3"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" @click="submitEdit">提交</button>
+                <button class="btn" @click="closeEdit">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/vue.global.prod.js"></script>
+<script>
+    const {createApp, ref, computed, onMounted, getCurrentInstance, watch, nextTick} = Vue;
+
+    const app = createApp({
+        setup() {
+            // ================================================================
+            // 1. 配置
+            // ================================================================
+            const API_URL = '/spider/v1/boss_zhipin/jobs';
+            const COMPANY_API = 'http://kl-home-pc:8002/spider/v1/boss_zhipin/companies';
+            const MD5_API = '/spider/v1/boss_zhipin/getJobMd5Times';
+            const FAST_EDIT_API_URL = '/spider/v1/boss_zhipin/fastEditJob';
+            const EDIT_API_URL = '/spider/v1/boss_zhipin/editJob';
+
+
+            // ================================================================
+            // 2. 列配置
+            // ================================================================
+            const rawCols = [
+                {
+                    key: 'id',
+                    label: 'ID',
+                    type: 'int',
+                    sortable: true,
+                    isAllowQuery: true,
+                    render: (col, row) => {
+                        let tmp = JSON.stringify({job_id: row.job_id});
+                        jobUrls.push(`https://www.zhipin.com/job_detail/${row.job_id}.html#${tmp}#`);
+                        return row.id;
+                    },
+                    call: (col, row) => {
+                        let tmp = JSON.stringify({job_id: row.job_id});
+                        window.open(`https://www.zhipin.com/job_detail/${row.job_id}.html#${tmp}#`);
+                    }
+                },
+                {
+                    key: 'com_id',
+                    label: '公司',
+                    type: 'string',
+                    isAllowQuery: true,
+                    operator: '$like',
+                    // 增加 render 函数，根据 com_id 显示公司名
+                    render: (col, row) => {
+                        // 从 companyMap 中查找
+                        const name = companyMap.value[row.com_id];
+                        return name || row.com_id; // 若未找到则显示 ID
+                    }
+                },
+                {key: 'area_title', label: '区域名称', type: 'string', isAllowQuery: true, operator: '$like'},
+                {key: 'area_code', label: '区域编码', type: 'string', isShowInGrid: false},
+                {key: 'job_id', label: '职位ID', type: 'string', isShowInGrid: false, isAllowQuery: true, operator: '$like'},
+                {key: 'title', label: '职位名称', type: 'string', isAllowQuery: true, operator: '$like'},
+                {key: 'salary_gte', label: '最低薪资', type: 'int', isShowInGrid: false},
+                {key: 'salary_lte', label: '最高薪资', type: 'int', isShowInGrid: false},
+                {key: 'salary_text', label: '薪资描述', type: 'string'},
+                {key: 'salary_ocr', label: '薪资OCR', type: 'string', isShowInGrid: false},
+                {key: 'salary_shoot_md5', label: '薪资截图MD5', type: 'string', isShowInGrid: false},
+                {key: 'tags', label: '标签', type: 'json', isLongText: true, readOnly: true},
+                {key: 'deny_reason', label: '否定原因', type: 'string', readOnly: true},
+                {
+                    key: 'detail',
+                    label: '详情',
+                    type: 'longtext',
+                    isLongText: true,
+                    isAllowQuery: true,
+                    operator: '$like',
+                    call: (col, row) => {
+                        openDetail(row);
+                    }
+                },
+
+                {key: 'remark', label: '备注', type: 'longtext', isLongText: true, isShowInGrid: false,},
+                //  {key: 'ds_deny_reason', label: 'D老师的否定', type: 'longtext', isLongText: true},
+                {key: 'spider_date', label: '爬取时间', type: 'datetime', isShowInGrid: false,},
+                {key: 'publish_date', label: '发布时间', type: 'datetime', isShowInGrid: false},
+                {key: 'hr_title', label: 'HR头衔', type: 'string'},
+                {key: 'hr_active_time', label: 'HR活跃时间', type: 'string', isShowInGrid: false},
+                {key: 'hr_active_int', label: 'HR活跃状态', type: 'int', render: (col, row) => row.hr_active_time || '-'},
+                {key: 'hr_hot_date', label: 'HR最新在线', type: 'datetime', isShowInGrid: false},
+                // tinyint 字段
+                {key: 'is_php', label: 'PHP岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_match', label: '匹配?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_self_biz', label: '自营岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_hr_live', label: 'hr活跃?', type: 'tinyint', isShowInGrid: false, isAllowQuery: true, isTinyInt: true, readOnly: true},
+                {key: 'is_true', label: '真实?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_edu_ok', label: '学历OK?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_jd_ol', label: '岗位在线?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, readOnly: true},
+                {key: 'is_salary_ok', label: '薪水?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+
+                {key: 'is_ds_ok', label: 'DS ok?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1, readOnly: true},
+                {
+                    key: 'is_boss_fav',
+                    label: 'src fav?',
+                    type: 'tinyint',
+                    isAllowQuery: true,
+                    isTinyInt: true,
+                    readOnly: true,
+                    items: [{val: 1, text: '感兴趣'}, {val: 2, text: '否'}]
+                },
+
+                {key: 'is_ok', label: 'OK?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1, readOnly: true},
+                //  {key: 'is_deny', label: '否定?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 2, readOnly: true},
+                {
+                    key: 'fav_lev',
+                    label: 'fav_lev',
+                    type: 'tinyint',
+                    isAllowQuery: true,
+                    isTinyInt: true,
+                    defaultVal: '',
+                    readOnly: true,
+                    //1一点不想    2有点不想    3 不确定   4有点兴趣   5特别有兴趣
+                    items: [
+                        {text: '未标记', val: 0},
+                        {text: '一点不想', val: 1},
+                        {text: '有点不想', val: 2},
+                        {text: '不确定', val: 3},
+                        {text: '有点兴趣', val: 4},
+                        {text: '特别有兴趣', val: 5}
+                    ],
+                    call: async (col, row) => {
+                        const old = row[col.key];
+                        const val = old === 1 ? 2 : 1;
+                        try {
+                            const res = await fetch(FAST_EDIT_API_URL, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({id: row.id, field: col.key, value: val}),
+                            });
+                            if (!res.ok) throw new Error('更新失败');
+                            row[col.key] = val;
+                        } catch (e) {
+                            alert('更新失败：' + e.message);
+                        }
+
+                    }
+                },
+
+                {key: 'spider_times', label: '出现次数', type: 'int'},
+                {key: 'create_date', label: '创建时间', type: 'datetime'},
+                {key: 'update_date', label: '更新时间', type: 'datetime'},
+                // ===== 新增三个字段 =====
+                {
+                    key: 'job_md5_cnt',
+                    label: '重复次数',
+                    type: 'int',
+                    isAllowQuery: true,
+                    sortable: true,
+                },
+                {
+                    key: 'is_md5_old',
+                    label: '是否老数据',
+                    type: 'int',
+                    isAllowQuery: true,
+                    sortable: true,
+                    // 可以按 tinyint 显示
+                    isTinyInt: true,   // 显示为是/否
+                },
+                {
+                    key: 'job_md5',
+                    label: '数据特征',
+                    type: 'string',
+                    isAllowQuery: true,
+                    isShowInGrid: false,  // 默认隐藏
+                    sortable: true,
+                },
+            ];
+
+            const defaultCol = {
+                isAllowQuery: false,
+                sortable: true,
+                operator: '=',
+                isLongText: false,
+                isTinyInt: false,
+                isShowInGrid: true,
+                render: null,
+                call: null,
+                attr: {},
+                defaultVal: false
+            };
+            const columns = ref(rawCols.map(c => {
+                if (c.items) {
+                    c.itemVal2Text = {};
+                    c.items.forEach(item => {
+                        c.itemVal2Text[item.val] = item.text;
+                    });
+                }
+                return {...defaultCol, ...c};
+            }));
+
+            // 1一点不想    2有点不想    3 不确定   4有点兴趣   5特别有兴趣
+            const favLevs = ref([
+                {val: 0, label: '未标记'},
+                {val: 1, label: '一点不想'},
+                {val: 2, label: '有点不想'},
+                {val: 3, label: '不确定'},
+                {val: 4, label: '有点兴趣'},
+                {val: 5, label: '特别有兴趣'}
+            ]);
+
+            // ================================================================
+            // 3. 状态
+            // ================================================================
+            const dataList = ref([]);
+            const total = ref(0);
+            const loading = ref(false);
+            const error = ref('');
+            const queryMap = ref({});
+            const sortKey = ref('id');
+            const sortOrder = ref('desc');
+            const currentPage = ref(1);
+            const pageSize = ref(10);
+            const panelOpen = ref(false);
+
+            // 公司相关状态（全量缓存）
+            const allCompanies = ref([]);         // 全量公司列表 [{com_id, title}]
+            const companyMap = ref({}); // com_id -> title 映射
+            const companySearch = ref('');
+            const companyDropdownOpen = ref(false);
+
+            const jsonModal = ref(false);
+            const jsonData = ref('');
+
+            const editModal = ref(false);
+            const editForm = ref({id: null, title: '', detail: '', deny_reason: ''});
+            const editIsFields = computed(() => columns.value.filter(c => c.type === 'tinyint' && c.key.startsWith('is_')));
+
+
+            const detailModal = ref(false);
+            const detailForm = ref({id: null, title: '', detail: '', deny_reason: '', ds_deny_reason: '', tags: '', fav_lev: 3});
+            const currentDetailIndex = ref(-1);
+            const detailIsFields = computed(() => columns.value.filter(c => c.type === 'tinyint' && c.key.startsWith('is_')));
+
+            let jobUrls = [];
+
+
+            // 语音输入相关状态
+            const isRecording = ref(false);
+            const isVoiceProcessing = ref(false);
+            // Web Audio API 录制相关（用于生成 WAV 格式）
+            let audioContext = null;
+            let mediaStreamSource = null;
+            let scriptProcessor = null;
+            let pcmData = [];
+            const WAV_SAMPLE_RATE = 16000; // 语音识别用 16kHz 足够了
+
+            // 浏览器 SpeechRecognition（两种方式同时运行，本地API结果优先）
+            let browserRecognition = null;
+            // 存储浏览器识别到的最终文本（当本地API失败时作为降级）
+            let browserTranscript = '';
+
+
+            // ================================================================
+            // 4. 计算
+            // ================================================================
+            const totalPages = computed(() => Math.ceil(total.value / pageSize.value) || 1);
+            const visibleCols = computed(() => columns.value.filter(c => c.isShowInGrid !== false));
+
+            // 过滤后的公司列表（用于下拉）
+            const filteredCompanies = computed(() => {
+                const keyword = companySearch.value.trim().toLowerCase();
+                if (!keyword) return allCompanies.value;
+                return allCompanies.value.filter(item =>
+                    item.title.toLowerCase().includes(keyword) ||
+                    item.com_id.toLowerCase().includes(keyword)
+                );
+            });
+
+            // ================================================================
+            // 5. 构建请求参数
+            // ================================================================
+            function buildParams() {
+                const attr = {};
+                columns.value.forEach(c => {
+                    if (!c.isAllowQuery) return;
+                    const v = queryMap.value[c.key];
+                    if (v === undefined || v === null || v === '') return;
+                    attr[c.key] = c.operator === '$like' ? {$like: v} : v;
+                });
+                const sort = {};
+                if (sortKey.value) sort[sortKey.value] = sortOrder.value;
+                return {attr, sort, page: {no: currentPage.value, size: pageSize.value}};
+            }
+
+            // ================================================================
+            // 6. 请求数据 + 获取 MD5 次数
+            // ================================================================
+            async function fetchData() {
+                loading.value = true;
+                error.value = '';
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(buildParams()),
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    if (json?.data) {
+                        jobUrls = [];
+                        const list = json.data.data || [];
+                        dataList.value = list;
+                        total.value = json.data.count || 0;
+
+                        // 若列表不为空，则获取 MD5 统计
+                        if (list.length > 0) {
+                            await fetchMd5Times(list);
+                        }
+                    } else {
+                        throw new Error('响应格式错误');
+                    }
+                } catch (e) {
+                    error.value = '请求失败：' + e.message;
+                    dataList.value = [];
+                    total.value = 0;
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            // ================================================================
+            // 7. 请求 MD5 次数
+            // ================================================================
+            async function fetchMd5Times(list) {
+                // 提取 job_md5 字段（注意字段名）
+                const md5s = list.map(item => item.job_md5).filter(Boolean);
+                if (md5s.length === 0) return;
+
+                try {
+                    const res = await fetch(MD5_API, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({job_md5s: md5s}),
+                    });
+                    if (!res.ok) throw new Error(`MD5接口HTTP ${res.status}`);
+                    const json = await res.json();
+                    if (json?.data) {
+                        // 构建映射 job_md5 -> times
+                        const map = {};
+                        json.data.forEach(item => {
+                            map[item.job_md5] = item.times;
+                        });
+                        // 更新 dataList 中的 job_md5_cnt
+                        dataList.value.forEach(row => {
+                            if (row.job_md5 && map[row.job_md5] !== undefined) {
+                                row.job_md5_cnt = map[row.job_md5];
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn('获取MD5次数失败', e);
+                    // 不阻断主流程
+                }
+            }
+
+            // ================================================================
+            // 8. 加载全量公司数据
+            // ================================================================
+            async function loadAllCompanies() {
+                try {
+                    // 一次性获取全部，设置较大 page_size 或去掉分页
+                    // 假设接口支持 page_size 参数，我们设为 99999
+                    const url = `${COMPANY_API}?page[size]=99999`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('加载公司列表失败');
+                    const json = await res.json();
+                    if (json?.data?.data) {
+                        const list = json.data.data;
+                        allCompanies.value = list;
+                        // 填充映射
+                        const map = {};
+                        list.forEach(item => {
+                            map[item.com_id] = item.title;
+                        });
+                        companyMap.value = map;
+                    }
+                } catch (e) {
+                    console.warn('加载公司列表失败', e);
+                    error.value = '加载公司列表失败：' + e.message;
+                }
+            }
+
+            // ================================================================
+            // 8. 公司搜索（本地过滤）
+            // ================================================================
+            function onCompanySearch() {
+                // 输入时自动展开下拉
+                if (companySearch.value.trim() !== '') {
+                    companyDropdownOpen.value = true;
+                } else {
+                    // 清空搜索时展示全部
+                    companyDropdownOpen.value = allCompanies.value.length > 0;
+                }
+                // 如果输入为空，且之前有选中的公司，清除筛选
+                if (companySearch.value.trim() === '') {
+                    if (queryMap.value.com_id !== undefined) {
+                        delete queryMap.value.com_id;
+                        onQueryChange();
+                    }
+                }
+            }
+
+            // 聚焦时展开下拉
+            function onCompanyFocus() {
+                companyDropdownOpen.value = true;
+            }
+
+            // 选择公司
+            function selectCompany(item) {
+                companySearch.value = item.title;
+                queryMap.value.com_id = item.com_id;
+                companyDropdownOpen.value = false;
+                onQueryChange(); // 触发数据刷新
+            }
+
+            // 失焦处理（延迟关闭下拉）
+            function onCompanyBlur() {
+                setTimeout(() => {
+                    companyDropdownOpen.value = false;
+                }, 200);
+            }
+
+            // ================================================================
+            // 10. 监听排序（重置页码并请求）
+            // ================================================================
+            watch([sortKey, sortOrder], () => {
+                currentPage.value = 1;
+                fetchData();
+            });
+
+            // ================================================================
+            // 11. 分页操作
+            // ================================================================
+            async function goPage(p) {
+                if (p < 1 || p > totalPages.value || p === currentPage.value) return;
+                currentPage.value = p;
+                await fetchData();
+            }
+
+            // ================================================================
+            // 12. pageSize 变化
+            // ================================================================
+            function onPageSizeChange() {
+                currentPage.value = 1;
+                fetchData();
+                // 改变后失去焦点，避免键盘左右键再触发 select 变化
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
+            }
+
+            // ================================================================
+            // 13. 筛选变化
+            // ================================================================
+            function onQueryChange() {
+                currentPage.value = 1;
+                fetchData();
+            }
+
+            // ================================================================
+            // 14. 排序处理
+            // ================================================================
+            function handleSort(key) {
+                if (sortKey.value === key) {
+                    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortKey.value = key;
+                    sortOrder.value = 'asc';
+                }
+            }
+
+            // ================================================================
+            // 15. 工具
+            // ================================================================
+            function truncate(text, len = 20) {
+                if (!text) return '';
+                return text.length > len ? text.substring(0, len) + '…' : text;
+            }
+
+            function getRender(col, row) {
+                if (!col.render) return '';
+                const fn = typeof col.render === 'function' ? col.render : null;
+                return fn ? fn(col, row) : '';
+            }
+
+            // ================================================================
+            // 16. 单元格点击
+            // ================================================================
+            const instance = getCurrentInstance();
+
+            function handleCellClick(col, row) {
+                if (col.call) {
+                    const fn = typeof col.call === 'function' ? col.call : instance?.proxy?.[col.call];
+                    if (typeof fn === 'function') fn(col, row);
+                    return;
+                }
+                if (col.isLongText) {
+                    alert(row[col.key] || '(空)');
+                } else if (col.isTinyInt) {
+                    toggleTiny(row, col);
+                }
+            }
+
+            async function toggleTiny(row, col) {
+                const old = row[col.key];
+                const val = old === 1 ? 2 : 1;
+                try {
+                    const res = await fetch(FAST_EDIT_API_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({id: row.id, field: col.key, value: val}),
+                    });
+                    if (!res.ok) throw new Error('更新失败');
+                    row[col.key] = val;
+                } catch (e) {
+                    alert('更新失败：' + e.message);
+                }
+            }
+
+            // ================================================================
+            // 17. JSON 查看
+            // ================================================================
+            function showJson(row) {
+                jsonData.value = JSON.stringify(row, null, 2);
+                jsonModal.value = true;
+            }
+
+
+            function openDetail(row) {
+                const comName = companyMap.value[row.com_id] || row.com_id || '';
+
+                detailForm.value = {
+                    msg: '新打开',
+                    id: row.id,
+                    job_id: row.job_id || '',
+                    job_link: `https://www.zhipin.com/job_detail/${row.job_id}.html#autoCloseWindow=no#` + JSON.stringify({job_id: row.job_id}),
+                    title: row.title || '',
+                    detail: (row.detail || '').replace(/\\n/g, '\n'),
+                    tags: (row.tags || '').replace(/\\n/g, '\n'),
+                    ds_deny_reason: (row.ds_deny_reason || '').replace(/\\n/g, '\n'),
+                    deny_reason: (row.deny_reason || '').replace(/\\n/g, '\n'),
+                    // 新增字段
+                    com_name: comName,
+                    area_title: row.area_title || '',
+                    salary_text: row.salary_text || '',
+                    hr_active_time: row.hr_active_time || '',
+                    fav_lev: row.fav_lev || 0,
+                    create_date: row.create_date || '',
+                    update_date: row.update_date || '',
+                    spider_times: row.spider_times || 0,
+                };
+                editIsFields.value.forEach(f => {
+                    detailForm.value[f.key] = row[f.key];
+                });
+                if (detailForm.value.deny_reason?.trim()) {
+                    const mf = editIsFields.value.find(f => f.key === 'is_match');
+                    if (mf) detailForm.value.is_match = 2;
+                }
+                currentDetailIndex.value = dataList.value.findIndex(item => item.id === row.id);
+                detailModal.value = true;
+                if (document.getElementById('detail-modal')) {
+                    document.getElementById('detail-modal').scrollTop = '0px';
+                }
+            }
+
+            function closeDetail() {
+                detailModal.value = false;
+            }
+
+            // fav_lev 变化处理：checkbox选中时赋值，取消选中时设为3
+            function onFavLevChange(val, event) {
+                detailForm.value.fav_lev = event.target.checked ? val : 3;
+            }
+
+
+            async function submitEdit2() {
+                try {
+                    const payload = {
+                        id: detailForm.value.id,
+                        attrs: {
+                            fav_lev: detailForm.value.fav_lev,
+                            deny_reason: detailForm.value.deny_reason,
+                        }
+                    };
+                    editIsFields.value.forEach(f => {
+                        if (f.readOnly !== true) {
+                            payload.attrs[f.key] = detailForm.value[f.key];
+                        }
+                    });
+                    const res = await fetch(EDIT_API_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload),
+                    });
+                    const json = await res.json();
+                    console.log('json', json, res);
+                    if (json.code !== 'ok') throw new Error(json.msg || '更新失败');
+                    detailForm.value.msg = '更新成功';
+                    console.log('更新成功');
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                    // 用 API 返回的最新数据更新 dataList 和当前 detailForm
+                    const idx = dataList.value.findIndex(item => item.id === json.data?.id);
+                    if (idx !== -1) {
+                        dataList.value[idx] = json.data;
+                        // 同步更新 detailForm 中对应行的显示内容
+                        if (detailModal.value && currentDetailIndex.value === idx) {
+                            detailForm.value.deny_reason = (json.data.deny_reason || '').replace(/\\n/g, '\n');
+                        }
+                    } else {
+                        fetchData();
+                    }
+                    // 自动切换到下一行（优先）；没有下一行时翻到下一页第一行
+                    if (detailModal.value) {
+                        if (currentDetailIndex.value < dataList.value.length - 1) {
+                            openDetail(dataList.value[currentDetailIndex.value + 1]);
+                        } else {
+                            // 已经是最后一行 → 向后翻页，显示下一页第一行
+                            const oldPage = currentPage.value;
+                            await goPage(currentPage.value + 1);
+                            if (currentPage.value !== oldPage && dataList.value.length > 0) {
+                                openDetail(dataList.value[0]);
+                            } else {
+                                detailForm.value.msg = '没有下一页了';
+                            }
+                        }
+                    }
+
+                } catch (e) {
+                    alert('更新失败：' + e.message);
+                }
+            }
+
+
+            // ================================================================
+            // 18. 编辑
+            // ================================================================
+            function openEdit(row) {
+                editForm.value = {
+                    id: row.id,
+                    title: row.title || '',
+                    detail: row.detail || '',
+                    deny_reason: row.deny_reason || '',
+                };
+                editIsFields.value.forEach(f => {
+                    editForm.value[f.key] = row[f.key];
+                });
+                if (editForm.value.deny_reason?.trim()) {
+                    const mf = editIsFields.value.find(f => f.key === 'is_match');
+                    if (mf) editForm.value.is_match = 2;
+                }
+                editModal.value = true;
+            }
+
+            function closeEdit() {
+                editModal.value = false;
+            }
+
+            async function submitEdit() {
+                try {
+                    const payload = {id: editForm.value.id, deny_reason: editForm.value.deny_reason};
+                    editIsFields.value.forEach(f => {
+                        payload[f.key] = editForm.value[f.key];
+                    });
+                    const res = await fetch(EDDIT_API_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload),
+                    });
+                    const json = await res.json();
+                    if (!res.ok || json.code !== 0) throw new Error(json.msg || '更新失败');
+                    const idx = dataList.value.findIndex(item => item.id === json.data?.id);
+                    if (idx !== -1) dataList.value[idx] = json.data;
+                    else fetchData();
+                    closeEdit();
+                    alert('更新成功');
+                } catch (e) {
+                    alert('更新失败：' + e.message);
+                }
+            }
+
+            watch(() => editForm.value.deny_reason, (nv) => {
+                if (nv?.trim()) {
+                    const mf = editIsFields.value.find(f => f.key === 'is_match');
+                    if (mf && editForm.value.is_match !== 2) editForm.value.is_match = 2;
+                }
+            });
+
+            // ================================================================
+            // 19. 列控制
+            // ================================================================
+            // localStorage 键名
+            const STORAGE_COL_KEY = 'boss_grid_col_conf';
+
+            // 保存列配置（可见性 + 宽度）到 localStorage
+            function saveColConf() {
+                const conf = {};
+                columns.value.forEach(c => {
+                    conf[c.key] = {
+                        isShowInGrid: c.isShowInGrid,
+                        width: c.width || null,
+                    };
+                });
+                try {
+                    localStorage.setItem(STORAGE_COL_KEY, JSON.stringify(conf));
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            // 从 localStorage 恢复列配置
+            function restoreColConf() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_COL_KEY);
+                    if (!raw) return;
+                    const conf = JSON.parse(raw);
+                    columns.value.forEach(c => {
+                        const saved = conf[c.key];
+                        if (saved) {
+                            if (saved.isShowInGrid !== undefined) c.isShowInGrid = saved.isShowInGrid;
+                            if (saved.width) c.width = saved.width;
+                        }
+                    });
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            function onColumnsChange() {
+                saveColConf();
+            }
+
+            // 列宽拖放调整
+            let resizeCol = null;
+            let resizeStartX = 0;
+            let resizeStartWidth = 0;
+
+            function onColResizerDown(e, col) {
+                resizeCol = col;
+                resizeStartX = e.clientX;
+                resizeStartWidth = col.width ? parseInt(col.width) : 0;
+                document.addEventListener('mousemove', onColResizerMove);
+                document.addEventListener('mouseup', onColResizerUp);
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            }
+
+            function onColResizerMove(e) {
+                if (!resizeCol) return;
+                const diff = e.clientX - resizeStartX;
+                const newWidth = Math.max(40, resizeStartWidth + diff); // 最小 40px
+                resizeCol.width = newWidth + 'px';
+            }
+
+            function onColResizerUp() {
+                if (resizeCol) {
+                    saveColConf();
+                    resizeCol = null;
+                }
+                document.removeEventListener('mousemove', onColResizerMove);
+                document.removeEventListener('mouseup', onColResizerUp);
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+
+            // ================================================================
+            // 20. 初始化默认查询值
+            // ================================================================
+            function initDefaults() {
+                columns.value.forEach(c => {
+                    if (c.isAllowQuery && c.defaultVal !== false && c.defaultVal !== undefined) {
+                        queryMap.value[c.key] = c.defaultVal;
+                    }
+                });
+                sortKey.value = 'id';
+                sortOrder.value = 'desc';
+            }
+
+            // ================================================================
+            // 在新窗口打开 jobs，以更新最新消息
+            // ================================================================
+            function openJobInTabs() {
+                console.log(jobUrls)
+                jobUrls.forEach(url => {
+                    window.open(url + '#autoCloseWindow=yes', '_blank',
+                        `
+                popup,
+    width=1200,
+    height=800,
+    left=500,
+    top=300,
+    menubar=no,
+    toolbar=no,
+    location=no,
+    status=no,
+    scrollbars=yes,
+    resizable=yes
+    `
+                    );
+                })
+            }
+
+            function openUrlInNewWindow(url) {
+                window.open(url + '#autoCloseWindow=yes', '_blank',
+                    `
+                popup,
+    width=1200,
+    height=800,
+    left=500,
+    top=300,
+    menubar=no,
+    toolbar=no,
+    location=no,
+    status=no,
+    scrollbars=yes,
+    resizable=yes
+    `
+                );
+            }
+
+            // ================================================================
+            // WAV 编码工具函数
+            // ================================================================
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            function floatTo16BitPCM(view, offset, samples) {
+                for (let i = 0; i < samples.length; i++) {
+                    const s = Math.max(-1, Math.min(1, samples[i]));
+                    view.setInt16(offset + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                }
+            }
+
+            function encodeWAV(samples, sampleRate) {
+                const buffer = new ArrayBuffer(44 + samples.length * 2);
+                const view = new DataView(buffer);
+
+                // RIFF header
+                writeString(view, 0, 'RIFF');
+                view.setUint32(4, 36 + samples.length * 2, true);
+                writeString(view, 8, 'WAVE');
+
+                // fmt chunk
+                writeString(view, 12, 'fmt ');
+                view.setUint32(16, 16, true);      // chunk size
+                view.setUint16(20, 1, true);        // PCM format
+                view.setUint16(22, 1, true);        // mono
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * 2, true); // byte rate
+                view.setUint16(32, 2, true);        // block align
+                view.setUint16(34, 16, true);       // bits per sample
+
+                // data chunk
+                writeString(view, 36, 'data');
+                view.setUint32(40, samples.length * 2, true);
+
+                // Write PCM samples
+                floatTo16BitPCM(view, 44, samples);
+
+                return new Blob([buffer], {type: 'audio/wav'});
+            }
+
+            // ================================================================
+            // 语音录制 & 提交（使用 Web Audio API 录制 PCM → WAV 格式）
+            // 松开时优先使用本地 API 结果，若本地 API 无返回则降级用浏览器识别文本
+            // ================================================================
+            async function startVoiceRecording() {
+                if (isRecording.value || isVoiceProcessing.value) return;
+
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({audio: true});
+                } catch (err) {
+                    console.error('麦克风获取失败:', err);
+                    alert('无法访问麦克风: ' + err.message);
+                    return;
+                }
+
+                // ----- 1. 启动浏览器 SpeechRecognition，每次识别到结果立即写入 deny_reason（加 "b:" 前缀） -----
+                browserTranscript = '';
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition) {
+                    browserRecognition = new SpeechRecognition();
+                    browserRecognition.lang = 'zh-CN';
+                    browserRecognition.continuous = true;
+                    browserRecognition.interimResults = true;
+
+                    browserRecognition.onresult = (event) => {
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                browserTranscript += transcript;
+                                // 立即记录到 deny_reason
+                                const prev = detailForm.value.deny_reason || '';
+                                const bText = 'b:' + transcript;
+                                detailForm.value.deny_reason = prev ? prev + '\n' + bText : bText;
+                                console.log('browser.SpeechRecognition 浏览器识别结果已记录:', bText);
+                            }
+                        }
+                    };
+
+                    browserRecognition.onerror = (event) => {
+                        console.warn('browser.SpeechRecognition 降级错误:', event.error);
+                        browserRecognition = null;
+                    };
+
+                    browserRecognition.start();
+                    console.log('browser.SpeechRecognition 已启动（降级备用）');
+                } else {
+                    console.warn('当前浏览器不支持 browser.SpeechRecognition，仅使用本地 API');
+                }
+
+                // ----- 2. 启动 Web Audio API 录制 PCM 数据（主要，生成 WAV 供本地 API） ----
+                pcmData = [];
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+                    // 创建 ScriptProcessor 采集 PCM 数据
+                    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                    scriptProcessor.onaudioprocess = (event) => {
+                        const inputData = event.inputBuffer.getChannelData(0);
+                        // 降采样到 WAV_SAMPLE_RATE（16kHz）
+                        if (audioContext.sampleRate === WAV_SAMPLE_RATE) {
+                            pcmData.push(new Float32Array(inputData));
+                        } else {
+                            const ratio = audioContext.sampleRate / WAV_SAMPLE_RATE;
+                            const newLength = Math.floor(inputData.length / ratio);
+                            const downsampled = new Float32Array(newLength);
+                            for (let i = 0; i < newLength; i++) {
+                                downsampled[i] = inputData[Math.floor(i * ratio)];
+                            }
+                            pcmData.push(downsampled);
+                        }
+                    };
+
+                    mediaStreamSource.connect(scriptProcessor);
+                    scriptProcessor.connect(audioContext.destination);
+                    // 保存 stream 引用以便停止时释放
+                    window._voiceStream = stream;
+                    isRecording.value = true;
+                    console.log('🎤 Web Audio API PCM 录制已启动（主要，用于生成 WAV → 本地 API）');
+                } catch (err) {
+                    console.error('Web Audio API 启动失败:', err);
+                    // 清理
+                    stream.getTracks().forEach(track => track.stop());
+                    if (browserRecognition) {
+                        try {
+                            browserRecognition.stop();
+                        } catch (e) {
+                        }
+                        browserRecognition = null;
+                    }
+                    alert('无法启动音频录制: ' + err.message);
+                }
+            }
+
+            async function stopVoiceRecordingAndSubmit() {
+                if (!isRecording.value) return;
+
+                isRecording.value = false;
+                isVoiceProcessing.value = true;
+
+                // ----- 1. 停止 SpeechRecognition（浏览器结果已在 onresult 中实时写入） -----
+                if (browserRecognition) {
+                    try {
+                        browserRecognition.stop();
+                    } catch (e) {
+                    }
+                    browserRecognition = null;
+                    console.log('⏹️ SpeechRecognition 停止');
+                }
+
+                // ----- 2. 停止 Web Audio API 录制并释放资源 ----
+                if (scriptProcessor) {
+                    try {
+                        scriptProcessor.disconnect();
+                    } catch (e) {
+                    }
+                    scriptProcessor = null;
+                }
+                if (mediaStreamSource) {
+                    try {
+                        mediaStreamSource.disconnect();
+                    } catch (e) {
+                    }
+                    mediaStreamSource = null;
+                }
+                if (audioContext) {
+                    try {
+                        await audioContext.close();
+                    } catch (e) {
+                    }
+                    audioContext = null;
+                }
+
+                // 释放麦克风流
+                if (window._voiceStream) {
+                    try {
+                        window._voiceStream.getTracks().forEach(track => track.stop());
+                    } catch (e) {
+                    }
+                    window._voiceStream = null;
+                }
+
+                await new Promise(r => setTimeout(r, 200));
+
+                // ---- 将 PCM 数据编码为 WAV，调用本地 API（加 "api:" 前缀） ----
+                if (pcmData.length > 0) {
+                    // 合并所有 PCM chunk
+                    const totalLength = pcmData.reduce((sum, chunk) => sum + chunk.length, 0);
+                    const allSamples = new Float32Array(totalLength);
+                    let offset = 0;
+                    for (const chunk of pcmData) {
+                        allSamples.set(chunk, offset);
+                        offset += chunk.length;
+                    }
+                    pcmData = []; // 释放内存
+
+                    // 编码为 WAV
+                    const wavBlob = encodeWAV(allSamples, WAV_SAMPLE_RATE);
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', wavBlob, 'voice.wav');
+                        kl.ajax({
+                            url: 'http://localhost:8212/transcribe',
+                            method: 'POST',
+                            form: formData,
+                            isAjax:true,
+                            success: (res) => {
+                                console.log('WAV 音频转录结果:', res);
+                            },
+                            error: (res) => {
+
+                            }
+                        })
+                        const res = await fetch('http://localhost:8212/transcribe', {
+                            method: 'POST',
+                            credentials: 'include', // 关键！否则 Cookie 不会被发送，导致跨域鉴权失败
+                            body: formData,
+                            signal: controller.signal,
+                        });
+                        console.log(res);
+                        clearTimeout(timeoutId);
+                        const json = await res.json();
+                        const localText = json?.text?.trim();
+                        if (localText) {
+                            const apiText = 'api:' + localText;
+                            detailForm.value.deny_reason = (detailForm.value.deny_reason || '') + '\n' + apiText;
+                            console.log('✅ 本地 API(WAV) 结果已追加:', apiText);
+                        }
+                    } catch (e) {
+                        clearTimeout(timeoutId);
+                        console.error('本地 API 请求失败:', e);
+                    }
+                }
+
+                isVoiceProcessing.value = false;
+            }
+
+            // ================================================================
+            // 22. 键盘控制
+            // ================================================================
+            // 检查当前焦点是否在表单元素上（避免与 select/input 等的原生键盘操作冲突）
+            function isFormElement(el) {
+                if (!el) return false;
+                const tag = el.tagName.toLowerCase();
+                return tag === 'input' || tag === 'select' || tag === 'textarea' || tag === 'button' || el.isContentEditable;
+            }
+
+            document.addEventListener('keydown', async (e) => {
+                // 如果焦点在表单元素上，不处理导航快捷键
+                if (isFormElement(document.activeElement)) return;
+
+                console.log(e.key, e.keyCode, 'type:', e.type);
+                switch (e.key) {
+                    case 'Escape':
+                        if (e.ctrlKey) {
+                            // 刷新
+
+                        }
+                        break;
+                    case 'ArrowUp':
+                        if (detailModal.value) {
+                            e.preventDefault();
+                            if (currentDetailIndex.value > 0) {
+                                // 有上一行，直接切换
+                                openDetail(dataList.value[currentDetailIndex.value - 1]);
+                            } else {
+                                // 已经是第一行 → 向前翻页，显示上一页最后一行
+                                const oldPage = currentPage.value;
+                                await goPage(currentPage.value - 1);
+                                if (currentPage.value !== oldPage && dataList.value.length > 0) {
+                                    openDetail(dataList.value[dataList.value.length - 1]);
+                                } else {
+                                    detailForm.value.msg = '没有上一页了';
+                                }
+                            }
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (detailModal.value) {
+                            e.preventDefault();
+                            if (currentDetailIndex.value < dataList.value.length - 1) {
+                                // 有下一行，直接切换
+                                openDetail(dataList.value[currentDetailIndex.value + 1]);
+                            } else {
+                                // 已经是最后一行 → 向后翻页，显示下一页第一行
+                                const oldPage = currentPage.value;
+                                await goPage(currentPage.value + 1);
+                                if (currentPage.value !== oldPage && dataList.value.length > 0) {
+                                    openDetail(dataList.value[0]);
+                                } else {
+                                    detailForm.value.msg = '没有下一页了';
+                                }
+                            }
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        if (detailModal.value) {
+                            e.preventDefault();
+                            if (e.ctrlKey) {
+                                //console.log('收藏等级:', detailForm.value.fav_lev);
+                                if (detailForm.value.fav_lev > 1) {
+                                    detailForm.value.fav_lev -= 1;
+                                } else {
+                                    detailForm.value.fav_lev = 5;
+                                }
+                            } else {
+                                const oldPage = currentPage.value;
+                                await goPage(currentPage.value - 1);
+                                // 切换到新页码后，显示第一行
+                                if (currentPage.value !== oldPage && dataList.value.length > 0) {
+                                    openDetail(dataList.value[0]);
+                                }
+                            }
+
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (detailModal.value) {
+                            e.preventDefault();
+                            if (e.ctrlKey) {
+                                if (detailForm.value.fav_lev < 5) {
+                                    detailForm.value.fav_lev += 1;
+                                }
+                            } else {
+                                const oldPage = currentPage.value;
+                                await goPage(currentPage.value + 1);
+                                if (currentPage.value !== oldPage && dataList.value.length > 0) {
+                                    openDetail(dataList.value[0]);
+                                }
+                            }
+                        }
+                        break;
+                    case '`':
+                        if (detailModal.value) {
+                            e.preventDefault();
+                            startVoiceRecording();
+                        }
+                        break;
+                    case 'Enter':
+                        if (detailModal.value && e.ctrlKey) {
+                            e.preventDefault();
+                            submitEdit2();
+                        }
+                        break;
+
+                }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                if (e.key === '`' && detailModal.value) {
+                    e.preventDefault();
+                    stopVoiceRecordingAndSubmit();
+                }
+            });
+            // ================================================================
+            // 23. 生命周期
+            // ================================================================
+            onMounted(async () => {
+                initDefaults();
+                restoreColConf();          // 恢复列配置（显示状态 + 列宽）
+                await loadAllCompanies(); // 先加载全量公司
+                fetchData();              // 再加载表格数据
+            });
+
+            // ================================================================
+            // 22. 暴露
+            // ================================================================
+            return {
+                columns,
+                dataList,
+                total,
+                totalPages,
+                loading,
+                error,
+                queryMap,
+                sortKey,
+                sortOrder,
+                currentPage,
+                pageSize,
+                panelOpen,
+                visibleCols,
+                jsonModal,
+                jsonData,
+                editModal,
+                editForm,
+                editIsFields,
+                // 公司相关
+                companySearch,
+                companyDropdownOpen,
+                filteredCompanies,
+                onCompanySearch,
+                onCompanyFocus,
+                selectCompany,
+                onCompanyBlur,
+                // 方法
+                onQueryChange,
+                goPage,
+                onPageSizeChange,
+                handleSort,
+                truncate,
+                getRender,
+                handleCellClick,
+                showJson,
+                openEdit,
+                closeEdit,
+                submitEdit,
+                onColResizerDown,
+                onColumnsChange,
+                //detail 窗口
+                detailModal,
+                detailForm,
+                currentDetailIndex,
+                openDetail,
+                submitEdit2,
+                closeDetail,
+                // 语音相关
+                isRecording,
+                isVoiceProcessing,
+                //
+                favLevs,
+                onFavLevChange,
+                //
+                openJobInTabs,
+                //
+                openUrlInNewWindow
+
+            };
+        },
+    });
+
+    app.mount('#app');
+</script>
+</body>
+</html>

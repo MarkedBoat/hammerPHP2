@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试粘贴</title>
+    <script src="http://cdn-imfile1.fengmi.tv/inmi/js/hammer.js"></script>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div id="div_projects">
+        <div class="div_project">
+            <div>项目</div>
+            <div>->master</div>
+            <div>->test</div>
+            <div>->debug</div>
+            <div>CLI入口</div>
+            <div>remark</div>
+        </div>
+    </div>
+    <div id="his">
+        <div id="his_list"></div>
+        <div id="his_info">
+            <textarea id="his_info_text"></textarea>
+            <button id="his_retry">重试</button>
+        </div>
+    </div>
+</div>
+<script></script>
+
+
+<script>
+
+    // window.onpaste = (event)-> # it's coffeescript. don't panic!
+    // for item in event.clipboardData.items # 如果你是用 jQuery 拦截了 paste 事件，你需要用 event.originalEvent 来代替 event
+    // if item.type.match /^image\// # item.type 为粘贴过来的内容的 mime-type，如 image/png
+    console.log('111');
+    document.getElementById('his_info_text').addEventListener('paste', function (event) {
+        console.log('222');
+        console.log(event.clipboardData.items);
+        var len = event.clipboardData.items.length;
+        for (var i = 0; i < len; i++) {
+            console.log(event.clipboardData.items[i]);
+            if (event.clipboardData.items[i].type.match(/^image\//)) {
+                console.log(event.clipboardData.items[i], typeof event.clipboardData.items[i]);
+                var fd = new FormData();
+                fd.append('file', event.clipboardData.items[i].getAsFile());
+                fd.append('filename', Math.random().toString().substr(2));
+                ajax({
+                    url: 'http://content.fengmi.tv/upload.php',
+                    form: fd,
+                    isAjax: false,
+                    success: function (data) {
+                        console.log(data);
+                        if(data.sta && data.sta===true){
+                           console.log(data.url);
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    },
+                    type:'json'
+                });
+            }
+        }
+    });
+
+
+</script>
+</body>
+</html>

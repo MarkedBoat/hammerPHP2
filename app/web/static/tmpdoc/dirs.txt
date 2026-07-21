@@ -1,0 +1,141 @@
+-rw-r--r-- 1 nginx nginx 235 Mar  7  2019 fcgapi.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/fcgapi/');
+-rw-r--r-- 1 nginx nginx 287 Apr 22  2020 pa.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/article/');
+-rw-r--r-- 1 nginx nginx 1001 Apr  8  2019 pam.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/aggre/');
+-rw-r--r-- 1 nginx nginx 233 Jan 16  2018 pb.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/pbeans/');
+-rw-rw-r-- 1 nginx nginx 236 Jun 13  2017 pc.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/credit/');
+-rw-r--r-- 1 nginx nginx 231 Nov 12 15:42 pfmg.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/pfmg/');
+-rwxrwxr-x 1 nginx nginx 231 Jun 28  2019 plets.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/home/');
+-rw-rw-r-- 1 nginx nginx 233 Jun 13  2017 pl.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/media/');
+-rwxrwxr-x 1 nginx nginx 233 Jun 13  2017 pm.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/media/');
+-rwxrwxr-x 1 nginx nginx 231 Jun 13  2017 po.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/home/');
+-rw-rw-r-- 1 nginx nginx 231 Jun 13  2017 po.funshion.com/v7/script/base.php
+define('LOG_PATH', '/data/log/home/');
+-rwxrwxr-x 1 nginx nginx 234 Jun 13  2017 ps.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/search/');
+-rw-rw-r-- 1 nginx nginx 224 Jun 13  2017 ps.funshion.com/v6/script/base.php
+define('LOG_PATH', '/data/log/search/');
+-rwxrwxr-x 1 nginx nginx 230 Jun 13  2017 psi.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/site/');
+-rw-r--r-- 1 nginx nginx 229 Mar 10  2020 psmart.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/psmart/');
+-rw-rw-r-- 1 nginx nginx 229 Jun 13  2017 psms.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/sms/');
+-rw-rw-r-- 1 nginx nginx 229 Jan  2  2020 ptp.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/ptp/');
+-rwxrwxr-x 1 nginx nginx 230 Jun 13  2017 pu.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/user/');
+-rwxrwxr-x 1 nginx nginx 232 Jun 13  2017 pv.funshion.com/v5/script/base.php
+define('LOG_PATH', '/data/log/video/');
+-rwxr-xr-x 1 nginx nginx 232 Dec 31  2019 pv.funshion.com/v6/script/base.php
+define('LOG_PATH', '/data/log/video/');
+-rwxr-xr-x 1 nginx nginx 232 Dec 31  2019 pv.funshion.com/v7/script/base.php
+define('LOG_PATH', '/data/log/video/');
+-rw-rw-r-- 1 nginx nginx 229 Jun 13  2017 pvip.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/vip/');
+-rw-r--r-- 1 nginx nginx 238 Mar  7  2018 pwa.funshion.com/v1/script/base.php
+define('LOG_PATH', '/data/log/warning/');
+-rw-r--r-- 1 nginx nginx 219 Jun 25  2018 papi.funshion.com/script/base.php
+define('LOG_PATH', '/data/log/papi/');
+-rw-r--r-- 1 nginx nginx 1026 Sep  6  2019 papi.funshion.com/index.php
+define('LOG_PATH', '/data/log/papi/');
+-rw-rw-r-- 1 nginx nginx 389 Mar 14  2019 fcgapi.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/fcgapi/');
+-rw-r--r-- 1 nginx nginx 391 Apr 15  2020 pa.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/article/');
+-rw-r--r-- 1 nginx nginx 287 Nov 19  2018 pam.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/aggre/');
+-rw-rw-r-- 1 nginx nginx 287 Jun 13  2017 pam.funshion.com/v6/index.php
+define('LOG_PATH', '/data/log/aggre/');
+-rw-r--r-- 1 nginx nginx 349 Jan 16  2018 pb.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/pbeans/');
+-rw-rw-r-- 1 nginx nginx 285 Jun 13  2017 pcap.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/pcap/');
+-rwxrwxr-x 1 nginx nginx 293 Jun 13  2017 pc.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/credit/');
+-rw-r--r-- 1 nginx nginx 386 Nov 12 15:42 pfmg.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/pfmg/');
+-rw-rw-r-- 1 nginx nginx 387 Jun 28  2019 plets.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/plets/');
+-rw-rw-r-- 1 nginx nginx 291 Jun 13  2017 pl.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/live/');
+-rwxrwxr-x 1 nginx nginx 293 Jun 13  2017 pm.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/media/');
+-rw-rw-r-- 1 nginx nginx 290 Jun 13  2017 pm.funshion.com/v6/index.php
+define('LOG_PATH', '/data/log/media/');
+-rwxrwxr-x 1 nginx nginx 290 Jun 13  2017 pm.funshion.com/v7/index.php
+define('LOG_PATH', '/data/log/media/');
+-rwxrwxr-x 1 nginx nginx 294 Jun 13  2017 pmsg.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/message/');
+-rwxr-xr-x 1 nginx nginx 1114 Jan 14  2020 po.funshion.com/v10/index.php
+define('LOG_PATH','/data/log/home/');
+-rwxrwxr-x 1 nginx nginx 1128 Jun 13  2017 po.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/home/');
+-rwxrwxr-x 1 nginx nginx 287 Jun 13  2017 po.funshion.com/v6/index.php
+define('LOG_PATH', '/data/log/home/');
+-rwxrwxr-x 1 nginx nginx 1128 Jun 13  2017 po.funshion.com/v7/index.php
+define('LOG_PATH', '/data/log/home/');
+-rwxr-xr-x 1 nginx nginx 1113 Dec  1  2017 po.funshion.com/v8/index.php
+define('LOG_PATH','/data/log/home/');
+-rwxr-xr-x 1 nginx nginx 1113 Nov 19  2018 po.funshion.com/v9/index.php
+define('LOG_PATH','/data/log/home/');
+-rwxrwxr-x 1 nginx nginx 1132 Jun 13  2017 ps.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/search/');
+-rw-r--r-- 1 nginx nginx 1153 Dec 25  2018 ps.funshion.com/v6/index.php
+define('LOG_PATH', '/data/log/search/');
+-rw-rw-r-- 1 nginx nginx 288 Jun 13  2017 psi.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/site/');
+-rw-r--r-- 1 nginx nginx 389 Mar 10  2020 psmart.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/psmart/');
+-rw-rw-r-- 1 nginx nginx 284 Jun 13  2017 psms.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/sms/');
+-rw-rw-r-- 1 nginx nginx 285 Jan  2  2020 ptp.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/ptp/');
+-rwxrwxr-x 1 nginx nginx 288 Jun 13  2017 pu.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/user/');
+-rwxrwxr-x 1 nginx nginx 290 Jun 13  2017 pv.funshion.com/v5/index.php
+define('LOG_PATH', '/data/log/video/');
+-rw-rw-r-- 1 nginx nginx 288 Jun 13  2017 pv.funshion.com/v6/index.php
+define('LOG_PATH', '/data/log/video/');
+-rwxrwxr-x 1 nginx nginx 290 Jun 13  2017 pv.funshion.com/v7/index.php
+define('LOG_PATH', '/data/log/video/');
+-rw-rw-r-- 1 nginx nginx 385 May 26  2020 pvip.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/vip/');
+-rwxr-xr-x 1 nginx nginx 295 Mar  7  2018 pwa.funshion.com/v1/index.php
+define('LOG_PATH', '/data/log/warning/');
+
+
+
+'fcgapi.funshion.com'=>'/data/log/fcgapi',
+'pa.funshion.com'=>'/data/log/article',
+'pam.funshion.com'=>'/data/log/aggre',
+'papi.funshion.com'=>'/data/log/papi',
+'pb.funshion.com'=>'/data/log/pbeans',
+'pc.funshion.com'=>'/data/log/credit',
+'pcap.funshion.com'=>'/data/log/pcap',
+'pfmg.funshion.com'=>'/data/log/pfmg',
+'pl.funshion.com'=>'/data/log/live',
+'pl.funshion.com'=>'/data/log/media',
+'plets.funshion.com'=>'/data/log/home',
+'plets.funshion.com'=>'/data/log/plets',
+'pm.funshion.com'=>'/data/log/media',
+'pmsg.funshion.com'=>'/data/log/message',
+'po.funshion.com'=>'/data/log/home',
+'ps.funshion.com'=>'/data/log/search',
+'psi.funshion.com'=>'/data/log/site',
+'psmart.funshion.com'=>'/data/log/psmart',
+'psms.funshion.com'=>'/data/log/sms',
+'ptp.funshion.com'=>'/data/log/ptp',
+'pu.funshion.com'=>'/data/log/user',
+'pv.funshion.com'=>'/data/log/video',
+'pvip.funshion.com'=>'/data/log/vip',
+'pwa.funshion.com'=>'/data/log/warning',

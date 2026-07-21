@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="kl-hammer.js" charset="UTF-8"></script>
+    <title>项目列表</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div id="div_projects">
+        <div class="div_project">
+            <div>项目</div>
+            <div>->master</div>
+            <div>->test</div>
+            <div>->debug</div>
+            <div>CLI入口</div>
+            <div>remark</div>
+        </div>
+    </div>
+    <div id="his">
+        <div id="his_list"></div>
+        <div id="his_info">
+            <textarea id="his_info_text"></textarea>
+            <button id="his_retry">重试</button>
+        </div>
+    </div>
+</div>
+<script></script>
+<script>
+    //http://porter.bfcode.com/eg/v1/console/tasks
+    //http://porter.bfcode.com/eg/v1/console/kill?planId=git_deploy
+    var cfg = {
+        projects: [
+            {
+                name: 'bftvapi',
+                branchs: ['master', 'test', 'debug'],
+                shFile: '',
+                remark: 'bftvapi项目'
+            },
+            {
+                name: 'content_cms',
+                branchs: ['master', 'test', 'debug'],
+                shFile: '',
+                remark: '内容编辑后台'
+            },
+            {
+                name: 'operate_cms',
+                branchs: ['master', 'test', 'debug'],
+                shFile: '',
+                remark: '运营后台'
+            },
+            {
+                name: 'pay_web',
+                branchs: ['master', 'test', 'debug'],
+                shFile: '',
+                remark: '支付web'
+            }, {
+                name: 'porter',
+                branchs: ['master', 'test', 'debug'],
+                shFile: 'porter',
+                remark: '项目交接'
+            }, {
+                name: 'content_spider',
+                branchs: ['master', 'test', 'debug'],
+                shFile: 'hammer',
+                remark: '新内容爬虫'
+            }, {
+                name: 'content_spider_yii',
+                branchs: ['master', 'test', 'debug'],
+                shFile: 'yiic',
+                remark: '老内容爬虫'
+            }],
+        branchs: ['master', 'test', 'debug']
+    };
+    //
+    cfg.projects.forEach(function (project) {
+        var projectName = project.name;
+        var row = new Emt('div').setPros({className: 'div_project', title: projectName, project: project});
+        kl.id('div_projects').appendChild(row);
+        row.addNodes([new Emt('div').setPros({textContent: projectName})]);
+        cfg.branchs.forEach(function (brachName) {
+            row.addNodes([
+                new Emt('div').addNodes([
+                    function () {
+                        if (project.branchs.indexOf(brachName) === -1) {
+                            return new Emt('em').setPros({textContent: '--'});
+                        }
+                        var a = new Emt('button').setPros({
+                            target: '_blank',
+                            textContent: '-->' + brachName,
+                            project: projectName,
+                            branch: brachName,
+                            shFile: project.shFile
+                            //href: '/eg/v1/project/deploy?project=' + projectName + '&branch=' + brachName
+                        });
+                        a.deploy = function () {
+                            console.log('deploy');
+                            var projectName = this.project;
+                            var brachName = this.branch;
+                            var shFile = this.shFile;
+                            //(new Date()).toISOString().replace(/([TZ]|.000)/ig,' ')
+                            var btn = new Emt('button').setPros({textContent: (new Date(+new Date() + 8 * 3600 * 1000)).toISOString().replace(/([TZ]|.000)/ig, ' ').replace(/(^\d+-\d+-)|(\.(.*)?$)/ig, '') + '<<' + projectName + '/' + brachName + '>>'});
+                            if (kl.id('his_list').childElementCount === 0) {
+                                kl.id('his_list').appendChild(btn);
+                            } else {
+                                kl.id('his_list').insertBefore(btn, kl.id('his_list').firstElementChild);
+                            }
+                            ajax({
+                                url: '/eg/v1/project/deploy',
+                                data: {project: this.project, branch: this.branch, shFile: this.shFile},
+                                success: function (txt) {
+                                    //cli.log(txt);
+                                    btn.textContent += (new Date(+new Date() + 8 * 3600 * 1000)).toISOString().replace(/([TZ]|.000)/ig, ' ').replace(/(^\d+-\d+-)|(\.(.*)?$)/ig, '');
+                                    btn.data = {
+                                        project: projectName,
+                                        branch: brachName,
+                                        shFile: shFile,
+                                        result: txt,
+                                        btn: a
+                                    };
+                                    kl.id('his_info_text').textContent = ">>>>>\n" + txt;
+                                    btn.addEventListener('click', function () {
+                                        kl.id('his_info_text').textContent = this.data.result;
+                                        kl.id('his_retry').btn = this.data.btn;
+                                    });
+                                    //t.insertBefore(new Emt('a'),t.firstElementChild);
+
+                                }
+                            });
+                        };
+                        a.addEventListener('click', function () {
+                            console.log('click');
+                            kl.id('his_info_text').textContent = 'loding……';
+                            this.deploy();
+                        });
+                        return a;
+                    }()
+
+                ])
+            ])
+        });
+        row.addNodes([
+            new Emt('div').setPros({textContent: project.shFile.length > 0 ? project.shFile : '--'}),
+            new Emt('div').setPros({textContent: project.remark.length > 0 ? project.remark : '--'})
+        ]);
+
+    });
+    kl.id('his_retry').addEventListener('click', function () {
+        this.btn.deploy();
+    });
+</script>
+</body>
+</html>

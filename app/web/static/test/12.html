@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>职位list</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, sans-serif;
+            background: #f5f7fb;
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        /* ===== 卡片 ===== */
+        .card {
+            flex: 1;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            padding: 20px 22px 24px;
+            /*display: flex;*/
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0b1a33;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .card-sub {
+            color: #6b7a8f;
+            font-size: 14px;
+            margin-bottom: 14px;
+            padding-left: 14px;
+            border-left: 4px solid #3b82f6;
+            background: #f8faff;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+            flex-shrink: 0;
+        }
+
+        .card-sub code {
+            background: #eef2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1e3a6f;
+        }
+
+        /* ===== 错误提示 ===== */
+        .error-msg {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .error-msg::before {
+            content: '⚠️';
+            font-size: 18px;
+        }
+
+        /* ===== 工具栏 ===== */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2a41;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 5px 10px;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            min-width: 100px;
+            color: #0b1a33;
+            transition: 0.2s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .filter-group input::placeholder {
+            color: #aab3c5;
+        }
+
+        /* ===== 自定义公司下拉组件 ===== */
+        .company-select-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .company-select-wrapper input {
+            padding: 5px 10px;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            min-width: 200px;
+            color: #0b1a33;
+            transition: 0.2s;
+        }
+
+        .company-select-wrapper input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .company-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .company-dropdown.show {
+            display: block;
+        }
+
+        .company-dropdown .option {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.1s;
+        }
+
+        .company-dropdown .option:hover {
+            background: #f0f4fe;
+        }
+
+        .company-dropdown .option:active {
+            background: #dbeafe;
+        }
+
+        .company-dropdown .no-result {
+            padding: 8px 12px;
+            color: #8a9bb0;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* ===== 分页 ===== */
+        .pager {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .pager button {
+            padding: 3px 10px;
+            border: 1px solid #dce1ea;
+            background: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2a41;
+            cursor: pointer;
+            transition: 0.15s;
+            min-width: 32px;
+        }
+
+        .pager button:hover:not(:disabled) {
+            background: #f0f4fe;
+            border-color: #3b82f6;
+            color: #1a4c8a;
+        }
+
+        .pager button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pager .page-info {
+            font-size: 13px;
+            color: #4a5a72;
+            padding: 0 4px;
+        }
+
+        .pager select {
+            padding: 3px 6px;
+            border: 1px solid #dce1ea;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .pager .count-info {
+            font-size: 13px;
+            color: #4a5a72;
+            margin-right: 4px;
+        }
+
+        /* ===== 列控制面板 ===== */
+        .col-panel {
+            background: #f8fafd;
+            border: 1px solid #e9edf4;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            padding: 6px 14px;
+            flex-shrink: 0;
+        }
+
+        .col-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .col-panel-header button {
+            background: none;
+            border: 1px solid #dce1ea;
+            padding: 0 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .col-panel-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-top: 6px;
+        }
+
+        .col-check {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+        }
+
+        .col-check input[type="checkbox"] {
+            margin: 0;
+        }
+
+        /* ===== 表格容器 ===== */
+        .table-wrap {
+            flex: 1;
+            overflow: visible; /* 关键：内部滚动，表头固定生效 */
+            border: 1px solid #e9edf4;
+            border-radius: 14px;
+            background: #fff;
+            min-height: 200px;
+        }
+
+        /* ===== 表格 ===== */
+        .grid {
+            /*width: 100%;*/
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            table-layout: fixed; /* 使各列按比例分配宽度，撑满容器 */
+        }
+
+        /* 为各列分配宽度（根据内容合理设置） */
+        .grid th:nth-child(1), .grid td:nth-child(1) {
+            width: 60px;
+        }
+
+        /* ID */
+
+        /* 操作列固定宽度 */
+        .grid th:last-child, .grid td:last-child {
+            width: 80px;
+        }
+
+        .grid thead {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .grid thead th {
+            background: #f8fafd;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f2a41;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            user-select: none;
+            transition: background 0.1s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .grid thead th.sortable {
+            cursor: pointer;
+        }
+
+        .grid thead th.sortable:hover {
+            background: #eef3fc;
+        }
+
+        .grid thead th .th-inner {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .grid thead th .sort-icon {
+            font-size: 13px;
+            color: #8a9bb0;
+            transition: 0.2s;
+            line-height: 1;
+        }
+
+        .grid thead th .sort-icon.active {
+            color: #3b82f6;
+        }
+
+        .grid thead th .sort-icon.desc {
+            transform: rotate(180deg);
+        }
+
+        .grid tbody td {
+            padding: 6px 10px;
+            color: #1f2a41;
+            vertical-align: middle;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .grid tbody tr {
+            border-bottom: 1px solid #edf1f7;
+            transition: background 0.12s;
+        }
+
+        .grid tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .grid tbody tr:hover {
+            background: #DDD;
+        }
+
+        .grid tbody tr:nth-child(even) {
+            background: #efedef;
+        }
+
+        .grid tbody tr:nth-child(even):hover {
+            background: #DDD;
+        }
+
+        /* ===== 固定列（ID和操作列） ===== */
+        .grid thead th:first-child,
+        .grid tbody td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            background: #fff;
+            min-width: 60px;
+            border-right: 1px solid #edf1f7;
+        }
+
+        .grid thead th:first-child {
+            background: #f8fafd;
+            z-index: 6;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .grid thead th:last-child,
+        .grid tbody td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 3;
+            background: #fff;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .grid thead th:last-child {
+            background: #f8fafd;
+            z-index: 6;
+        }
+
+        /* ===== 状态标签 ===== */
+        .badge {
+            display: inline-block;
+            padding: 1px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge.active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge.inactive {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge.pending {
+            background: #fef3c7;
+            color: #a16207;
+        }
+
+        /* ===== 空/加载 ===== */
+        .grid .empty-row td,
+        .grid .loading-row td {
+            padding: 30px 14px;
+            text-align: center;
+            color: #8a9bb0;
+            font-size: 14px;
+        }
+
+        .grid .loading-row td::after {
+            content: ' ⏳';
+        }
+
+        /* ===== 按钮 ===== */
+        .btn {
+            padding: 2px 8px;
+            border: 1px solid #dce1ea;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.15s;
+        }
+
+        .btn:hover {
+            background: #eef3fc;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn-sm {
+            padding: 1px 6px;
+            font-size: 11px;
+        }
+
+        /* ===== 编辑弹窗 ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px 24px;
+            max-width: 720px;
+            width: 92%;
+            max-height: 85vh;
+            overflow: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-header .close-x {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            color: #6b7a8f;
+        }
+
+        .modal-header .close-x:hover {
+            color: #1f2a41;
+        }
+
+        .modal pre {
+            background: #f5f7fb;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 50vh;
+            overflow: auto;
+        }
+
+        .modal .field-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .modal .field-row label {
+            min-width: 70px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal .switch-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .modal .switch-group .sw {
+            padding: 2px 12px;
+            border: 1px solid #dce1ea;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.15s;
+        }
+
+        .modal .switch-group .sw.active {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        .modal .switch-group .sw:hover:not(.active) {
+            background: #f0f4fe;
+        }
+
+        .modal textarea {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #dce1ea;
+            border-radius: 8px;
+            font-size: 13px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .modal .modal-actions .btn {
+            padding: 6px 18px;
+            font-size: 14px;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 700px) {
+            #app {
+                padding: 8px;
+            }
+
+            .card {
+                padding: 12px 10px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group input,
+            .filter-group select,
+            .company-select-wrapper input {
+                min-width: unset;
+                width: 100%;
+            }
+
+            .pager {
+                justify-content: center;
+                margin-top: 4px;
+            }
+
+            .table-wrap {
+                min-height: 150px;
+            }
+
+            .modal {
+                padding: 14px;
+                max-width: 96%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="card">
+
+        <!-- 标题 -->
+        <h1 class="card-title">📋 职位 DataGrid </h1>
+        <p class="card-sub">
+            <code>
+                用以展示html/vue能力,联动 / 筛选 / 排序 / 分页 / 列控制 / 编辑 / 弹窗
+            </code>
+        </p>
+
+        <!-- 错误 -->
+        <div v-if="error" class="error-msg">{{ error }}</div>
+
+        <!-- ====== 工具栏 ====== -->
+        <div class="toolbar">
+            <div class="filter-group">
+                <template v-for="col in columns" :key="col.key">
+                    <template v-if="col.isAllowQuery">
+                        <!-- 特殊处理 com_id：使用可搜索下拉 -->
+                        <template v-if="col.key === 'com_id'">
+                            <label :for="'f-' + col.key">{{ col.label }}</label>
+                            <div class="company-select-wrapper">
+                                <input
+                                        type="text"
+                                        :id="'f-' + col.key"
+                                        :placeholder="'搜索公司名或ID'"
+                                        v-model="companySearch"
+                                        @input="onCompanySearch"
+                                        @focus="onCompanyFocus"
+                                        @blur="onCompanyBlur"
+                                        autocomplete="off"
+                                />
+                                <div class="company-dropdown" :class="{ show: companyDropdownOpen && filteredCompanies.length > 0 }">
+                                    <div
+                                            v-for="item in filteredCompanies"
+                                            :key="item.com_id"
+                                            class="option"
+                                            @mousedown.prevent="selectCompany(item)"
+                                    >
+                                        {{ item.title }}
+                                    </div>
+                                    <div v-if="filteredCompanies.length === 0 && companySearch.trim() !== ''" class="no-result">
+                                        无匹配公司
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <!-- 其他字段保持原样 -->
+                        <template v-else>
+                            <label :for="'f-' + col.key">{{ col.label }}</label>
+                            <input v-if="!col.isTinyInt"
+                                   :id="'f-' + col.key"
+                                   type="text"
+                                   :placeholder="col.label"
+                                   v-model="queryMap[col.key]"
+                                   @input="onQueryChange"/>
+                            <select v-else
+                                    :id="'f-' + col.key"
+                                    v-model="queryMap[col.key]"
+                                    @change="onQueryChange">
+                                <option value="">全部</option>
+                                <option value="1">是</option>
+                                <option value="2">否</option>
+                            </select>
+                        </template>
+                    </template>
+                </template>
+            </div>
+
+            <div class="pager">
+                <span class="count-info">共 <strong>{{ total }}</strong> 条</span>
+                <button @click="goPage(1)" :disabled="currentPage===1||loading">⏮</button>
+                <button @click="goPage(currentPage-1)" :disabled="currentPage===1||loading">◀</button>
+                <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                <button @click="goPage(currentPage+1)" :disabled="currentPage===totalPages||loading">▶</button>
+                <button @click="goPage(totalPages)" :disabled="currentPage===totalPages||loading">⏭</button>
+                <select v-model.number="pageSize" @change="onPageSizeChange">
+                    <option :value="5">5</option>
+                    <option :value="10">10</option>
+                    <option :value="20">20</option>
+                    <option :value="50">50</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ====== 列控制 ====== -->
+        <div class="col-panel">
+            <div class="col-panel-header" @click="panelOpen = !panelOpen">
+                <span>📋 列显示控制</span>
+                <button>{{ panelOpen ? '收起' : '展开' }}</button>
+            </div>
+            <div v-if="panelOpen" class="col-panel-body">
+                <div v-for="col in columns" :key="col.key" class="col-check">
+                    <input type="checkbox" :id="'c-'+col.key" v-model="col.isShowInGrid" @change="onColumnsChange"/>
+                    <label :for="'c-'+col.key">{{ col.label }}</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== 表格 ====== -->
+        <div class="table-wrap">
+            <table class="grid">
+                <thead>
+                <tr>
+                    <th v-for="col in visibleCols" :key="col.key"
+                        :class="{ sortable: col.sortable }"
+                        @click="col.sortable && handleSort(col.key)">
+                            <span class="th-inner">
+                                {{ col.label }}
+                                <span v-if="col.sortable" class="sort-icon"
+                                      :class="{ active: sortKey===col.key, desc: sortKey===col.key && sortOrder==='desc' }">
+                                    {{ sortKey === col.key ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅' }}
+                                </span>
+                            </span>
+                    </th>
+                    <th style="text-align:center;">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-if="loading" class="loading-row">
+                    <td :colspan="visibleCols.length+1">加载中</td>
+                </tr>
+                <tr v-else v-for="row in dataList" :key="row.id">
+                    <td v-for="col in visibleCols" :key="col.key"
+                        @click="handleCellClick(col, row)">
+                        <template v-if="col.render">
+                            <span v-html="getRender(col, row)"></span>
+                        </template>
+                        <template v-else-if="col.isLongText">
+                            <span :title="row[col.key]">{{ truncate(row[col.key], 20) }}</span>
+                        </template>
+                        <template v-else-if="col.isTinyInt">
+                            <span>{{ row[col.key] === 1 ? '✅ 是' : '❌ 否' }}</span>
+                        </template>
+                        <template v-else>
+                            {{ row[col.key] }}
+                        </template>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm" @click.stop="showJson(row)">修改</button>
+                        <button class="btn btn-sm" @click.stop="openEdit(row)">编辑</button>
+                    </td>
+                </tr>
+                <tr v-if="!loading && dataList.length===0" class="empty-row">
+                    <td :colspan="visibleCols.length+1">没有匹配的数据</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ====== 底部翻页 ====== -->
+        <div class="toolbar" style="margin-top:10px;margin-bottom:0;flex-shrink:0;">
+            <div></div>
+            <div class="pager">
+                <span class="count-info">共 <strong>{{ total }}</strong> 条</span>
+                <button @click="goPage(1)" :disabled="currentPage===1||loading">⏮</button>
+                <button @click="goPage(currentPage-1)" :disabled="currentPage===1||loading">◀</button>
+                <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                <button @click="goPage(currentPage+1)" :disabled="currentPage===totalPages||loading">▶</button>
+                <button @click="goPage(totalPages)" :disabled="currentPage===totalPages||loading">⏭</button>
+                <select v-model.number="pageSize" @change="onPageSizeChange">
+                    <option :value="5">5</option>
+                    <option :value="10">10</option>
+                    <option :value="20">20</option>
+                    <option :value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== JSON 模态窗 ====== -->
+    <div v-if="jsonModal" class="modal-overlay" @click.self="jsonModal=false">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>行数据 (JSON)</h3>
+                <button class="close-x" @click="jsonModal=false">×</button>
+            </div>
+            <pre>{{ jsonData }}</pre>
+            <div class="modal-actions">
+                <button class="btn btn-primary" @click="jsonModal=false">关闭</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ====== 详情弹窗 ====== -->
+    <div v-if="detailModal" class="modal-overlay" @click.self="closeDetail">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>岗位详情</h3>
+                <button class="close-x" @click="closeDetail">×</button>
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <strong>标题：</strong><span>{{ detailForm.title }}</span>
+            </div>
+            <div style="margin-bottom:10px;">
+                <strong>详情：</strong>
+                <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                     v-html="detailForm.detail"></pre>
+            </div>
+            <div style="margin-bottom:10px;">
+                <strong>标签：</strong>
+                <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                     v-html="detailForm.tags"></pre>
+            </div>
+            <div style="margin-bottom:10px;">
+                <strong>deepseek意见：</strong>
+                <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                     v-html="detailForm.ds_deny_reason"></pre>
+            </div>
+
+            <div v-for="f in editIsFields" :key="f.key" class="field-row">
+                <label>{{ f.label }}</label>
+                <div class="switch-group">
+                    <button class="sw" :class="{ active: detailForm[f.key] === 1 }"
+                            @click="detailForm[f.key]=1">是
+                    </button>
+                    <button class="sw" :class="{ active: detailForm[f.key] === 2 }"
+                            @click="detailForm[f.key]=2">否
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="display:block;margin-bottom:2px;font-weight:500;">拒绝原因</label>
+                <textarea v-model="detailForm.deny_reason" rows="3"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" @click="closeDetail">提交</button>
+                <button class="btn" @click="closeDetail">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 编辑模态窗 ====== -->
+    <div v-if="editModal" class="modal-overlay" @click.self="closeEdit">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>编辑岗位</h3>
+                <button class="close-x" @click="closeEdit">×</button>
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <strong>标题：</strong><span>{{ editForm.title }}</span>
+            </div>
+            <div style="margin-bottom:10px;">
+                <strong>详情：</strong>
+                <pre style="background:#f5f7fb;padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"
+                     v-html="editForm.detail"></pre>
+            </div>
+
+            <div v-for="f in editIsFields" :key="f.key" class="field-row">
+                <label>{{ f.label }}</label>
+                <div class="switch-group">
+                    <button class="sw" :class="{ active: editForm[f.key] === 1 }"
+                            @click="editForm[f.key]=1">是
+                    </button>
+                    <button class="sw" :class="{ active: editForm[f.key] === 2 }"
+                            @click="editForm[f.key]=2">否
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="display:block;margin-bottom:2px;font-weight:500;">拒绝原因</label>
+                <textarea v-model="editForm.deny_reason" rows="3"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" @click="submitEdit">提交</button>
+                <button class="btn" @click="closeEdit">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/vue.global.prod.js"></script>
+<script>
+    const {createApp, ref, computed, onMounted, getCurrentInstance, watch, nextTick} = Vue;
+
+    const app = createApp({
+        setup() {
+            // ================================================================
+            // 1. 配置
+            // ================================================================
+            const API_URL = '/spider/v1/boss_zhipin/jobs';
+            const COMPANY_API = 'http://kl-home-pc:8002/spider/v1/boss_zhipin/companies';
+            const MD5_API = '/spider/v1/boss_zhipin/getJobMd5Times';
+            const FAST_EDIT_API_URL = '/spider/v1/boss_zhipin/fastEditJob';
+
+
+            // ================================================================
+            // 2. 列配置
+            // ================================================================
+            const rawCols = [
+                {
+                    key: 'id',
+                    label: 'ID',
+                    type: 'int',
+                    sortable: true,
+                    isAllowQuery: true,
+                    call: (col, row) => {
+                        window.open(`https://www.zhipin.com/job_detail/${row.job_id}.html`);
+                    }
+                },
+                {
+                    key: 'com_id',
+                    label: '公司',
+                    type: 'string',
+                    isAllowQuery: true,
+                    operator: '$like',
+                    // 增加 render 函数，根据 com_id 显示公司名
+                    render: (col, row) => {
+                        // 从 companyMap 中查找
+                        const name = companyMap.value[row.com_id];
+                        return name || row.com_id; // 若未找到则显示 ID
+                    }
+                },
+                {key: 'area_title', label: '区域名称', type: 'string', isAllowQuery: true, operator: '$like'},
+                {key: 'area_code', label: '区域编码', type: 'string', isShowInGrid: false},
+                {key: 'job_id', label: '职位ID', type: 'string', isShowInGrid: false, isAllowQuery: true, operator: '$like'},
+                {key: 'title', label: '职位名称', type: 'string', isAllowQuery: true, operator: '$like'},
+                {key: 'salary_gte', label: '最低薪资', type: 'int', isShowInGrid: false},
+                {key: 'salary_lte', label: '最高薪资', type: 'int', isShowInGrid: false},
+                {key: 'salary_text', label: '薪资描述', type: 'string'},
+                {key: 'salary_ocr', label: '薪资OCR', type: 'string', isShowInGrid: false},
+                {key: 'salary_shoot_md5', label: '薪资截图MD5', type: 'string', isShowInGrid: false},
+                {key: 'tags', label: '标签', type: 'json', isLongText: true},
+                {key: 'deny_reason', label: '否定原因', type: 'string'},
+                {
+                    key: 'detail', label: '岗位描述', type: 'longtext', isLongText: true, call: (col, row) => {
+                        openDetail(row);
+                    }
+                },
+                {key: 'remark', label: '备注', type: 'longtext', isLongText: true, isShowInGrid: false,},
+                //  {key: 'ds_deny_reason', label: 'D老师的否定', type: 'longtext', isLongText: true},
+                {key: 'spider_date', label: '爬取时间', type: 'datetime', isShowInGrid: false,},
+                {key: 'publish_date', label: '发布时间', type: 'datetime', isShowInGrid: false},
+                {key: 'hr_title', label: 'HR头衔', type: 'string'},
+                {key: 'hr_active_time', label: 'HR活跃时间', type: 'string', isShowInGrid: false},
+                {key: 'hr_active_int', label: 'HR活跃状态', type: 'int', render: (col, row) => row.hr_active_time || '-'},
+                {key: 'hr_hot_date', label: 'HR最新在线', type: 'datetime', isShowInGrid: false},
+                // tinyint 字段
+                {key: 'is_php', label: 'PHP?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_match', label: '匹配?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_dog', label: '外包?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_zombie', label: '僵尸岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_fake', label: '诈骗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_edu_ok', label: '学历?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is404', label: '下线?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_ds_deny', label: 'DS否定?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_ok', label: '岗位OK?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_deny', label: '否定?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 2},
+                {key: 'spider_times', label: '出现次数', type: 'int'},
+                {key: 'create_date', label: '创建时间', type: 'datetime'},
+                {key: 'update_date', label: '更新时间', type: 'datetime'},
+                // ===== 新增三个字段 =====
+                {
+                    key: 'job_md5_cnt',
+                    label: '重复次数',
+                    type: 'int',
+                    isAllowQuery: true,
+                    sortable: true,
+                },
+                {
+                    key: 'is_md5_old',
+                    label: '是否老数据',
+                    type: 'int',
+                    isAllowQuery: true,
+                    sortable: true,
+                    // 可以按 tinyint 显示
+                    isTinyInt: true,   // 显示为是/否
+                },
+                {
+                    key: 'job_md5',
+                    label: '数据特征',
+                    type: 'string',
+                    isAllowQuery: true,
+                    isShowInGrid: false,  // 默认隐藏
+                    sortable: true,
+                },
+            ];
+
+            const defaultCol = {
+                isAllowQuery: false,
+                sortable: true,
+                operator: '=',
+                isLongText: false,
+                isTinyInt: false,
+                isShowInGrid: true,
+                render: null,
+                call: null,
+                attr: {},
+                defaultVal: false
+            };
+            const columns = ref(rawCols.map(c => ({...defaultCol, ...c})));
+
+            // ================================================================
+            // 3. 状态
+            // ================================================================
+            const dataList = ref([]);
+            const total = ref(0);
+            const loading = ref(false);
+            const error = ref('');
+            const queryMap = ref({});
+            const sortKey = ref('id');
+            const sortOrder = ref('desc');
+            const currentPage = ref(1);
+            const pageSize = ref(10);
+            const panelOpen = ref(true);
+
+            // 公司相关状态（全量缓存）
+            const allCompanies = ref([]);         // 全量公司列表 [{com_id, title}]
+            const companyMap = ref({}); // com_id -> title 映射
+            const companySearch = ref('');
+            const companyDropdownOpen = ref(false);
+
+            const jsonModal = ref(false);
+            const jsonData = ref('');
+
+            const editModal = ref(false);
+            const editForm = ref({id: null, title: '', detail: '', deny_reason: ''});
+            const editIsFields = computed(() => columns.value.filter(c => c.type === 'tinyint' && c.key.startsWith('is_')));
+
+
+            const detailModal = ref(false);
+            const detailForm = ref({id: null, title: '', detail: '', deny_reason: ''});
+            const currentDetailIndex = ref(-1);
+            const detailIsFields = computed(() => columns.value.filter(c => c.type === 'tinyint' && c.key.startsWith('is_')));
+
+
+            // ================================================================
+            // 4. 计算
+            // ================================================================
+            const totalPages = computed(() => Math.ceil(total.value / pageSize.value) || 1);
+            const visibleCols = computed(() => columns.value.filter(c => c.isShowInGrid !== false));
+
+            // 过滤后的公司列表（用于下拉）
+            const filteredCompanies = computed(() => {
+                const keyword = companySearch.value.trim().toLowerCase();
+                if (!keyword) return allCompanies.value;
+                return allCompanies.value.filter(item =>
+                    item.title.toLowerCase().includes(keyword) ||
+                    item.com_id.toLowerCase().includes(keyword)
+                );
+            });
+
+            // ================================================================
+            // 5. 构建请求参数
+            // ================================================================
+            function buildParams() {
+                const attr = {};
+                columns.value.forEach(c => {
+                    if (!c.isAllowQuery) return;
+                    const v = queryMap.value[c.key];
+                    if (v === undefined || v === null || v === '') return;
+                    attr[c.key] = c.operator === '$like' ? {$like: v} : v;
+                });
+                const sort = {};
+                if (sortKey.value) sort[sortKey.value] = sortOrder.value;
+                return {attr, sort, page: {no: currentPage.value, size: pageSize.value}};
+            }
+
+            // ================================================================
+            // 6. 请求数据 + 获取 MD5 次数
+            // ================================================================
+            async function fetchData() {
+                loading.value = true;
+                error.value = '';
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(buildParams()),
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    if (json?.data) {
+                        const list = json.data.data || [];
+                        dataList.value = list;
+                        total.value = json.data.count || 0;
+
+                        // 若列表不为空，则获取 MD5 统计
+                        if (list.length > 0) {
+                            await fetchMd5Times(list);
+                        }
+                    } else {
+                        throw new Error('响应格式错误');
+                    }
+                } catch (e) {
+                    error.value = '请求失败：' + e.message;
+                    dataList.value = [];
+                    total.value = 0;
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            // ================================================================
+            // 7. 请求 MD5 次数
+            // ================================================================
+            async function fetchMd5Times(list) {
+                // 提取 job_md5 字段（注意字段名）
+                const md5s = list.map(item => item.job_md5).filter(Boolean);
+                if (md5s.length === 0) return;
+
+                try {
+                    const res = await fetch(MD5_API, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({job_md5s: md5s}),
+                    });
+                    if (!res.ok) throw new Error(`MD5接口HTTP ${res.status}`);
+                    const json = await res.json();
+                    if (json?.data) {
+                        // 构建映射 job_md5 -> times
+                        const map = {};
+                        json.data.forEach(item => {
+                            map[item.job_md5] = item.times;
+                        });
+                        // 更新 dataList 中的 job_md5_cnt
+                        dataList.value.forEach(row => {
+                            if (row.job_md5 && map[row.job_md5] !== undefined) {
+                                row.job_md5_cnt = map[row.job_md5];
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn('获取MD5次数失败', e);
+                    // 不阻断主流程
+                }
+            }
+
+            // ================================================================
+            // 8. 加载全量公司数据
+            // ================================================================
+            async function loadAllCompanies() {
+                try {
+                    // 一次性获取全部，设置较大 page_size 或去掉分页
+                    // 假设接口支持 page_size 参数，我们设为 99999
+                    const url = `${COMPANY_API}?page[size]=99999`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('加载公司列表失败');
+                    const json = await res.json();
+                    if (json?.data?.data) {
+                        const list = json.data.data;
+                        allCompanies.value = list;
+                        // 填充映射
+                        const map = {};
+                        list.forEach(item => {
+                            map[item.com_id] = item.title;
+                        });
+                        companyMap.value = map;
+                    }
+                } catch (e) {
+                    console.warn('加载公司列表失败', e);
+                    error.value = '加载公司列表失败：' + e.message;
+                }
+            }
+
+            // ================================================================
+            // 8. 公司搜索（本地过滤）
+            // ================================================================
+            function onCompanySearch() {
+                // 输入时自动展开下拉
+                if (companySearch.value.trim() !== '') {
+                    companyDropdownOpen.value = true;
+                } else {
+                    // 清空搜索时展示全部
+                    companyDropdownOpen.value = allCompanies.value.length > 0;
+                }
+                // 如果输入为空，且之前有选中的公司，清除筛选
+                if (companySearch.value.trim() === '') {
+                    if (queryMap.value.com_id !== undefined) {
+                        delete queryMap.value.com_id;
+                        onQueryChange();
+                    }
+                }
+            }
+
+            // 聚焦时展开下拉
+            function onCompanyFocus() {
+                companyDropdownOpen.value = true;
+            }
+
+            // 选择公司
+            function selectCompany(item) {
+                companySearch.value = item.title;
+                queryMap.value.com_id = item.com_id;
+                companyDropdownOpen.value = false;
+                onQueryChange(); // 触发数据刷新
+            }
+
+            // 失焦处理（延迟关闭下拉）
+            function onCompanyBlur() {
+                setTimeout(() => {
+                    companyDropdownOpen.value = false;
+                }, 200);
+            }
+
+            // ================================================================
+            // 10. 监听排序（重置页码并请求）
+            // ================================================================
+            watch([sortKey, sortOrder], () => {
+                currentPage.value = 1;
+                fetchData();
+            });
+
+            // ================================================================
+            // 11. 分页操作
+            // ================================================================
+            function goPage(p) {
+                if (p < 1 || p > totalPages.value || p === currentPage.value) return;
+                currentPage.value = p;
+                fetchData();
+            }
+
+            // ================================================================
+            // 12. pageSize 变化
+            // ================================================================
+            function onPageSizeChange() {
+                currentPage.value = 1;
+                fetchData();
+            }
+
+            // ================================================================
+            // 13. 筛选变化
+            // ================================================================
+            function onQueryChange() {
+                currentPage.value = 1;
+                fetchData();
+            }
+
+            // ================================================================
+            // 14. 排序处理
+            // ================================================================
+            function handleSort(key) {
+                if (sortKey.value === key) {
+                    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortKey.value = key;
+                    sortOrder.value = 'asc';
+                }
+            }
+
+            // ================================================================
+            // 15. 工具
+            // ================================================================
+            function truncate(text, len = 20) {
+                if (!text) return '';
+                return text.length > len ? text.substring(0, len) + '…' : text;
+            }
+
+            function getRender(col, row) {
+                if (!col.render) return '';
+                const fn = typeof col.render === 'function' ? col.render : null;
+                return fn ? fn(col, row) : '';
+            }
+
+            // ================================================================
+            // 16. 单元格点击
+            // ================================================================
+            const instance = getCurrentInstance();
+
+            function handleCellClick(col, row) {
+                if (col.call) {
+                    const fn = typeof col.call === 'function' ? col.call : instance?.proxy?.[col.call];
+                    if (typeof fn === 'function') fn(col, row);
+                    return;
+                }
+                if (col.isLongText) {
+                    alert(row[col.key] || '(空)');
+                } else if (col.isTinyInt) {
+                    toggleTiny(row, col);
+                }
+            }
+
+            async function toggleTiny(row, col) {
+                const old = row[col.key];
+                const val = old === 1 ? 2 : 1;
+                try {
+                    const res = await fetch(FAST_EDIT_API_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({id: row.id, field: col.key, value: val}),
+                    });
+                    if (!res.ok) throw new Error('更新失败');
+                    row[col.key] = val;
+                } catch (e) {
+                    alert('更新失败：' + e.message);
+                }
+            }
+
+            // ================================================================
+            // 17. JSON 查看
+            // ================================================================
+            function showJson(row) {
+                jsonData.value = JSON.stringify(row, null, 2);
+                jsonModal.value = true;
+            }
+
+
+            function openDetail(row) {
+                detailForm.value = {
+                    id: row.id,
+                    title: row.title || '',
+                    detail: row.detail || '',
+                    tags: row.tags || '',
+                    ds_deny_reason: (row.ds_deny_reason || '').replace(/\\n/g, '\n'),
+                    deny_reason: row.deny_reason || '',
+                };
+                editIsFields.value.forEach(f => {
+                    detailForm.value[f.key] = row[f.key];
+                });
+                if (detailForm.value.deny_reason?.trim()) {
+                    const mf = editIsFields.value.find(f => f.key === 'is_match');
+                    if (mf) detailForm.value.is_match = 2;
+                }
+                currentDetailIndex.value = dataList.value.findIndex(item => item.id === row.id);
+                detailModal.value = true;
+            }
+
+            function closeDetail() {
+                detailModal.value = false;
+            }
+
+            async function submitDetail() {
+
+            }
+
+
+            // ================================================================
+            // 18. 编辑
+            // ================================================================
+            function openEdit(row) {
+                editForm.value = {
+                    id: row.id,
+                    title: row.title || '',
+                    detail: row.detail || '',
+                    deny_reason: row.deny_reason || '',
+                };
+                editIsFields.value.forEach(f => {
+                    editForm.value[f.key] = row[f.key];
+                });
+                if (editForm.value.deny_reason?.trim()) {
+                    const mf = editIsFields.value.find(f => f.key === 'is_match');
+                    if (mf) editForm.value.is_match = 2;
+                }
+                editModal.value = true;
+            }
+
+            function closeEdit() {
+                editModal.value = false;
+            }
+
+            async function submitEdit() {
+                try {
+                    const payload = {id: editForm.value.id, deny_reason: editForm.value.deny_reason};
+                    editIsFields.value.forEach(f => {
+                        payload[f.key] = editForm.value[f.key];
+                    });
+                    const res = await fetch('/xxx/update', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload),
+                    });
+                    const json = await res.json();
+                    if (!res.ok || json.code !== 0) throw new Error(json.msg || '更新失败');
+                    const idx = dataList.value.findIndex(item => item.id === json.data?.id);
+                    if (idx !== -1) dataList.value[idx] = json.data;
+                    else fetchData();
+                    closeEdit();
+                    alert('更新成功');
+                } catch (e) {
+                    alert('更新失败：' + e.message);
+                }
+            }
+
+            watch(() => editForm.value.deny_reason, (nv) => {
+                if (nv?.trim()) {
+                    const mf = editIsFields.value.find(f => f.key === 'is_match');
+                    if (mf && editForm.value.is_match !== 2) editForm.value.is_match = 2;
+                }
+            });
+
+            // ================================================================
+            // 19. 列控制
+            // ================================================================
+            function onColumnsChange() {
+                // 可保存到 localStorage
+            }
+
+            // ================================================================
+            // 20. 初始化默认查询值
+            // ================================================================
+            function initDefaults() {
+                columns.value.forEach(c => {
+                    if (c.isAllowQuery && c.defaultVal !== false && c.defaultVal !== undefined) {
+                        queryMap.value[c.key] = c.defaultVal;
+                    }
+                });
+                sortKey.value = 'id';
+                sortOrder.value = 'desc';
+            }
+
+            // ================================================================
+            // 21. 键盘控制
+            // ================================================================
+            document.addEventListener('keydown', (e) => {
+                console.log(e.key, e.keyCode);
+                switch (e.key) {
+                    case 'Escape':
+                        if (e.ctrlKey) {
+                            // 刷新
+
+                        }
+                        break;
+                    case 'ArrowUp':
+                        if (detailModal.value && currentDetailIndex.value > 0) {
+                            e.preventDefault();
+                            const prevRow = dataList.value[currentDetailIndex.value - 1];
+                            if (prevRow) {
+                                openDetail(prevRow);
+                            }
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (detailModal.value && currentDetailIndex.value < dataList.value.length - 1) {
+                            e.preventDefault();
+                            const nextRow = dataList.value[currentDetailIndex.value + 1];
+                            if (nextRow) {
+                                openDetail(nextRow);
+                            }
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        if (detailModal.value) {
+                            e.preventDefault();
+                            goPage(currentPage.value - 1);
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (detailModal.value) {
+                            e.preventDefault();
+                            goPage(currentPage.value + 1);
+                        }
+                        break;
+                    case '`':
+                        break;
+                    case 'Enter':
+                        break;
+
+                }
+            });
+            // ================================================================
+            // 21. 生命周期
+            // ================================================================
+            onMounted(async () => {
+                initDefaults();
+                await loadAllCompanies(); // 先加载全量公司
+                fetchData();              // 再加载表格数据
+            });
+
+            // ================================================================
+            // 22. 暴露
+            // ================================================================
+            return {
+                columns,
+                dataList,
+                total,
+                totalPages,
+                loading,
+                error,
+                queryMap,
+                sortKey,
+                sortOrder,
+                currentPage,
+                pageSize,
+                panelOpen,
+                visibleCols,
+                jsonModal,
+                jsonData,
+                editModal,
+                editForm,
+                editIsFields,
+                // 公司相关
+                companySearch,
+                companyDropdownOpen,
+                filteredCompanies,
+                onCompanySearch,
+                onCompanyFocus,
+                selectCompany,
+                onCompanyBlur,
+                // 方法
+                onQueryChange,
+                goPage,
+                onPageSizeChange,
+                handleSort,
+                truncate,
+                getRender,
+                handleCellClick,
+                showJson,
+                openEdit,
+                closeEdit,
+                submitEdit,
+                onColumnsChange,
+                //detail 窗口
+                detailModal,
+                detailForm,
+                currentDetailIndex,
+                openDetail,
+                closeDetail,
+            };
+        },
+    });
+
+    app.mount('#app');
+</script>
+</body>
+</html>

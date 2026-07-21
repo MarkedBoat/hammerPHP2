@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../../file/js/string.js" charset="UTF-8"></script>
+
+
+    <title>GET 请求</title>
+    <style>
+        .json_key {
+            display: block;
+            float: left;
+        }
+
+        .json_key input {
+            display: none;
+        }
+
+        .json_key_checkbox:checked + span {
+            background: #AAA;
+        }
+
+        .json_ele, .json_map {
+            float: left;
+            margin-left: 25px;
+            border-left: 1px solid #EEE;
+            border-bottom: 1px solid #EEE;
+            width: 200%;
+            background: #DDD;
+        }
+        .json_ele {
+            width: 100%;
+        }
+
+
+        .json_ele > div {
+            display: block;
+            float: left;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .json_val_div, .json_key_div {
+            float: left;
+            min-height: 15px;
+        }
+
+        .json_key_div > div {
+            float: left;
+            width: 100%;
+            min-height: 15px;
+        }
+
+        .eles_extend {
+
+        }
+
+        .eles_close {
+
+        }
+
+        .eles_close > .json_eles {
+            display: none;
+        }
+
+        .json_key, .eles_fix {
+            cursor: pointer;
+        }
+
+        .json_box {
+            font-size: 12px;
+        }
+        .eles_fix{
+            width: 20px;
+        }
+        .json_key_div{
+            padding-right: 10px;
+        }
+
+        #tmp {
+            width: 100%;
+            height: auto;
+            overflow-x: scroll;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div>
+        <a href="../console.html" target="_blank"><h1>返回</h1></a>
+        <h1>GET 请求</h1>
+        <div id="tmp">
+
+        </div>
+
+
+    </div>
+
+
+</div>
+<script></script>
+<script>
+    var data = {
+        "type": "dump", "data": {
+            "line": "Common_Sysadv->dump() #/data/code/poseidon_server/po.funshion.com/v6/service/channelhome_sv.php:16       <<<<<>>>>>>",
+            "code": ["        ));\r", "        die;\r"],
+            "argnames": [],
+            "args": [{"key": 0, "val": {"a1": {"b1": {"c1": {"d1": ["e"]}}}, "a2": {"b2": {"c2": {"d2": ["e2"]}}}}}],
+            "traces": [{
+                "$steps": [{
+                    "file": "/data/code/poseidon_server/po.funshion.com/v6/index.php",
+                    "line": 10,
+                    "function": "dispatch",
+                    "class": "Common_Dispatcher",
+                    "object": {},
+                    "type": "->",
+                    "args": [],
+                    "__step": 0
+                }, {
+                    "file": "/data/code/poseidon_server/phplib/common/dispatcher.php",
+                    "line": 20,
+                    "function": "doAction",
+                    "class": "Common_Dispatcher",
+                    "object": {},
+                    "type": "->",
+                    "args": [],
+                    "__step": 1
+                }, {
+                    "file": "/data/code/poseidon_server/phplib/common/dispatcher.php",
+                    "line": 27,
+                    "function": "actionInvoker",
+                    "class": "Common_Action",
+                    "object": {},
+                    "type": "->",
+                    "args": [],
+                    "__step": 2
+                }, {
+                    "file": "/data/code/poseidon_server/phplib/common/action.php",
+                    "line": 121,
+                    "function": "actionExecute",
+                    "class": "Action_Channelhome",
+                    "object": {},
+                    "type": "->",
+                    "args": [],
+                    "__step": 3
+                }, {
+                    "file": "/data/code/poseidon_server/po.funshion.com/v6/action/channelhome_ac.php",
+                    "line": 21,
+                    "function": "execute",
+                    "class": "Service_Channelhome",
+                    "object": {},
+                    "type": "->",
+                    "args": [{
+                        "nav_id": 1,
+                        "cl": "kyyapp",
+                        "uc": 99,
+                        "ve": "",
+                        "filter": "media",
+                        "is_agg": 0,
+                        "common": {
+                            "cl": "kyyapp",
+                            "uc": 99,
+                            "ca": "funshionappbest",
+                            "ve": "",
+                            "fudid": "4383F38264A7FE2731A8DAF6A42E37C2",
+                            "ia": 0,
+                            "mac": "",
+                            "access_token": "",
+                            "param": "",
+                            "user_id": "0",
+                            "token": "",
+                            "ip": ""
+                        }
+                    }],
+                    "__step": 4
+                }, {
+                    "file": "/data/code/poseidon_server/po.funshion.com/v6/service/channelhome_sv.php",
+                    "line": 16,
+                    "function": "dump",
+                    "class": "Common_Sysadv",
+                    "object": {"cache": true, "params": []},
+                    "type": "->",
+                    "args": [{"a1": {"b1": {"c1": {"d1": ["e"]}}}, "a2": {"b2": {"c2": {"d2": ["e2"]}}}}],
+                    "__step": 5
+                }, {
+                    "file": "/data/code/poseidon_server/phplib/common/sysadv.php",
+                    "line": 616,
+                    "function": "getCaller",
+                    "class": "Common_Sysadv",
+                    "object": {"cache": true, "params": []},
+                    "type": "->",
+                    "args": [true],
+                    "__step": 6
+                }],
+                "$j": 6,
+                "$getCaller_index": 5,
+                "count": 7,
+                "line_fix": false,
+                "$caller": {
+                    "file": "/data/code/poseidon_server/po.funshion.com/v6/service/channelhome_sv.php",
+                    "line": 16,
+                    "function": "dump",
+                    "class": "Common_Sysadv",
+                    "object": {"cache": true, "params": []},
+                    "type": "->",
+                    "args": [{"a1": {"b1": {"c1": {"d1": ["e"]}}}, "a2": {"b2": {"c2": {"d2": ["e2"]}}}}]
+                },
+                "$fixed": [],
+                "return": {
+                    "file": "/data/code/poseidon_server/po.funshion.com/v6/service/channelhome_sv.php",
+                    "line": 16,
+                    "function": "dump",
+                    "class": "Common_Sysadv",
+                    "object": {"cache": true, "params": []},
+                    "type": "->",
+                    "args": [{"a1": {"b1": {"c1": {"d1": ["e"]}}}, "a2": {"b2": {"c2": {"d2": ["e2"]}}}}]
+                }
+            }]
+        }
+    };
+    let view_json = function (input_data) {
+        let json_box = new Emt('div').setPros({className: 'json_box'});
+        console.log(input_data);
+        var eachEle = function (data, key) {
+            if (data === null) {
+                return 'null';
+            }
+            var is_int_key = typeof key === 'number';
+            var str_key = is_int_key ? (key.toString() + ':') : '"' + key + '":';
+            if (typeof data === 'object') {
+                var map_div = new Emt('div').setPros({className: 'json_map', eleType: 'map'});
+                //var span = new Emt('span').setPros({textContent: str_key});
+                var eles_fix1 = new Emt('div').setPros({className: 'eles_fix'});
+                var eles_fix2 = new Emt('div').setPros({className: 'eles_fix'});
+                var checkbox = new Emt('input').setPros({type: 'checkbox', className: 'json_key_checkbox'});
+
+                var json_eles_div = new Emt('div').setPros({className: 'json_eles', jsonNodes: []});
+
+                var json_val_div = new Emt('div').setPros({className: 'json_val_div', elesDiv: json_eles_div}).addNodes([
+                    //new Emt('p').setPros({textContent: ' '}),
+                    eles_fix1,
+                    json_eles_div,
+                    eles_fix2
+                ]);
+                map_div.addNodes([
+                    new Emt('div').setPros({className: 'json_key_div'}).addNodes([
+                        new Emt('label').setPros({className: 'json_key'}).addNodes([
+                            checkbox,
+                            new Emt('span').setPros({textContent: str_key})
+                        ])
+                    ]),
+                    json_val_div
+                ]);
+                map_div.toggleBtn = checkbox;
+                map_div.valDiv = json_val_div;
+
+                if (isVarArray(data)) {
+                    eles_fix1.textContent = '[';
+                    eles_fix2.textContent = ']';
+                    data.forEach(function (data2, index) {
+                        var ele = eachEle(data2, index);
+                        json_eles_div.jsonNodes.push(ele);
+                        json_eles_div.addNodes([
+                            ele
+                        ]);
+                    });
+
+                } else {
+                    eles_fix1.textContent = '{';
+                    eles_fix2.textContent = '}';
+                    for (var key2 in data) {
+                        var ele = eachEle(data[key2], key2);
+                        json_eles_div.jsonNodes.push(ele);
+                        json_eles_div.addNodes([
+                            ele
+                        ]);
+                    }
+                }
+                checkbox.addEventListener('change', function () {
+                    if (this.checked) {
+                        json_val_div.classList.add('eles_close');
+                        console.log(window.event, window.event.ctrlKey);
+                        if (window.event.ctrlKey) {
+                            console.log(json_val_div, json_eles_div.jsonNodes);
+                            json_val_div.elesDiv.jsonNodes.forEach(function (ele) {
+                                if (ele.eleType === 'map') {
+                                    if (ele.toggleBtn.checked === false) {
+                                        ele.toggleBtn.checked = true;
+                                        ele.valDiv.classList.add('eles_close');
+                                    }
+                                }
+                            });
+                        }
+
+                    } else {
+                        json_val_div.classList.remove('eles_close');
+                    }
+                });
+
+                var toggleAndCloseSubNodes = function () {
+                    console.log(json_val_div, json_eles_div.jsonNodes);
+                    if (checkbox.checked === false) {
+                        checkbox.checked = true;
+                        json_val_div.classList.add('eles_close');
+                        //cli.log(window.event, window.event.ctrlKey);
+                        console.log(json_val_div, json_eles_div.jsonNodes);
+                        json_val_div.elesDiv.jsonNodes.forEach(function (ele) {
+                            if (ele.eleType === 'map') {
+                                if (ele.toggleBtn.checked === false) {
+                                    ele.toggleBtn.checked = true;
+                                    ele.valDiv.classList.add('eles_close');
+                                }
+                            }
+                        });
+                    } else {
+                        checkbox.checked = false;
+                        json_val_div.classList.remove('eles_close');
+                    }
+                };
+                [eles_fix1, eles_fix2].forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        toggleAndCloseSubNodes();
+                    })
+                });
+                return map_div;
+            } else {
+                var str_data = typeof data === 'string' ? '"' + data + '"' : data;
+                //var str_key = typeof key === 'string' ? '"' + key + '"' : key;
+                return new Emt('div').setPros({className: 'json_ele', eleType: 'ele'}).addNodes([
+                    new Emt('div').setPros({textContent: str_key, is_int_key: is_int_key, className: 'ele_key'}),
+                    new Emt('div').setPros({textContent: str_data, className: 'ele_val'})
+                ]);
+            }
+
+        };
+        var isVarArray = function (data) {
+            return typeof data.forEach === 'function';
+        };
+        json_box.addNodes([eachEle(input_data, '__')]);
+        return json_box;
+    };
+    var t = {
+        "a1": {
+            "b1": {
+                "c1": {
+                    "d1": [
+                        "exxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxe"
+                    ]
+                }
+            },
+            "xb1": {
+                "xc1": {
+                    "xd1": [
+                        "xe"
+                    ]
+                }
+            }
+        },
+        "a2": {
+            "b2": {
+                "c2": {
+                    "d2": [
+                        "e2"
+                    ]
+                }
+            }
+        }
+    };
+    //kl.id('tmp').appendChild(view_json(t));
+    kl.id('tmp').appendChild(view_json(data));
+
+    [{"style":"teststyle","blockid":4,"type":"video_block","name":"\\u4eca\\u65e5\\u70ed\\u699c","contents":[{"type":"pmedia","stp":"tmx:15111:4","id":339801,"template":"media"},{"type":"pmedia","stp":"tmx:15111:4","id":338349,"template":"media"},{"type":"pmedia","stp":"tmx:15111:4","id":339119,"template":"media"}]}]
+
+</script>
+</body>
+</html>

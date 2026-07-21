@@ -1,0 +1,47 @@
+{
+  "episode_id": "43691",
+  "media_id": "4263",
+  "language_id": "3",
+  "name": "黑客",
+  "num": "1",
+  "still": "",
+  "description": "黑客",
+  "duration": "6250",
+  "clip_duration": "0",
+  "disable": "0",
+  "isvip": "0",
+  "free_time": "0000-00-00 00:00:00",
+  "isnew": "0",
+  "create_time": 1604558824,
+  "update_time": 1604558824,
+  "episode_name": "黑客",
+  "media_name": "黑客",
+  "isfee": "0",
+  "infohash": "87CD0C7F21EE206F0CAD24E9C6882C4723037B40",
+  "infohash_list": [
+    {
+      "episode_id": "43691",
+      "infohash": "87CD0C7F21EE206F0CAD24E9C6882C4723037B40",
+      "definition_id": "40",
+      "filesize": "798525642",
+      "md5": "f75bf6a8927041cb1618a1264a3104b1"
+    },
+    {
+      "episode_id": "43691",
+      "infohash": "74DE8F8A5C36AC6D00EE30B1305C241742CACCC8",
+      "definition_id": "30",
+      "filesize": "467672545",
+      "md5": "691663edf834ec176d8095424dc558e4"
+    },
+    {
+      "episode_id": "43691",
+      "infohash": "4C0800B53F292B266B20EFBDC6411012391A8A80",
+      "definition_id": "20",
+      "filesize": "387382521",
+      "md5": ""
+    }
+  ],
+  "clipplay_list": [],
+  "channel_id": "1",
+  "language_name": "原声"
+}

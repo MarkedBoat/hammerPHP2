@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.20240811.js" charset="UTF-8"></script>
+
+    <title>转码任务</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .item_list, attrs-input-div {
+            width: 100%;
+            float: left;
+            margin-bottom: 10em;
+        }
+
+        .item_list > button {
+            display: block;
+            width: 90%;
+            float: left;
+            margin-top: 0.5em;
+            text-align: left;
+        }
+
+        .attrs-input-div > div {
+            float: left;
+            margin-left: 2em;
+        }
+
+        .attrs-input-div > div > span {
+            float: left;
+            display: block;
+            width: 100%;
+        }
+
+        .attrs-input-div > div > select {
+            float: left;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .video_player_div {
+            position: fixed;
+            top: 0;
+            left: 3em;
+            width: 90%;
+            height: 90%;
+            z-index: 999;
+        }
+
+        .video_player_div > video {
+            max-width: 100%;
+            max-height: 100%;
+
+        }
+
+        .item_on_fcous {
+            border: 0.3em solid #666;
+        }
+
+        .conv-task {
+            width: 100%;
+            float: left;
+            border: 1px solid #F00;
+            padding: 1em;
+
+            .src {
+                width: 30em;
+                float: left;
+
+                button {
+                    display: block;
+                    float: left;
+                    width: 95%;
+                }
+            }
+
+            .src-info {
+                width: 15em;
+                float: left;
+
+                span, em {
+                    display: block;
+                    float: left;
+                    font-size: 0.6em;
+                    min-height: 1em;
+                }
+
+                .wh-rate-tv::before {
+                    width: 1em;
+                    content: '↔🖥️';
+                }
+
+                .wh-rate-phone::before {
+                    width: 1em;
+                    content: '↕📱';
+                }
+
+                .size {
+                    width: 7em;
+                }
+
+                .file-size {
+                    width: 6em;
+                }
+
+                .duration {
+                    width: 4em;
+                }
+
+
+                .rate-k {
+                    width: 3em;
+                }
+            }
+
+            .compare-src-info {
+                width: 20em;
+                float: left;
+
+                span, em {
+                    display: block;
+                    float: left;
+                    font-size: 0.6em;
+                    min-height: 1em;
+                }
+
+                .wh-rate-tv::before {
+                    width: 1em;
+                    content: '↔🖥️';
+                }
+
+                .wh-rate-phone::before {
+                    width: 1em;
+                    content: '↕📱';
+                }
+
+                .size {
+                    width: 4em;
+                }
+
+
+                .fps {
+                    width: 2em;
+                }
+
+                .rate-k {
+                    width: 5em;
+                }
+            }
+
+            .res {
+                width: 45%;
+                float: left;
+            }
+
+            .op {
+                width: 20em;
+                float: left;
+            }
+
+            .snapshots {
+                width: 26em;
+                float: left;
+                max-height: 10em;
+
+                canvas {
+                    max-height: 8em;
+                    max-width: 10em;
+                }
+
+                .header-ad, .tail-ad {
+                    float: left;
+
+                }
+            }
+        }
+
+        .volume-input {
+            appearance: slider-vertical;
+            display: block;
+            position: fixed;
+            left: 0;
+            height: calc(100vh - 5em);
+            width: 1.5em;
+
+        }
+
+        .duration-input {
+
+            width: 100%;
+
+
+        }
+
+        .play_btn {
+            text-align: left;
+        }
+
+        .del-src-btn {
+            text-align: left;
+            width: 6em !important;
+            background: #F00;
+        }
+
+        .rename-src-btn {
+            text-align: left;
+            width: 6em !important;
+            background: #EEE;
+        }
+
+        .common-tool-bar {
+            position: fixed;
+            bottom: 0px;
+            width: calc(100vw - 3em);
+            left: 2em;
+            background: #DDD;
+        }
+
+        .sec-input {
+            width: 6em;
+        }
+
+        .fuck-type-video {
+            background: #FEE;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div>
+
+    </div>
+    <div id="root_div">
+
+    </div>
+
+</div>
+<script></script>
+<script>
+
+
+    domLoaded(function () {
+        let rootDiv = kl.id('root_div');
+
+        let attrInputDiv = new Emt('div', 'class="attrs-input-div"');
+        let queryBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '查询');
+
+
+        let itemListDiv = new Emt('div', 'class="item_list"', {album2div: {}});
+        let videoPlayerDiv = new Emt('div', 'class="video_player_div hidden"');
+        let playerControllerDiv = new Emt('div', 'class="video_player_ctrl_div "');
+        let videoPlayer = new Emt('video', 'controls="controls"', '', {volume: 0.1});
+        window.videoPlayer = videoPlayer;
+        let volumeInput = new Emt('input', 'type="range" class="volume-input"', '', {max: 100, value: 5});
+        let durationInput = new Emt('input', 'type="range" class="duration-input"', '', {max: 1000, value: 0, step: 1});
+
+        let headerSecInput = kl.HTML.INPUT('class="sec-input" max="99999"');
+        let tailSecInput = kl.HTML.INPUT('class="sec-input" max="99999"');
+        let markHeaderAdEndBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '开头广告结尾');
+        let markTailAdStartBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '结尾广告开始');
+        let rubishAdDurationInput = kl.HTML.SELECT('class="mark-ad-select"');
+        let gotoRubishAdDurationTailBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '去结尾');
+
+        let taskGears = [
+            {height: 720, maxRateK: 1600, fps: 24, title: '骑兵/标准'},
+            {height: 720, maxRateK: 2000, fps: 24, title: '720 2000k 24fps'},
+            {height: 720, maxRateK: 2400, fps: 30, title: '720高帧',},
+            {height: 720, maxRateK: 2400, fps: 24, title: '高清720',},
+            {height: 720, maxRateK: 3000, fps: 30, title: '超清清720 30fps',},
+            {height: 720, maxRateK: 3000, fps: 24, title: '超清清720 24fps',},
+            {height: 1080, maxRateK: 1600, fps: 24, title: '骑兵/标准/低质手机'},
+            {height: 1080, maxRateK: 2000, fps: 24, title: '1080P 2M 24fps'},
+            {height: 1080, maxRateK: 2400, fps: 24, title: '普通步兵1080',},
+            {height: 1080, maxRateK: 3000, fps: 30, title: '顶级步兵1080',},
+        ];
+        let taskGearStrVal2ObjectVal = {};
+
+        let rubishAdDurationItems = [
+            {header: 0, tail: 0,},
+            {header: 152, tail: 129,},
+            {header: 141, tail: 129,},
+            {header: 141, tail: 169,},
+            {header: 184, tail: 192,},
+            {header: 40, tail: 54,},
+
+            {header: 28, tail: 0,},
+            {header: 22, tail: 0,},
+            {header: 24, tail: 23,},
+            {header: 14, tail: 0,},
+            {header: 17, tail: 17,},
+            {header: 40, tail: 54,},
+        ];
+
+        let attrsKV = {
+            is_err: {text: '出错了?', val: {1: '出错了', 2: '正常'}},
+            is_pre: {text: '得多转一次?', val: {1: '不能直接转码', 2: '可以直接转码'}},
+            is_src_exist: {text: '原始文件还在', val: {1: '还在', 2: '已经删除'}},
+            is_auto_del_src: {text: '自动删除', val: {1: '自动删除', 2: '需要审核后才能删除'}},
+            is_ok: {text: '转码完成?', val: {1: '转码好了', 2: '没能转码结束'}, default: 2},
+            run_lc: {text: '运行锁?', val: {0: 'free', '>0': '被锁了'}},
+            album_dir: {text: 'album', val: 'string'},
+            video_basename: {text: 'video name', val: 'string'},
+            limit: {text: 'limit', val: 100, default: 100},
+        };
+        let attrInputKV = {};
+        let attrInputs = [];
+        for (const [attr, cfg] of Object.entries(attrsKV)) {
+            cfg.attr = attr;
+            let items = [{text: '#', val: '#'}];
+            let input;
+            let valType = (typeof cfg.val);
+            switch (valType) {
+                case 'object':
+                    for (const [k, v] of Object.entries(cfg.val)) {
+                        items.push({text: v, val: k});
+                    }
+                    input = kl.HTML.SELECT().setItems(items);
+                    break;
+
+                case "number":
+                    input = kl.HTML.INPUT_NUMBER().setPros({max: cfg.val});
+                    break;
+                case 'string':
+                default:
+                    input = kl.HTML.INPUT_TEXT();
+                    break;
+
+            }
+
+            attrInputKV[attr] = input;
+            input.label = cfg.text;
+            input.attrKey = attr;
+            if (cfg.default === undefined) {
+                input.val = '#';
+            } else {
+                input.value = cfg.default;
+            }
+            attrInputs.push(input);
+        }
+
+        kl.ajax({
+            url: '/dev/v1/KL_PC/getRubishAdTimes',
+            data: {},
+            type: 'json',
+            success: function (cfg_res) {
+                console.log(cfg_res);
+                let rubishAdTimes = kl.getValByPath(cfg_res, 'data.rubishAdTimes');
+                if (Array.isArray(rubishAdTimes)) {
+                    rubishAdDurationInput.setItems((rubishAdTimes || rubishAdDurationItems).map(item => {
+                        item.text = `${item.header}  ${item.tail}`;
+                        item.val = `${item.header}_${item.tail}`;
+                        return item;
+                    }));
+                } else {
+                    let err_msg = kl.getValByPath(cfg_res, 'msg', '未知错误');
+                    alert(err_msg);
+                    throw err_msg;
+                }
+            },
+            error: (error) => {
+                console.error(error);
+            }
+        });
+
+
+        let timeBtns = [
+            kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '', {num: 60}),
+            kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '', {num: 10}),
+            kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '', {num: 1}),
+
+            kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '', {num: -60}),
+            kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '', {num: -10}),
+            kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '', {num: -1}),
+
+        ];
+        timeBtns.forEach(timeBtn => {
+            let typeStr = timeBtn.num > 0 ? '>>>' : '<<<';
+            let num = Math.abs(timeBtn.num);
+            timeBtn.textContent = `${typeStr}${num}`;
+            timeBtn.addEventListener('click', () => {
+                let baseSec = parseInt(videoPlayer.currentTime);
+                videoPlayer.currentTime = baseSec + timeBtn.num;
+            });
+        })
+        rootDiv.addNodes([
+
+            videoPlayerDiv.addNodes([
+                playerControllerDiv,
+                videoPlayer,
+            ]),
+            attrInputDiv.addNodes(attrInputs.map(input => {
+                return kl.HTML.DIV().addNodes([
+                    kl.HTML.SPAN('', input.label),
+                    input,
+                ])
+            })).addNodes([queryBtn]),
+            itemListDiv,
+            kl.HTML.DIV(`class="common-tool-bar"`,).addNodes([
+                durationInput,
+                markHeaderAdEndBtn, headerSecInput,
+                kl.HTML.SPAN().addNodes(timeBtns.slice(3)),
+                rubishAdDurationInput, gotoRubishAdDurationTailBtn,
+                kl.HTML.SPAN().addNodes(timeBtns.slice(0, 3)),
+                markTailAdStartBtn, tailSecInput
+            ]),
+
+        ]);
+        document.body.append(volumeInput);
+
+        let getVdieoSrc = (src) => {
+            return `http://kl-home-pc:8001${src}`;
+        }
+        let functionPlay = (item) => {
+            rubishAdDurationInput.value = '0_0';
+            window.currItem = item;
+            videoPlayerDiv.classList.remove('hidden');
+            videoPlayer.volume = parseInt(volumeInput.value) / 100;
+            videoPlayer.src = getVdieoSrc(item.src);
+
+            console.log(videoPlayer);
+
+            videoPlayer.addEventListener('loadedmetadata', function captureFrame1() {
+                videoPlayer.removeEventListener('loadedmetadata', captureFrame1);
+                console.log('loadedmetadata:', videoPlayer.duration);
+                if (item.durationSec === 0) {
+                    item.durationSec = parseInt(videoPlayer.duration);
+                }
+            });
+
+            videoPlayer.play();
+        }
+
+
+        let makeGearVal = (gear) => {
+
+            // gear.val = `${gear.height}_${gear.maxRateK}_${gear.fps}_${gear.csf}_${gear.title}_${gear.resAs}`;
+            return `${gear.height}_${gear.maxRateK}_${gear.fps}_${gear.csf}_${gear.isCopy}_${gear.resAs}_${gear.resVer}`;
+        }
+        let makeDstTaskSelect = (videoInfo) => {
+            let autoGear = videoInfo.task_info.expect;
+            if (autoGear) {
+                autoGear.resAs = autoGear.resAs || 'h265';
+
+                if (autoGear.maxRateK) {
+                    let ar = [];
+                    autoGear.maxRateK = parseInt(autoGear.maxRateK.replace('k', ''));
+                    ar.push('auto'.padStart(30));
+
+                    ar.push(autoGear.height.toString().padStart(6));
+                    ar.push(autoGear.maxRateK.toString().padStart(6));
+                    ar.push(autoGear.fps.toString().padStart(6));
+                    ar.push(autoGear.resAs.toString().padStart(6));
+                    autoGear.text = ar.join('');
+                    autoGear.val = makeGearVal(autoGear);
+                    console.log({videoInfo: videoInfo, autoGear: autoGear});
+                }
+            } else {
+                console.error({videoInfo: videoInfo, autoGear: autoGear, taskGears: taskGears});
+            }
+            let select = kl.HTML.SELECT();
+            if (autoGear === undefined) {
+                console.error('autoGear undefined');
+                select.setItems(taskGears);
+                select.value = Object.values(taskGears)[0].val;
+            } else {
+                if (taskGearStrVal2ObjectVal[autoGear.val] === undefined) {
+                    console.warn({
+                        taskGearStrVal2ObjectVal: taskGearStrVal2ObjectVal,
+                        taskSelect: autoGear.val,
+                        autoGear: autoGear,
+                        videoInfo: videoInfo,
+                    });
+                    select.setItems(taskGears.concat([autoGear]));
+                } else {
+                    select.setItems(taskGears);
+                }
+
+                select.value = autoGear.val;
+            }
+
+            return select;
+
+        };
+
+        let getQueryAttrs = () => {
+            let attrs = {};
+            attrInputs.forEach(input => {
+                if (input.value !== '#' && input.value !== '') {
+                    attrs[input.attrKey] = input.value;
+                }
+            });
+            return attrs;
+        };
+        let query = () => {
+            itemListDiv.album2div = {};
+            itemListDiv.removeAllChildNodes();
+            queryBtn.classList.add('hide');
+            kl.ajax({
+                url: '/dev/v1/KL_PC/FfmpegTasks',
+                data: {file: '/data/sysadv.debug', attrs: getQueryAttrs(), kldebug: 'x'},
+                success: function (file_result) {
+                    queryBtn.classList.remove('hide');
+
+                    console.log(file_result);
+                    let list = kl.getValByPath(file_result, 'data.list');
+                    if (list && Array.isArray(list)) {
+                        console.log(file_result);
+                        list.forEach((videoInfo, i) => {
+                            if (videoInfo.is_pre === 1) {
+                                // return false;
+                            }
+                            let sizeM = parseInt(videoInfo.filesize / 1024 / 1024);
+                            let srcInfo = videoInfo.src_video_info;
+                            let taskManualInfo = kl.getValByPath(videoInfo, 'task_info.manual', {});
+                            let srcTitle = `${videoInfo.id} ${videoInfo.video_basename}.${videoInfo.video_ext} `;
+                            let infospan = new Emt('span', '', '', {textContent: ''});
+
+                            let taskSelect = makeDstTaskSelect(videoInfo);
+
+                            let srcDiv = new Emt('div', 'class="src"');
+                            let srcInfoDiv = new Emt('div', 'class="src-info"');
+                            let compareSrcInfoDiv = new Emt('div', 'class="compare-src-info"');
+                            let dstManualInfoDiv = new Emt('div', 'class="compare-src-info"');
+
+                            let snapshotDiv = new Emt('div', 'class="snapshots"');
+
+                            let headerAdCanvas = new Emt('canvas');
+                            let tailAdCanvas = new Emt('canvas');
+                            let headerAdSecInput = kl.HTML.INPUT_NUMBER('', '', {value: taskManualInfo.ss || 0});
+                            let tailAdSecInput = kl.HTML.INPUT_NUMBER('', '', {value: taskManualInfo.tailAdStart || 0});
+
+                            videoInfo.headerAdCanvas = headerAdCanvas;
+                            videoInfo.tailAdCanvas = tailAdCanvas;
+                            videoInfo.headerAdSecInput = headerAdSecInput;
+                            videoInfo.tailAdSecInput = tailAdSecInput;
+                            videoInfo.durationSec = 0;
+
+
+                            let opBtn = new Emt('button', 'type="button" class="hidden"', '应用');
+                            let spreadAdRangeBtn = new Emt('button', 'type="button" class=""', '同步垃圾广告');
+
+
+                            let opDiv = new Emt('div', 'class="op"');
+
+                            let whRate = parseInt(srcInfo.width * 100 / srcInfo.height);
+                            let whFlag = whRate >= 100 ? 'tv' : 'phone';
+                            let videoInfoDiv = new Emt('div', 'class="conv-task"').addNodes([
+                                srcDiv,
+                                srcInfoDiv.addNodes([
+                                    kl.HTML.SPAN(`class="wh-rate-${whFlag}"`,),
+                                    kl.HTML.EM('class="size"', `${srcInfo.width}X${srcInfo.height}`),
+                                    kl.HTML.EM('class="file-size"', `${sizeM}M`),
+                                    kl.HTML.EM('class="duration"', `${srcInfo.duration}s`),
+                                    kl.HTML.EM('class="rate-k"', `${srcInfo.rateK}K`),
+
+                                ]),
+                                opDiv.addNodes([
+                                    compareSrcInfoDiv.addNodes([
+                                        kl.HTML.SPAN(`class="wh-rate-${whFlag}"`,),
+                                        kl.HTML.EM('class="size"', `${srcInfo.height}`),
+                                        kl.HTML.EM('class="rate-k"', `${srcInfo.rateK}K`),
+                                        kl.HTML.EM('class="fps"', `${srcInfo.fps}fps`),
+
+                                    ]),
+                                    dstManualInfoDiv.addNodes([
+                                        kl.HTML.SPAN(`class="wh-rate-${whFlag}"`,),
+                                        kl.HTML.EM('class="size"', `${taskManualInfo.height || ''}`),
+                                        kl.HTML.EM('class="rate-k"', `${taskManualInfo.maxRateK || ''}`),
+                                        kl.HTML.EM('class="fps"', `${taskManualInfo.fps || ''}fps`),
+
+                                    ]),
+                                    taskSelect, infospan, opBtn
+                                ]),
+                                snapshotDiv.addNodes([
+                                    kl.HTML.DIV('class="header-ad"').addNodes([
+                                        headerAdCanvas,
+                                        kl.HTML.HR(),
+                                        headerAdSecInput,
+                                    ]),
+                                    kl.HTML.DIV('class="tail-ad"').addNodes([
+                                        tailAdCanvas,
+                                        kl.HTML.HR(),
+                                        tailAdSecInput,
+                                    ])
+                                ]),
+                            ]);
+
+                            if (videoInfo.is_pre === 1) {
+                                videoInfoDiv.classList.add('fuck-type-video');
+                            }
+
+                            videoInfo = Object.assign(videoInfo, {
+                                getAdImg: async (headerEndSec, tailStratSec) => {
+                                    // 创建视频元素辅助函数
+                                    const createVideoElement = () => {
+                                        let vp = new Emt('video');
+                                        document.body.append(vp);
+                                        vp.volume = 0;
+                                        vp.src = getVdieoSrc(videoInfo.src);
+                                        vp.style.display = 'none'; // 隐藏视频元素
+                                        return vp;
+                                    };
+
+                                    // 等待视频元数据加载
+                                    const waitForMetadata = (video) => {
+                                        return new Promise((resolve, reject) => {
+                                            if (video.readyState >= 1) { // HAVE_METADATA
+                                                resolve(video);
+                                                return;
+                                            }
+
+                                            const onLoaded = () => {
+                                                video.removeEventListener('loadedmetadata', onLoaded);
+                                                video.removeEventListener('error', onError);
+                                                resolve(video);
+                                            };
+
+                                            const onError = (e) => {
+                                                video.removeEventListener('loadedmetadata', onLoaded);
+                                                video.removeEventListener('error', onError);
+                                                reject(e);
+                                            };
+
+                                            video.addEventListener('loadedmetadata', onLoaded);
+                                            video.addEventListener('error', onError);
+
+                                            // 超时处理
+                                            setTimeout(() => {
+                                                video.removeEventListener('loadedmetadata', onLoaded);
+                                                video.removeEventListener('error', onError);
+                                                reject(new Error('视频元数据加载超时'));
+                                            }, 10000);
+                                        });
+                                    };
+
+                                    // 截取视频帧
+                                    const captureFrame = (video, time, canvas, successCall) => {
+                                        return new Promise((resolve, reject) => {
+                                            video.currentTime = time;
+
+                                            const onSeeked = () => {
+                                                video.removeEventListener('seeked', onSeeked);
+                                                video.removeEventListener('error', onSeekError);
+
+                                                try {
+                                                    canvas.width = video.videoWidth;
+                                                    canvas.height = video.videoHeight;
+                                                    const ctx = canvas.getContext('2d');
+                                                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                                    successCall();
+                                                    if (videoInfo.durationSec === 0) {
+                                                        videoInfo.durationSec = parseInt(video.duration);
+                                                    }
+                                                    //if (secInput) secInput.value = time;
+                                                    resolve();
+                                                } catch (error) {
+                                                    reject(error);
+                                                }
+                                            };
+
+                                            const onSeekError = (e) => {
+                                                video.removeEventListener('seeked', onSeeked);
+                                                video.removeEventListener('error', onSeekError);
+                                                reject(e);
+                                            };
+
+                                            video.addEventListener('seeked', onSeeked);
+                                            video.addEventListener('error', onSeekError);
+
+                                            // 超时处理
+                                            setTimeout(() => {
+                                                video.removeEventListener('seeked', onSeeked);
+                                                video.removeEventListener('error', onSeekError);
+                                                reject(new Error('视频跳转超时'));
+                                            }, 5000);
+                                        });
+                                    };
+
+                                    let vp = null;
+                                    let vp2 = null;
+
+                                    try {
+                                        // 创建第一个视频元素并处理片头
+                                        vp = createVideoElement();
+                                        await waitForMetadata(vp);
+                                        console.log('loadedmetadata vp:', vp.duration);
+                                        await vp.play();
+                                        await captureFrame(vp, headerEndSec, headerAdCanvas, () => {
+                                            headerAdSecInput.value = headerEndSec;
+                                            headerAdSecInput.dispatchEvent(new CustomEvent('change'));
+                                        });
+
+                                        // 创建第二个视频元素并处理片尾
+                                        vp2 = createVideoElement();
+                                        await waitForMetadata(vp2);
+                                        console.log('loadedmetadata vp2:', vp2.duration);
+                                        console.log(vp2.duration, tailStratSec, vp2.duration - tailStratSec);
+                                        await vp2.play();
+                                        await captureFrame(vp2, vp2.duration - tailStratSec, tailAdCanvas, () => {
+                                            tailAdSecInput.value = tailStratSec;
+                                            tailAdSecInput.dispatchEvent(new CustomEvent('change'));
+
+                                        });
+
+                                        console.log('截图完成');
+
+                                    } catch (error) {
+                                        console.error('截图失败:', error);
+                                        throw error;
+                                    } finally {
+                                        // 清理视频元素
+                                        if (vp) {
+                                            vp.pause();
+                                            vp.remove();
+                                        }
+                                        if (vp2) {
+                                            vp2.pause();
+                                            vp2.remove();
+                                        }
+                                    }
+                                },
+                            });
+                            let dirname = false;
+                            if (videoInfo.album_dir === '') {
+                                itemListDiv.addNode(videoInfoDiv);
+                            } else {
+                                if (itemListDiv.album2div[videoInfo.album_dir] === undefined) {
+
+                                    itemListDiv.album2div[videoInfo.album_dir] = new Emt('div', 'class="dir-conv-task"');
+                                    itemListDiv.album2div[videoInfo.album_dir].videoInfos = [];
+                                    let dirOpBtn = new Emt('button', 'type="button" class=""', '清理目录');
+
+
+                                    itemListDiv.addNode(itemListDiv.album2div[videoInfo.album_dir].addNodes([
+                                        new Emt('p').addNodes([
+                                            new Emt('strong', '', videoInfo.album_dir), dirOpBtn,
+                                        ])
+                                    ]));
+                                    dirOpBtn.addEventListener('click', async () => {
+                                        if (window.confirm('确定清理目录?') === false) {
+                                            return false;
+                                        }
+                                        let pairInfos = {};
+                                        for (const [tmp_j, tmpPairInfo] of pairInfos.entries()) {
+
+                                        }
+                                    });
+                                }
+
+                                opDiv.addNodes([
+                                    spreadAdRangeBtn,
+                                ])
+
+
+                                itemListDiv.album2div[videoInfo.album_dir].addNode(videoInfoDiv);
+                                itemListDiv.album2div[videoInfo.album_dir].videoInfos.push({
+                                    videoInfo: videoInfo,
+                                    opBtn: opBtn,
+                                });
+                                spreadAdRangeBtn.addEventListener('click', async () => {
+                                    console.log('同步垃圾广告配置', headerAdSecInput.value, tailAdSecInput.value);
+                                    let tailAdStart = tailAdSecInput.value.length > 0 ? parseInt(tailAdSecInput.value) : 0;
+                                    let headerAdEnd = headerAdSecInput.value.length > 0 ? parseInt(headerAdSecInput.value) : 0;
+
+                                    async function exampleUsage() {
+
+                                        for (const [key, videoInfoObj] of Object.entries(itemListDiv.album2div[videoInfo.album_dir].videoInfos)) {
+                                            try {
+                                                await videoInfoObj.videoInfo.getAdImg(headerAdEnd, tailAdStart); // 片头5秒，片尾10秒
+                                                console.log('截图处理完成');
+                                            } catch (error) {
+                                                console.error('处理失败:', error);
+                                            }
+                                        }
+
+                                    }
+
+                                    await exampleUsage();
+                                });
+                            }
+
+
+                            let items = [];
+
+                            if (videoInfo.src) {
+                                console.log(videoInfo.src);
+                                items.push(videoInfo.src);
+                                let delSrcBtn = new Emt('button', 'type="button" class="del-src-btn"', 'DEL SRC');
+                                let renameBtn = new Emt('button', 'type="button" class="rename-src-btn"', 'rename');
+                                let asResBtn = new Emt('button', 'type="button" class="del-src-btn"', 'src to res', {title: '无需再次转码，直接当成转码后的'});
+                                let btn = new Emt('button', 'type="button" class="play_btn"', srcTitle);
+                                srcDiv.addNodes([delSrcBtn, renameBtn, asResBtn, btn]);
+
+                                btn.addEventListener('click', () => {
+                                    console.log('play:', videoInfo);
+                                    event.preventDefault(); //阻止冒泡
+                                    functionPlay(videoInfo);
+                                });
+
+                                delSrcBtn.addEventListener('click', async () => {
+                                    if (window.confirm(`确定删除 ${srcTitle}?`)) {
+                                        await kl.ajax({
+                                            url: '/dev/v1/KL_PC/FfmpegTaskDelSrc',
+                                            data: {id: videoInfo.id},
+                                            type: 'json',
+                                            async: true,
+                                        }).then(aysncRes => {
+                                            console.log(aysncRes.result);
+                                            let op_res = aysncRes.result;
+                                            if (kl.getValByPath(aysncRes, 'result.data.src_exist') === false) {
+                                                videoInfoDiv.remove();
+                                            }
+
+                                        });
+                                    }
+
+                                });
+
+                                asResBtn.addEventListener('click', async () => {
+                                    if (window.confirm(`确定  src to res? ${srcTitle}?`)) {
+                                        await kl.ajax({
+                                            url: '/dev/v1/KL_PC/moveVideoSrcToRes',
+                                            data: {id: videoInfo.id},
+                                            type: 'json',
+                                            async: true,
+                                        }).then(aysncRes => {
+                                            console.log(aysncRes.result);
+                                            let op_res = aysncRes.result;
+                                            if (kl.getValByPath(aysncRes, 'result.data.src_exist') === false) {
+                                                if (kl.getValByPath(aysncRes, 'result.data.dst_exist') === true) {
+                                                    videoInfoDiv.remove();
+                                                } else {
+                                                    alert('异常,src 没了，但 dst 也没了');
+                                                }
+                                                //  videoInfoDiv.remove();
+                                            } else {
+                                                alert('异常,src 还在');
+                                            }
+
+                                        });
+                                    }
+
+                                });
+                                renameBtn.addEventListener('click', async () => {
+                                    let str = window.prompt(`输入新name:`, `${videoInfo.video_basename}`);
+                                    if (str && str !== videoInfo.video_basename) {
+                                        await kl.ajax({
+                                            url: '/dev/v1/KL_PC/FfmpegTaskRenameFile',
+                                            data: {id: videoInfo.id, oldStr: `${videoInfo.video_basename}`, newStr: str},
+                                            type: 'json',
+                                            async: true,
+                                        }).then(aysncRes => {
+                                            console.log(aysncRes.result);
+                                            let op_res = aysncRes.result;
+                                            if (kl.getValByPath(aysncRes, 'result.data.src_exist') === false) {
+                                                videoInfoDiv.remove();
+                                            }
+
+                                        });
+                                    }
+
+                                });
+
+
+                            } else {
+
+                                srcDiv.addNodes([kl.HTML.SPAN('class="play_btn"', srcTitle)]);
+                            }
+                            if (parseInt(videoInfo.run_lc) > 0) {
+                                let btn = new Emt('button', 'type="button" class="play_btn"', 'free run lcok');
+                                srcDiv.addNode(btn);
+
+                                btn.addEventListener('click', async () => {
+                                    if (window.confirm('确定解锁?')) {
+                                        await kl.ajax({
+                                            url: '/dev/v1/KL_PC/FfmpegTaskUpdate',
+                                            data: {id: videoInfo.id, attrs: {is_ok: 2, run_lc: 0}},
+                                            type: 'json',
+                                            async: true,
+                                        }).then(aysncRes => {
+                                            console.log(aysncRes.result);
+                                            videoInfoDiv.remove();
+
+                                        });
+
+                                    }
+                                });
+                            }
+                            [headerAdSecInput, tailAdSecInput, taskSelect].forEach(input => {
+                                input.addEventListener('change', async () => {
+                                    console.log('xxxx', taskSelect.value);
+                                    let ar = taskSelect.value.split('_');
+                                    let videoDuration = videoInfo.durationSec || videoInfo.src_video_info.duration;
+                                    let tailAdStart = tailAdSecInput.value.length > 0 ? parseInt(tailAdSecInput.value) : 0;
+                                    let headerAdEnd = headerAdSecInput.value.length > 0 ? parseInt(headerAdSecInput.value) : 0;
+                                    let tmp = {};
+                                    if (taskGearStrVal2ObjectVal[taskSelect.value]) {
+                                        let gearInfo = taskGearStrVal2ObjectVal[taskSelect.value];
+                                        console.log({
+                                            taskGearStrVal2ObjectVal: taskGearStrVal2ObjectVal,
+                                            taskSelect: taskSelect.value,
+                                            gearInfo: gearInfo
+                                        });
+                                        tmp = {
+                                            type: '265',
+                                            height: gearInfo.height,
+                                            maxRateK: gearInfo.maxRateK + 'K',
+                                            fps: gearInfo.fps,
+                                            csf: gearInfo.csf,
+                                            isCopy: gearInfo.isCopy,
+                                            resAs: gearInfo.resAs,
+                                            resVer: gearInfo.resVer,
+                                            ss: headerAdEnd,
+                                            tailAdStart: tailAdStart,
+                                            to: videoDuration === 0 ? 0 : (tailAdStart > 0 ? parseInt(videoDuration - tailAdStart) : 0),
+                                        };
+                                    } else {
+                                        tmp = {
+                                            type: '265',
+                                            height: parseInt(ar[0]),
+                                            maxRateK: parseInt(ar[1] || 0) + 'K',
+                                            fps: parseInt(ar[2] || 0),
+                                            csf: parseInt(ar[3] || 22),
+                                            ss: headerAdEnd,
+                                            tailAdStart: tailAdStart,
+                                            to: videoDuration === 0 ? 0 : (tailAdStart > 0 ? parseInt(videoDuration - tailAdStart) : 0),
+                                        };
+                                    }
+
+
+                                    await kl.ajax({
+                                        url: '/dev/v1/KL_PC/FfmpegTaskUpdate',
+                                        data: {id: videoInfo.id, task: tmp, isCopy: tmp.isCopy},
+                                        type: 'json',
+                                        async: true,
+                                    }).then(aysncRes => {
+                                        console.log(aysncRes.result);
+                                        let op_res = aysncRes.result;
+
+                                    });
+                                });
+                            });
+
+
+                        });
+                    } else {
+                        alert(file_result.msg || '未知');
+                    }
+                },
+                error: () => {
+                    queryBtn.classList.remove('hide');
+                },
+                type: 'json'
+            });
+        };
+        //  query();
+
+        queryBtn.addEventListener('click', query);
+
+        let functionPause = () => {
+            videoPlayerDiv.classList.add('hidden');
+            videoPlayer.pause();
+        }
+
+        window.setInterval(() => {
+            if (videoPlayer.isConnected) {
+                //   headerSecInput.value = parseInt(videoPlayer.currentTime);
+                //    tailSecInput.value = parseInt(videoPlayer.duration - videoPlayer.currentTime);
+            }
+        }, 500);
+        headerSecInput.addEventListener('change', () => {
+            videoPlayer.currentTime = headerSecInput.value;
+        });
+
+
+        videoPlayer.addEventListener('timeupdate', () => {
+            if (videoPlayer.isConnected) {
+                headerSecInput.value = parseInt(videoPlayer.currentTime);
+                tailSecInput.value = parseInt(videoPlayer.duration - videoPlayer.currentTime);
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            console.log('keydown', e.code);
+            // 37 l  38 top  39 right  40 down
+            switch (e.code) {
+                case'Enter':
+                    console.log('player div ok');
+
+                    if (videoPlayer.paused) {
+                        videoPlayer.play();
+                    } else {
+                        videoPlayer.paused();
+                    }
+                    break;
+                case 'Escape':
+                case 'Backquote':
+                    console.log('player div exit');
+                    videoPlayerDiv.classList.add('hidden');
+                    videoPlayer.pause();
+                    break;
+                case 'ArrowLeft':
+                    videoPlayer.currentTime += 15;
+                    break;
+                case 'ArrowUp':
+                    videoPlayer.volume += 0.02;
+                    break;
+                case 'ArrowRight':
+                    videoPlayer.currentTime -= 15;
+                    break;
+                case 'ArrowDown':
+                    videoPlayer.volume -= 0.02;
+                    break;
+            }
+            // e.preventDefault();
+            // return false;
+
+
+        });
+        markHeaderAdEndBtn.addEventListener('click', () => {
+            if (window.currItem.headerAdCanvas) {
+                window.currItem.headerAdCanvas.width = videoPlayer.videoWidth;
+                window.currItem.headerAdCanvas.height = videoPlayer.videoHeight;
+
+                const ctx = window.currItem.headerAdCanvas.getContext('2d');
+                ctx.drawImage(videoPlayer, 0, 0, window.currItem.headerAdCanvas.width, window.currItem.headerAdCanvas.height);
+                window.currItem.headerAdSecInput.value = parseInt(videoPlayer.currentTime);
+                window.currItem.headerAdSecInput.dispatchEvent(new CustomEvent('change'));
+
+            }
+        });
+        markTailAdStartBtn.addEventListener('click', () => {
+            if (window.currItem.tailAdCanvas) {
+                window.currItem.tailAdCanvas.width = videoPlayer.videoWidth;
+                window.currItem.tailAdCanvas.height = videoPlayer.videoHeight;
+                const ctx = window.currItem.tailAdCanvas.getContext('2d');
+                ctx.drawImage(videoPlayer, 0, 0, window.currItem.tailAdCanvas.width, window.currItem.tailAdCanvas.height);
+                window.currItem.tailAdSecInput.value = parseInt(videoPlayer.duration - videoPlayer.currentTime);
+                window.currItem.tailAdSecInput.dispatchEvent(new CustomEvent('change'));
+            }
+        });
+
+        rubishAdDurationInput.addEventListener('change', () => {
+            console.log(rubishAdDurationInput.value);
+            let ar = rubishAdDurationInput.value.split('_');
+            let headerTs = parseInt(ar[0]);
+            let tailTs = parseInt(ar[1]);
+
+            if (window.currItem.headerAdCanvas) {
+                window.currItem.headerAdCanvas.width = videoPlayer.videoWidth;
+                window.currItem.headerAdCanvas.height = videoPlayer.videoHeight;
+
+                const ctx = window.currItem.headerAdCanvas.getContext('2d');
+                ctx.drawImage(videoPlayer, 0, 0, window.currItem.headerAdCanvas.width, window.currItem.headerAdCanvas.height);
+
+
+                window.currItem.headerAdSecInput.value = headerTs;
+                window.currItem.tailAdSecInput.value = tailTs;
+
+                window.currItem.headerAdSecInput.dispatchEvent(new CustomEvent('change'));
+                window.currItem.tailAdSecInput.dispatchEvent(new CustomEvent('change'));
+
+
+                videoPlayer.currentTime = headerTs;
+                videoPlayer.pause();
+                console.log(videoPlayer.currentTime);
+            }
+        });
+        gotoRubishAdDurationTailBtn.addEventListener('click', () => {
+            let ar = rubishAdDurationInput.value.split('_');
+            let tailTs = parseInt(ar[1]);
+
+
+            window.currItem.tailAdSecInput.value = tailTs;
+
+            videoPlayer.currentTime = parseInt(videoPlayer.duration - tailTs);
+            videoPlayer.pause();
+
+            console.log(videoPlayer.currentTime);
+            window.currItem.tailAdCanvas.width = videoPlayer.videoWidth;
+            window.currItem.tailAdCanvas.height = videoPlayer.videoHeight;
+
+
+            const tailCtx = window.currItem.tailAdCanvas.getContext('2d');
+            tailCtx.drawImage(videoPlayer, 0, 0, window.currItem.tailAdCanvas.width, window.currItem.tailAdCanvas.height);
+
+            window.currItem.tailAdSecInput.value = tailTs;
+
+
+        });
+
+
+        durationInput.addEventListener('input', () => {
+            //cli.log(durationInput.value);
+            videoPlayer.currentTime = parseInt(durationInput.value / 1000 * videoPlayer.duration);
+        });
+        volumeInput.addEventListener('input', () => {
+            //cli.log(durationInput.value);
+            videoPlayer.volume = parseInt(volumeInput.value) / 100;
+        });
+
+
+        kl.ajax({
+            url: '/dev/v1/KL_PC/getHdItems',
+            data: {},
+            type: 'json',
+            success: function (cfg_res) {
+                console.log(cfg_res);
+                let hdItems = kl.getValByPath(cfg_res, 'data.hdItems');
+                if (Array.isArray(hdItems)) {
+                    console.log(hdItems);
+                    let tmp = {};
+
+                    hdItems.forEach((gear, i) => {
+                        let ar = [];
+                        ar.push(gear.resAs.toString().padStart(6));
+                        ar.push(gear.height.toString().padStart(6));
+                        ar.push(gear.maxRateK.toString().padStart(6));
+                        ar.push(gear.fps.toString().padStart(6));
+                        ar.push(gear.title.toString().padStart(30));
+                        ar.push(gear.csf.toString().padStart(3));
+
+                        gear.text = ar.join('');
+
+                        gear.val = makeGearVal(gear);
+                        tmp[gear.text] = gear;
+                        taskGearStrVal2ObjectVal[gear.val] = gear;
+                    });
+                    let keys = Object.keys(tmp).sort();
+
+                    taskGears = [];
+                    keys.forEach(text => {
+                        taskGears.push(tmp[text]);
+                    });
+
+                    query();
+                } else {
+                    let err_msg = kl.getValByPath(cfg_res, 'msg', '未知错误');
+                    alert(err_msg);
+                    throw err_msg;
+                }
+            },
+            error: (error) => {
+                console.error(error);
+            }
+        });
+
+    })
+
+</script>
+</body>
+</html>

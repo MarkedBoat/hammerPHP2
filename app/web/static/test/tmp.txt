@@ -1,0 +1,52 @@
+现有接口:http://kl-home-pc:8002/spider/v1/boss_zhipin/companies
+数据格式如下
+
+{
+  "status": 200,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "com_id": "company_logo_click_010d1c185472f6c91Xd43dy9EVA~",
+        "title": "素问堂"
+      }
+    ],
+    "count": 2956,
+    "page_index": 0,
+    "page_no": 1,
+    "page_size": 1
+  },
+  "code": "ok"
+  }
+
+
+  $.data.data 为 company infos ，com_id 为公司id ,title 为公司名，现在要求：
+  1.原页面的 com_id 列显示成公司名，使用col的 render属性;
+  2.com_id对应的筛选输入，由input 改为 可 搜索com_id和 公司名的 下拉框，可引用vue-element ，扔给queryMap的仍然是 com_id不变，
+
+
+columns 增加了3个
+
+                  {key: 'job_md5_cnt', label: '重复次数', type: 'int', isAllowQuery: true,},
+                  {key: 'is_md5_old', label: '是否老数据', type: 'int', isAllowQuery: true,},
+                  {key: 'job_md5 ', label: '数据特征', type: 'string', isAllowQuery: true, isShowInGrid: false},
+
+                  要求每次jobs分页查询完之后，拿着 job_md5 合集，POST 接口 /boss_zhipin/getJobMd5Times  数据  {job_md5s:[job_md5_1,job_md5_2.....]}，返回格式
+
+                  {
+                    "status": 200,
+                    "data": {
+                      "data": [
+                        {
+                          "com_id": "company_logo_click_010d1c185472f6c91Xd43dy9EVA~",
+                          "times": 1
+                        }.
+                        {
+                          "com_id": "company_logo_click_010d1cXXXX",
+                          "times": 2
+                        }
+                      ],
+                    },
+                    "code": "ok"
+                    }
+                    讲times 值替换  job_md5_cnt 列内容

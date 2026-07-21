@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="/static/file/js/kl-hammer-json.js" charset="UTF-8"></script>
+    <title>短信统计参数</title>
+    <style>
+        #text {
+            width: 90%;
+            min-height: 600px;
+        }
+    </style>
+    <link href="/static/file/css/kl-hammer-json.css" media="all" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div>
+    <div id="boxer">
+        <a href="/static/deploy/projects/json_args/index.html" target="_blank"><h1>json参数调试</h1></a>
+    </div>
+    <div id="dev_opts">
+        <div id="dev_opts_error">
+
+        </div>
+    </div>
+
+</div>
+<script></script>
+<script>
+
+    var box = new Emt('textarea').setPros({id: 'text'});
+    kl.id('boxer').appendChild(box);
+    var json_pre = new Emt('div');
+    kl.id('boxer').appendChild(json_pre);
+    t = {
+        "type": "alarm",
+        "mail": "yangjl02@fun.tv",
+        "title": "测试-请忽略-短信到达率异常",
+        "unit": "min",
+        "col_date_style": "H:i",
+        //"ranges": {"r1": {"at": 10, "range": 10}, "r2": {"at": 20, "range": 10}},
+        "ranges": {"r1": {"at": 100, "range": 10}, "r2": {"at": 200, "range": 10}},
+        "row_vars": {
+            "thresholds": [{"val": {"0": 0.9, "8": 0.9, "9": 2}}, "set"],
+            "rate1": [["r1.recv1", "/", "r1.send1"], "round", {"val": 2}],
+            "rate2": [["r2.recv1", "/", "r2.send1"], "round", {"val": 2}],
+            "rate_last": [["rate1", "-", "rate2"], "abs", {"val": ""}],
+            "threshold": ["thresholds", "indexOf", "oid", {val: 0}],
+            //"threshold": [{"val": 0.4}, "set", null]
+        },
+        //"alarm": {"style": "cids", "opts": [["send1_recv0", ">", {val: 50}], "&&", ["rate_last", ">=", "threshold"]]},
+        "alarm": {"style": "cids", "opts": [["rate1", "<=", "threshold"]]},
+        "cols": {
+            "name": "运营商",
+            "rate_last": {
+                "text": "波动",
+                "val": "rate_last",
+                "red": ["rate_last", ">=", "threshold"],
+                "skip_row": ["rate_last", "<", "threshold"]
+            },
+            "rate1": "{r1.start_date}~{r1.end_date}到 达率",
+            "r1.send1": "-发送",
+            "r1.recv1": "-接收",
+            "rate2": "{r2.start_date}~{r2.end_date}到达率",
+            "r2.send1": "-- 发送",
+            "r2.recv1": "--接收"
+        }
+    };
+
+
+    t = {
+        "type": "alarm",
+        "mail": "yangjl02@fun.tv",
+        "title": "测试-请忽略-短信到达率异常",
+        "unit": "min",
+        "col_date_style": "H:i",
+        "ranges": {"r1": {"at": 10, "range": 10}},
+        "row_vars": {
+            "thresholds": [{"val": {"0": 0.7, "6": 2, "7": 0.7, "8": 2}}, "set"],
+            "min_nums": [{"val": {"0": 200, "6": 100, "7": 30, "8": 30}}, "set"],
+            "rate1": [["r1.recv1", "/", "r1.send1"], "round", {"val": 2}],
+            "threshold": ["thresholds", "indexOf", "oid", {val: 0}],
+            "min": ["min_nums", "indexOf", "oid", {val: 0}],
+        },
+        "alarm": {"style": "cids", "opts": [[],'&&',["rate1", "<=", "threshold"]]},
+        "cols": {
+            "name": "运营商",
+            "rate1": {
+                "text": "{r1.start_date}~{r1.end_date}到 达率",
+                "val": "rate1",
+                "red": ["rate1", "<=", "threshold"],
+            },
+            "r1.send1": "发送",
+            "r1.recv1": "接收",
+            "threshold": "阈值",
+            "min": "最低数量"
+        }
+    };
+
+
+    t = {
+        "type": "alarm",
+        "mail": "pdgs-mobile@fun.tv",
+        "title": "短信到达率异常",
+        "unit": "min",
+        "col_date_style": "H:i",
+        "ranges": {"r1": {"at": 10, "range": 10}},
+        "row_vars": {
+            "thresholds": [{"val": {"0": 0.7, "6": 0.7, "7": 0.7, "8": 0.7}}, "set"],
+            "min_nums": [{"val": {"0": 90, "6": 30, "7": 30, "8": 30}}, "set"],
+            "rate1": [["r1.recv1", "/", "r1.send1"], "round", {"val": 2}],
+            "threshold": ["thresholds", "indexOf", "oid", {val: 0}],
+            "min": ["min_nums", "indexOf", "oid", {val: 0}],
+        },
+        "alarm": {"style": "cids", "opts": [["min", "<=", "r1.send1"], '&&', ["rate1", "<=", "threshold"]]},
+        "cols": {
+            "name": "运营商",
+            "rate1": {
+                "text": "{r1.start_date}~{r1.end_date}到 达率",
+                "val": "rate1",
+                "red": ["rate1", "<=", "threshold"],
+            },
+            "r1.send1": "发送",
+            "r1.recv1": "接收",
+            "threshold": "阈值",
+            "min": "报警数量门槛"
+        }
+    };
+
+
+    // ^(\w+)\s+=\s+(.*)(;)$
+    // '$1':'$2',
+
+
+
+    json_pre.innerHTML = '';
+    json_pre.appendChild(view_json(t));
+    var str = JSON.stringify(t);
+    var str1 = "\nphp /data/code/poseidon_server/psms.funshion.com/v1/script/send_counter_debug.php '" + str + "'\n";
+    var str2 = "\n/usr/local/php5.3.11/bin/php  /usr/website_server_alpha/psms.funshion.com/v1/script/send_counter_debug.php '" + str + "'\n";
+    //document.write(str1,str2);
+    console.log(str1, str2);
+    box.textContent = str1 + "\n" + str2;
+</script>
+</body>
+</html>

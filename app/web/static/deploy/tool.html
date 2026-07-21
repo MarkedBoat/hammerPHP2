@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../file/js/kl-hammer-dom-data.js" charset="UTF-8"></script>
+    <script src="../file/js/string.js" charset="UTF-8"></script>
+    <script src="../file/js/text2accii.js" charset="UTF-8"></script>
+
+    <title>dev工具箱</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+
+
+        #dev_opts > div {
+            display: block;
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            margin: 0.1em;
+        }
+
+        #dev_opts > div > div {
+            width: 100%;
+        }
+
+        #dev_opts > div > div > label {
+            display: block;
+            width: 400px;
+            /* height: 2em; */
+            /* margin-top: 0.5em; */
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            background: #EEE;
+            margin: 0.1em;
+        }
+
+        .tt {
+            width: 100%;
+            min-height: 150px;
+        }
+
+        .row_line {
+            width: 100%;
+            display: block;
+            float: left;
+            padding: 5px;
+        }
+
+        .row_line button {
+            display: block;
+            float: left;
+            width: 100px;
+        }
+
+        .row_doc {
+            display: block;
+            float: left;
+            max-width: 80%;
+        }
+
+        .row_doc em {
+            font-size: 0.8em;
+        }
+
+        .row_doc pre {
+            width: 80%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        em + pre {
+            display: none;
+            position: absolute;
+            z-index: 999;
+            background: #AAA;
+            padding: 5px;
+            border: 3px solid #000;
+        }
+
+        em:hover + pre {
+            display: block;
+        }
+
+        #box {
+            border-bottom: 200px;
+        }
+
+        .row_line_hover {
+            width: 40px;
+            float: left;
+        }
+
+        .row_line:hover {
+            background: #DDD;
+        }
+
+        .row_hovered {
+            background: #AAA;
+        }
+    </style>
+</head>
+<body>
+<div id="box">
+
+
+</div>
+<script></script>
+<script>
+    domLoaded(function () {
+        var label1 = new Emt('label').setPros({textContent: 'label1'});
+        var label2 = new Emt('label').setPros({textContent: 'label2'});
+        var label3 = new Emt('label').setPros({textContent: 'label3'});
+        var tpl_input = new Emt('textarea').setPros({className: 'tt', placeholder: '在此输入模板,被替换词{rep}'});
+        var input = new Emt('textarea').setPros({className: 'tt', id: 'ta_in'});
+        var result = new Emt('textarea').setPros({className: 'tt', id: 'ta_out'});
+        var inputs = [tpl_input, input, result, new Emt('textarea').setPros({className: 'tt', id: 'ta_out'})];
+        var labels = [label1, label2, label3, new Emt('label').setPros({textContent: 'label4'})];
+        kl.id('box').appendChild(new Emt('div').addNodes([
+            label1,
+            tpl_input,
+            label2,
+            input,
+            label3,
+            result,
+            labels[3],
+            inputs[3],
+        ]));
+        var saveChangeValue = function () {
+            var ar = [];
+            inputs.forEach(function (input) {
+                ar.push(input.value);
+            });
+            window.localStorage.setItem('saveChangeValue', JSON.stringify(ar));
+        };
+        var last_values = ['', '', '', '', ''];
+        try {
+            last_values = JSON.parse(window.localStorage.getItem('saveChangeValue'));
+        } catch (e) {
+        }
+        console.log(last_values);
+        inputs.forEach(function (input, index) {
+            input.addEventListener('change', function () {
+                saveChangeValue();
+            });
+            input.value = last_values && typeof last_values[index] === 'string' ? last_values[index] : '';
+        });
+
+        var row_hovered = false;
+        var row_line = function (strs) {
+            var t = new Emt('div').setPros({className: 'row_line'});
+            var div_for_hover = new Emt('div').setPros({className: 'row_line_hover', textContent: '###'});
+            if (strs && typeof strs.forEach === 'function') {
+                div_for_hover.addEventListener('mouseover', function () {
+                    if (row_hovered !== false) {
+                        row_hovered.classList.remove('row_hovered');
+                    }
+                    t.classList.add('row_hovered');
+                    row_hovered = t;
+                    strs.forEach(function (str, index) {
+                        labels[index].textContent = str || '#';
+                    })
+                });
+            }
+            t.addNodes([div_for_hover]);
+            return t;
+        };
+        var row_doc = function (input_str, result_str, doc_str) {
+            var em = new Emt('em').setPros({textContent: doc_str});
+            var pre = new Emt('pre').setPros({textContent: "\n<----------->\n" + input_str + "\n<----------->\n" + result_str});
+            return new Emt('div').setPros({className: 'row_doc'}).addNodes([em, pre]);
+        };
+        var select_ele = function (array) {
+            var select0 = new Emt('select');
+            array.forEach(function (ar) {
+                select0.add(new Option(ar[0], ar[1]));
+            });
+            return select0;
+        };
+        kl.id('box').appendChild(new Emt('div').setPros({}).setAttrs({'style': 'display: block; float: left;margin-bottom: 500px;'}).addNodes([
+            function () {
+                var b = new Emt('button').setPros({textContent: '结果回车->\\n'});
+                b.addEventListener('click', function () {
+                    inputs[2].value = '"' + inputs[2].value.replace(/\n+/g, '\\' + 'n') + '"';
+                });
+                return row_line(['', '', '结果输出']).addNodes([b]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: '去除空格'});
+                b.addEventListener('click', function () {
+                    inputs[2].value = inputs[1].value.replace(/\s+/g, "");
+                });
+                return row_line(['', '带有空格的字符串', '结果输出']).addNodes([b]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'str=>map'});
+                b.addEventListener('click', function () {
+                    var ar = inputs[1].value.split(',');
+                    console.log(ar);
+                    var ar2 = [];
+                    ar.forEach(function (str) {
+                        var str2 = str.replace(/\s+/g, "");
+                        ar2.push("'" + str2 + "'=>'" + str2 + "',");
+                    });
+                    inputs[2].value = 'array(' + ar2.join("\n") + ')';
+                });
+                return row_line(['', '远字符串 比如 逗号隔开 如：1,2,3', "结果输出:array('1'=>'1','23'=>'23','3'=>'3',)"]).addNodes([b, row_doc('1,2,3', "array('1'=>'1','23'=>'23','3'=>'3',)", '以【,】，切割，变成kv对等的map')]);
+
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'sql=>array map'});
+                b.addEventListener('click', function () {
+                    var ar = inputs[1].value.split(',');
+                    console.log(ar);
+                    var ar2 = [];
+                    ar.forEach(function (str) {
+                        console.log(str);
+                        var str2 = str.trim().toLowerCase();
+                        console.log(str2);
+                        if (str2.indexOf(' ') === -1) {
+                            ar2.push("'" + str2 + "'=>'" + str2 + "',");
+                        } else {
+                            if (str2.indexOf(' as ') === -1) {
+                                var ar3 = str2.replace(/\s+/g, " ").split(' ');
+                                ar2.push("'" + ar3[1] + "'=>'" + ar3[0] + "',");
+                            } else {
+                                var ar3 = str2.split(' as ');
+                                if (str2.indexOf('(') === -1) {
+                                    ar2.push("'" + ar3[1].trim() + "'=>'" + ar3[0].trim() + "',");
+                                } else {
+                                    ar2.push("'" + ar3[1].trim() + "'=>function($row){ return '" + ar3[0] + "';},");
+                                }
+                            }
+                        }
+                    });
+                    inputs[2].value = 'array(' + ar2.join("\n") + ')';
+                });
+                return row_line(['', 'sql', '结果输出']).addNodes([b, row_doc('topic_id,name,description,template,icon,aword,poster,still,channel_id,num,disable', "array('topic_id'=>'topic_id',\n'name'=>'name',\n'description'=>'description',\n'template'=>'template',\n'icon'=>'icon',\n'aword'=>'aword',\n'poster'=>'poster',\n'still'=>'still',\n'channel_id'=>'channel_id',\n'num'=>'num',\n'disable'=>'disable',)", 'sql 语句转map 映射')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'str=>ASCII'});
+                b.addEventListener('click', function () {
+                    inputs[2].value = text2ASCII(inputs[1].value);
+                });
+                return row_line().addNodes([b, row_doc('abc', "/********************************************************************************************************************************************************\n *   _  ___  ____ \n *  /_\ |__) |    \n * /   \|__) |___ \n *\n *******************************************************************************************************************************************************/", '转化成ASCII')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'insert select'});
+                b.addEventListener('click', function () {
+                    var ar = inputs[1].value.split(',');
+                    console.log(ar);
+                    var ar2 = [];
+                    var ar3 = [];
+                    ar.forEach(function (str) {
+                        console.log(str);
+                        ar2.push('`' + str + '`');
+                        ar3.push('`' + str + '`=values(`' + str + '`)');
+
+                    });
+                    inputs[2].value = 'INSERT INTO {{new_table}} SELECT ' + ar2.join(',') + ' from {{old_table}} {{where}}  ON DUPLICATE KEY UPDATE ' + ar3.join(',');
+                });
+                return row_line(['', '字母和数字', '结果输出']).addNodes([b, row_doc('topic_id,name,description,template,icon,aword,poster,still,channel_id,num,disable', 'INSERT INTO {{new_table}} SELECT `topic_id`,`name`,`description`,`template`,`icon`,`aword`,`poster`,`still`,`channel_id`,`num`,`disable` from {{old_table}} {{where}}  ON DUPLICATE KEY UPDATE `topic_id`=values(`topic_id`),`name`=values(`name`),`description`=values(`description`),`template`=values(`template`),`icon`=values(`icon`),`aword`=values(`aword`),`poster`=values(`poster`),`still`=values(`still`),`channel_id`=values(`channel_id`),`num`=values(`num`),`disable`=values(`disable`)', 'insert select ')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'phpstorm git 文件对比辅助', title: '不同批次提交需要空一行'});
+                b.addEventListener('click', function () {
+                    var ar = inputs[1].value.split("\n");
+                    var ar2 = [];
+                    var dirs = [];
+                    var is_dir = false;
+                    ar.forEach(function (str) {
+                        var str2 = str.replace(/\s+/g, "");
+                        if (str2 === '') {
+                            dirs = [];
+                            is_dir = false;
+                            return false;
+                        }
+                        if (str2.indexOf('.php') === -1) {
+                            if (is_dir === false) {
+                                var last = dirs.length - 1;
+                                if (last < 0) last = 0;
+                                dirs[last] = str2;
+                            } else {
+                                dirs.push(str2);
+                            }
+                            is_dir = true;
+                        } else {
+                            is_dir = false;
+                            var str3 = str2 + "\t" + dirs.join('\\') + '\\' + str2;
+                            str3 = str3.replace(inputs[0].value, '');
+                            if (ar2.indexOf(str3) === -1) {
+
+                                ar2.push(str3);
+                            }
+                        }
+
+                    });
+                    inputs[2].value = ar2.sort().join("\n---------------------------------\n");
+                });
+                return row_line(['', '原phpstrom', '结果输出']).addNodes([b, row_doc("phplib\common\nvipaction.php\npvip.funshion.com\nconf\nkey_conf.php\nv1\ndata\npromotion_da.php\nservice\promotion\nshareurl_sv.php", "key_conf.php	pvip.funshion.com\conf\key_conf.php\n---------------------------------\npromotion_da.php	pvip.funshion.com\v1\data\promotion_da.php\n---------------------------------\nshareurl_sv.php	pvip.funshion.com\v1\service\promotion\shareurl_sv.php\n---------------------------------\nvipaction.php	phplib\common\vipaction.php", '方便对比')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'array:去重'});
+                var select0 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                var select1 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                b.addEventListener('click', function () {
+                    var ar_unique = inputs[1].value.split(select0.value);
+                    var ar = [];
+                    ar_unique.forEach(function (str) {
+                        if (ar.indexOf(str) === -1) ar.push(str);
+                    });
+                    //var joiner = window.prompt('输入链接符', "\n");
+                    inputs[2].value = ar.join(select1.value);
+                });
+                return row_line().addNodes([b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([
+                        new Emt('label').setPros({textContent: '分隔符'}).addNodes([select0]),
+                        new Emt('label').setPros({textContent: '连接符'}).addNodes([select1])
+                    ]),
+                    row_doc('1,2,2,2,3,3,4', '1,2,3,4', '去重')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'array:diff'});
+                var select0 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                var select1 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                b.addEventListener('click', function () {
+                    var ar0 = inputs[0].value.split(select0.value);
+                    var ar1 = inputs[1].value.split(select0.value);
+                    console.log(ar0, ar1);
+                    var ar2 = [];
+                    ar0.forEach(function (str) {
+                        if (ar1.indexOf(str) === -1) ar2.push(str);
+                    });
+                    inputs[2].value = ar2.join(select1.value);
+                    console.log(ar2);
+                });
+                return row_line().addNodes([
+                    b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([
+                        new Emt('label').setPros({textContent: '分隔符'}).addNodes([select0]),
+                        new Emt('label').setPros({textContent: '连接符'}).addNodes([select1])
+                    ]),
+                    row_doc("1,2,3,4,5,6\n3,4,5", "1,2,6", 'input 0最多  input1 少')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'array:intersect'});
+                var select0 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                var select1 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                b.addEventListener('click', function () {
+                    var ar0 = inputs[0].value.split(select0.value);
+                    var ar1 = inputs[1].value.split(select0.value);
+                    console.log(ar0, ar1);
+                    var ar2 = [];
+                    ar0.forEach(function (str) {
+                        if (ar1.indexOf(str) !== -1) ar2.push(str);
+                    });
+                    inputs[2].value = ar2.join(select1.value);
+                    console.log(ar2);
+                });
+                return row_line().addNodes([
+                    b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([
+                        new Emt('label').setPros({textContent: '分隔符'}).addNodes([select0]),
+                        new Emt('label').setPros({textContent: '连接符'}).addNodes([select1])
+                    ]),
+                    row_doc("1,2,3,4,5,6\n3,4,5", "1,2,6", 'input 0最多  input1 少')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: '替换模板'});
+                var select0 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                var select1 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                b.addEventListener('click', function () {
+                    var tpl = inputs[0].value;
+                    var ar = inputs[1].value.split(select0.value);
+                    console.log([tpl, ar]);
+                    var ar2 = [];
+                    ar.forEach(function (str) {
+                        ar2.push(tpl.replace('{rep}', str));
+                    });
+                    console.log(ar2);
+                    inputs[2].value = ar2.join(select1.value);
+                });
+                return row_line().addNodes([
+                    b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([
+                        new Emt('label').setPros({textContent: '分隔符'}).addNodes([select0]),
+                        new Emt('label').setPros({textContent: '连接符'}).addNodes([select1])
+                    ]),
+                    row_doc("$i_{rep}\n1,2,3", "$i_1,$i_2,$i_3", '循环替换')]);
+            }(),
+
+            function () {
+                var b = new Emt('button').setPros({textContent: 'json/postman'});
+                b.addEventListener('click', function () {
+                    var tpl = inputs[0].value;
+                    var obj = JSON.parse(inputs[1].value);
+                    console.log(obj);
+                    var ar2 = [];
+                    for (var k in obj) {
+                        ar2.push(k + ':' + obj[k]);
+                    }
+                    console.log(ar2);
+                    inputs[2].value = ar2.join("\n");
+                });
+                return row_line().addNodes([
+                    b,
+                    row_doc("d", 'd')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'postman/json'});
+                b.addEventListener('click', function () {
+                    var str = inputs[1].value;
+                    var ar = str.split("\n");
+                    var obj = {};
+                    ar.forEach(function (str, index) {
+                        str = str.trim();
+                        if (str.length === 0) return false;
+                        str = str.replace(':', '#####');
+                        var ar2 = str.split('#####');
+                        if (ar2.length === 2) {
+                            obj[ar2[0].trim()] = ar2[1].trim();
+                        } else {
+                            console.log('异常切分', ar2);
+                        }
+                    });
+                    console.log(obj);
+
+                    inputs[2].value = JSON.stringify(obj);
+                });
+                return row_line(['', 'postman bull格式参数', '输出结果:json']).addNodes([
+                    b,
+                    row_doc("k:v\nk1:v1\n", '{k:v,k1:v1}')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'clear/postman'});
+                var all_1 = new Emt('input').setPros({type: 'checkbox'});
+                b.addEventListener('click', function () {
+                    var str = inputs[1].value;
+                    var ar = str.split("\n");
+                    console.log(ar);
+                    var ar2 = [];
+                    ar.forEach(function (str, index) {
+                        str = str.trim();
+                        str = str.replace(/;$/g, "");
+                        str = str.replace(/ = /g, ":");
+                        str = str.replace(/\s?:\s/g, "");
+                        if (all_1.checked) {
+                            str = str.replace(/\"/g, "");
+                        }
+                        ar2.push(str);
+                    });
+
+                    console.log(ar2);
+                    inputs[2].value = ar2.join("\n");
+                });
+                return row_line().addNodes([
+                    b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([
+                        new Emt('label').setPros({textContent: '是否所有双引号也转化'}).addNodes([all_1]),
+                    ]),
+                    row_doc("d", 'd', '非标准postman bulk格式')]);
+            }(),
+
+            function () {
+                var b = new Emt('button').setPros({textContent: 'urlencode'});
+                b.addEventListener('click', function () {
+                    inputs[2].value = inputs[1].value.urlencode();
+                });
+                return row_line(['', '原数据', 'url编码后']).addNodes([
+                    b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([]),
+                    row_doc("d", 'd', '非标准postman bulk格式')]);
+            }(),
+            function () {
+                var b = new Emt('button').setPros({textContent: 'urldecode'});
+                b.addEventListener('click', function () {
+                    inputs[2].value = inputs[1].value.urldecode();
+                });
+                return row_line(['', 'url编码', 'url解码后']).addNodes([
+                    b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([]),
+                    row_doc("d", 'd', '非标准postman bulk格式')]);
+            }(),
+
+            function () {
+                var select0 = select_ele([['回车', "\n"], ['逗号', ',']]);
+                var select1 = select_ele([['展示', "yes"], ['不展示', ',']]);
+                var partten_not_exist = new Emt('input').setPros({type:'text'});
+                var partten_exist =  new Emt('input').setPros({type:'text'});
+                var b = new Emt('button').setPros({textContent: '查找缺失并补上'});
+                b.addEventListener('click', function () {
+                    var str = inputs[0].value;
+                    var strs = inputs[1].value.split(select0.value);
+                    var is_show_exist = select1.value === 'yes';
+                    strs.forEach(function (str1, index) {
+                        console.log(str1, str.indexOf(str1));
+                        if (str.indexOf(str1) === -1) {
+                            inputs[2].value = inputs[2].value + (partten_not_exist.value ?partten_not_exist.value.replace(/#NNN#/g, str1) : str1) + "\n";
+                        } else {
+                            if (is_show_exist) {
+                                inputs[2].value = inputs[2].value + (partten_exist.value ? partten_exist.value.replace(/#EEE#/g, str1) : str1) + "\n";
+                            }
+                        }
+
+                    })
+                });
+                return row_line(['被查找字符串', '要被切成数组转化的', '查找出来和替换的', '替换规则 找到: #EEE# 未找到 #NNN#']).addNodes([
+                    b,
+                    new Emt('div').setAttrs({style: 'display:block;float:left;'}).addNodes([
+                        new Emt('label').setPros({textContent: '切割符'}).addNodes([select0]),
+                        new Emt('label').setPros({textContent: '已存在的是否展示'}).addNodes([select1]),
+                        new Emt('label').setPros({textContent: '尚未存在的替换表达'}).addNodes([partten_not_exist]),
+                        new Emt('label').setPros({textContent: '存在的替换表达'}).addNodes([partten_exist]),
+                    ]),
+                    row_doc("d", 'd', '非标准postman bulk格式')]);
+            }(),
+        ]));
+    })
+    var extend2 = {
+        permit: {
+            everyone: {
+                buy_times_max: 1,//购买次数小于这个数值的 才符合条件
+                viptime_max: 'now',//会员比今天小的才符合条件  取值范围：now|时间戳
+                viptime_min: 'now',//会员到期时间比今天大的，才符合条件  取值范围:now|时间戳
+
+            }
+        }
+    }
+
+    var extend = {
+        //许可/有效，所有条件都为 and 关系, val:为false 代表不生效
+        // 所有表达式之前的key都是变量,要从数据中取出  比如 user.buy_times ,now,user.viptime
+        permit: {
+            user: {
+                buy_times: [
+                    {type: '<', val: 2} //购买次数小于这个数值的 才符合条件
+                ],
+                //buy_times:[{type:'<',val:false}],//【【【购买次数无所谓】】】
+                //buy_times:[{type:'<',val:2}],//最多购买2次--->  没有购买过，购买次数不到2次的人，符合条件
+                viptime: [
+                    {type: '<', val: 'now'} //会员比今天小的才符合条件  取值范围：now|时间戳
+                ],
+                //viptime:[{type:'<',val:'now'}]//会员到期（非会员）
+                //viptime:[{type:'>',val:'now'}]//会员 才能买
+                //viptime:[{type:'<',val:false}]// 【【【【是不是 会员都可以】】】】
+                //viptime:[{type:'<',val:'unix_timestamp(2020-12-01)'}]// 非会员和   2020-12-1 以前到期的会员都可以购买
+                //viptime:[{type:'>',val:'unix_timestamp(2030-12-01)'}]// 会员有效期在10年以上的，才能购买
+            },
+            serivce: {
+                buy_times: [
+                    {type: '<', val: 1000}//购买次数 不能超过这个数
+                ],
+            },
+            now: [
+                {type: '<', val: 'unix_timestamp(2030-12-01)'},//到这个时间下线 ,解释:当前时间(now) < xxxx  才符合条件
+                {type: '>', val: 'unix_timestamp(2020-12-01)'}//到这个时间上线 ,解释:当前时间(now) > xxxx  才符合条件
+                //两条综合解释：有效时间范围
+            ],
+        }
+    }
+    outopt = {
+        title: "小程序增量{$date}",
+        sub_title: '小程序增量',
+        db_range: 1,
+        his_range: 1,
+        no_channels: false,
+        cols: {
+            'conf.push': '小程序输出量',
+            'db.insert.get1': '虚拟仓入仓量',
+            'his.push.get1': '符合推送频道配置的入仓量',
+        }
+    }
+
+
+</script>
+</body>
+</html>

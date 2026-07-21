@@ -1,0 +1,114 @@
+
+.collapse {
+
+}
+
+.json_lines {
+    width: 50px;
+    display: block;
+    float: left;
+}
+
+.json_lines > div {
+    text-align: right;
+}
+
+.json_root {
+    width: 80%;
+    display: block;
+    float: left;
+    color: #55A;
+}
+
+.json_root > * {
+    width: 100%;
+    display: inline;
+    float: left;
+}
+
+.json_collapse {
+    display: none;
+}
+
+.json_extend_btn > .expand_label {
+    display: inline;
+}
+
+.expand_label {
+    display: none;
+}
+
+.json_extend_btn > .collapse_label {
+    display: none;
+}
+
+.json_root:hover {
+    background: #EEE;
+}
+
+.text_btn {
+    cursor: pointer;
+    min-width: 10px;
+    display: inline-block;
+}
+
+.json_root:hover .text_btn {
+    background: #666;
+}
+
+.trace_block {
+    border-bottom: 1px solid #000;
+    overflow-y: auto;
+}
+
+.hide {
+    display: none;
+}
+
+.trace_title {
+    display: inline;
+}
+
+.trace_toggle {
+    margin-left: 20px;
+}
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+
+
+.json_collapse {
+    display: none;
+}
+
+.json_extend_flag > .json_expand_label {
+    display: inline;
+}
+
+.json_expand_label {
+    display: none;
+}
+
+.json_extend_flag > .json_collapse_label {
+    display: none;
+}
+
+.json_root:hover {
+    background: #EEE;
+}
+
+.json_extend_btn {
+    cursor: pointer;
+    min-width: 10px;
+    display: inline-block;
+}
+
+.json_root:hover .json_extend_btn {
+    background: #666;
+}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="../file/js/kl-hammer-dom-data.js" charset="UTF-8"></script>
+
+    <title>CMS调试配置</title>
+    <style>
+        #div_projects {
+            width: 100%;
+            float: left;
+        }
+
+        .div_project {
+            float: left;
+            width: 100%;
+            border-bottom: 1px solid #777;
+        }
+
+        .div_project:hover {
+            background: #777;
+        }
+
+        .div_project > div {
+            float: left;
+            width: 100px;
+            padding: 5px;
+        }
+
+        .div_project > div > a {
+        }
+
+        .div_project > div:nth-child(1) {
+            width: 150px;
+        }
+
+        .div_project > div:nth-child(2) {
+
+        }
+
+        .div_project > div:nth-child(3) {
+
+        }
+
+        .div_project > div:nth-child(4) {
+
+        }
+
+        #his {
+            width: 100%;
+            float: left;
+
+        }
+
+        #his_list {
+            display: block;
+            float: left;
+            width: 40%;
+            min-height: 100px;
+        }
+
+        #his_list > button {
+            display: block;
+            float: left;
+            width: 80%;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        #his_info {
+            display: block;
+            float: left;
+            width: 60%;
+        }
+
+        #his_info_text {
+            display: block;
+            float: left;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        #his_retry {
+            display: block;
+            float: left;
+            width: 50px;
+            min-height: 30px;
+        }
+
+
+        #dev_opts > div {
+            display: block;
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            margin: 0.1em;
+        }
+
+        #dev_opts > div > div {
+            width: 100%;
+        }
+
+        #dev_opts > div > div > label {
+            display: block;
+            width: 400px;
+            /* height: 2em; */
+            /* margin-top: 0.5em; */
+            border-bottom: 1px solid #666;
+            padding: 0.5em;
+            background: #EEE;
+            margin: 0.1em;
+        }
+
+        #dev_opts_mysql_env {
+            margin-top: 50px;
+        }
+
+        #dev_opts_mysql_env > div {
+            display: block;
+            float: left;
+            padding-top: 20px;
+        }
+
+        #dev_opts_mysql_env > div > * {
+            display: block;
+            float: left;
+        }
+        #dev_opts_mysql_env > div > strong {
+            width: 100px;
+        }
+        #dev_opts_mysql_env > div > em {
+            width: 500px;
+        }
+        #dev_opts_mysql_env > div > span {
+            width: 190px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div>
+        <a href="tool2.html" target="_blank"><h1>工具箱</h1></a>
+        <a href="conf_mysql.html" target="_blank"><h1>Mysql配置</h1></a>
+        <a href="conf_redis.html" target="_blank"><h1>Redis配置</h1></a>
+        <a href="http://funtv_poseidon.kl.com/static/deploy/console.html" target="_blank"><h1>CLI</h1></a>
+        <a href="/static/deploy/projects/json_args/index.html" target="_blank"><h1>json参数调试</h1></a>
+
+    </div>
+    <div id="dev_opts">
+        <div id="dev_opts_error">
+
+        </div>
+        <div id="dev_opts_out">
+
+        </div>
+        <div id="dev_opts_mysql_env">
+
+        </div>
+    </div>
+
+</div>
+<script></script>
+<script>
+    domLoaded(function () {
+        //cat /home/kinglone/poseidon_server_mysql_conf_files |xargs -I F ln -s /data/code/debug/poseidon.conf_mysql F
+        // cat /home/kinglone/poseidon_server_mysql_conf_files |xargs -I F rm -f F
+        var html_opts = [
+            {
+                'key': 'error',
+                'opts': ['none',
+                    'error',
+                    'warning',
+                    'parse',
+                    'notice',
+                    'core_error',
+                    'core_warning',
+                    'compile_error',
+                    'compile_warning',
+                    'user_error',
+                    'user_warning',
+                    'user_notice',
+                    'strict',
+                    'recoverable_error',
+                    'deprecated',
+                    'user_deprecated',
+                    'all']
+            },
+            {
+                'key': 'out',
+                'opts': [
+                    'lastError',
+                    'exception',
+                    'log',
+                    'logData',
+                    'notice',
+                    'var',
+                    'echoVarAsLog',
+                    'posedonLog'
+                ]
+            }
+        ];
+        var debug_cmds = [
+            {
+                key: 'mysql_env', cmds: [
+                    // {
+                    //     label: '194/slave ENV',
+                    //     cmd: 'mysql_env_slave',
+                    //     comment: 'cat /data/code/debug/poseidon.conf_mysql.slave.php > /data/code/debug/poseidon.conf_mysql'
+                    // },
+                    // {
+                    //     label: '115/dev ENV',
+                    //     cmd: 'mysql_env_dev',
+                    //     comment: 'cat /data/code/debug/poseidon.conf_mysql.dev.php > /data/code/debug/poseidon.conf_mysql'
+                    // },
+                    {
+                        label: 'FsE 抛异常',
+                        cmd: 'poseidon_server/phplib/common/exception.php',
+                    },
+                    {
+                        label: 'pvip v1入口',
+                        cmd: 'poseidon_server/pvip.funshion.com/v1/index.php',
+                    }
+                ]
+            }
+        ];
+        var cover_files = [
+            'poseidon_server/phplib/common/exception.php###FsE 抛异常',
+            'poseidon_server/phplib/common/fsload.php###FsE 类加载',
+            'poseidon_server/phplib/common/init.php###初始化',
+            'poseidon_server/phplib/common/systemlog.php###日志',
+            'poseidon_server/psi.funshion.com/v5/index.php###pvip v1入口',
+            'poseidon_server/pv.funshion.com/v5/index.php###pv v5入口',
+            'poseidon_server/pvip.funshion.com/v1/index.php###pvip v1入口',
+            'poseidon_server/phplib/common/db.php###数据链接',
+            'poseidon_server/papi.funshion.com/dao/vr/virtualrepository_dao.php###syncmv内容',
+            'poseidon_server/papi.funshion.com/index.php###paip',
+        ];
+        ajax({
+            url: '/dev/v1/rootCmd/readFile',
+            data: {file: '/data/sysadv_cms.debug'},
+            success: function (file_result) {
+                console.log(file_result);
+                if (file_result.status === 200 && file_result.code === 'ok') {
+                    console.log(file_result);
+                    var domData = new HammerDomData(file_result.data);
+                    html_opts.forEach(function (lev1) {
+                        var box = kl.id('dev_opts_' + lev1.key);
+                        lev1.opts.forEach(function (opt_key) {
+                            var msg = new Emt('span');
+                            box.appendChild(new Emt('div').addNodes([
+                                new Emt('label').addNodes([
+                                    new Emt('span').setPros({textContent: opt_key}),
+                                    function () {
+                                        var label = new Emt('input').setPros({type: 'checkbox'}).bindData({
+                                            path: lev1.key + '.' + opt_key,
+                                            domData: domData
+                                        });
+                                        label.addEventListener('change', function () {
+                                            event.preventDefault(); //阻止冒泡
+                                            setTimeout(function () {
+                                                //cli.log(domData.dataBinded);
+                                                console.log(JSON.stringify(domData.dataBinded, null, 2));
+                                                ajax({
+                                                    url: '/dev/v1/rootCmd/writeFile',
+                                                    data: {
+                                                        file: '/data/sysadv_cms.debug',
+                                                        json: JSON.stringify(domData.dataBinded)
+                                                    },
+                                                    success: function (file_result) {
+                                                        console.log(file_result);
+                                                        if (file_result.status === 200 && file_result.code === 'ok') {
+                                                         //   alert('ok');
+                                                            msg.textContent='【ok】'+((new Date()).toLocaleTimeString())+'';
+                                                        } else {
+                                                          //  alert(file_result.msg);
+                                                            msg.textContent='【'+file_result.msg+'】'+((new Date()).toLocaleTimeString())+'';
+                                                        }
+                                                    },
+                                                    type: 'json'
+                                                });
+                                            }, 500)
+                                        });
+                                        return label;
+                                    }(),
+                                    msg
+                                ])
+                            ]))
+                        });
+                    });
+                } else {
+                    alert(file_result.msg);
+                }
+            },
+            type: 'json'
+        });
+
+        cover_files = cover_files.sort();
+        console.log(cover_files.join("\n"));
+        var t_len = cover_files[0].length;
+        var common_str = '';
+        for (var i = 10; i < t_len; i++) {
+            var str = cover_files[0].trim().slice(0, i);
+            var is_ok = true;
+            cover_files.forEach(function (cmd) {
+                is_ok = cmd.trim().indexOf(str) === -1 ? false : is_ok;
+            });
+            if (is_ok) {
+                common_str = str;
+            } else {
+                break;
+            }
+        }
+        console.log(common_str);
+        cover_files.forEach(function (cmd) {
+            var box = kl.id('dev_opts_mysql_env');
+            var ar = cmd.split('###');
+            var ar2 = ar[0].split('/');
+            var filename = ar2[ar2.length - 1].replace('.php', '');
+            var msg = new Emt('span');
+            box.appendChild(new Emt('div').addNodes([
+                new Emt('strong').setPros({textContent: filename }),
+                function () {
+                    var fun = function (type) {
+                        var btn = new Emt('button').setPros({textContent: type});
+                        btn.addEventListener('click', function () {
+                            event.preventDefault(); //阻止冒泡
+                            ajax({
+                                url: '/dev/v1/funtv/conf/file/cover',
+                                data: {action: type, file: ar[0], date: (new Date()).toLocaleString()},
+                                success: function (input_result) {
+                                    console.log(input_result);
+                                    if (input_result.status === 200 && input_result.code === 'ok') {
+                                        //  alert('ok');
+                                        msg.textContent = '【ok' + '】' + ((new Date()).toLocaleTimeString()) + ''+input_result.data.action;
+                                    } else {
+                                        msg.textContent = '【' + input_result.msg + '】' + ((new Date()).toLocaleTimeString()) + '';
+                                    }
+                                },
+                                type: 'json'
+                            });
+                        });
+                        return btn;
+                    };
+                    return new Emt('div').addNodes([
+                        fun('debug'),
+                        fun('bak'),
+                    ]);
+                }(),
+                new Emt('em').setPros({textContent: cmd.replace(common_str, '')}),
+                msg
+            ]));
+
+        });
+
+    })
+
+</script>
+</body>
+</html>

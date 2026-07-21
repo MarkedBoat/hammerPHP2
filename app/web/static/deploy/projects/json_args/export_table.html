@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/file/js/kl-hammer.js" charset="UTF-8"></script>
+    <script src="/static/file/js/kl-hammer-json.js" charset="UTF-8"></script>
+    <title>短信统计参数</title>
+    <style>
+        #text {
+            width: 90%;
+            min-height: 600px;
+        }
+    </style>
+    <link href="/static/file/css/kl-hammer-json.css" media="all" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div>
+    <div id="boxer">
+        <a href="/static/deploy/projects/json_args/index.html" target="_blank"><h1>json参数调试</h1></a>
+    </div>
+    <div id="dev_opts">
+        <div id="dev_opts_error">
+
+        </div>
+    </div>
+
+</div>
+<script></script>
+<script>
+
+    var box = new Emt('textarea').setPros({id: 'text'});
+    kl.id('boxer').appendChild(box);
+    var json_pre = new Emt('div');
+    kl.id('boxer').appendChild(json_pre);
+
+
+    t = {
+        fields: {
+            "vr.video_id": "视频ID",
+            "fv.name": "视频名称",
+            "vr.disable": "是否可用",
+            "vr.channel_id": "频道ID",
+            "ch.name": "频道",
+            "fv.last_update_time": "基础信息更新时间",
+            "vr.create_time": "虚拟仓创建时间",
+            "vr.update_time": "虚拟仓更新时间",
+            "fv.platform": "适用范围",
+            "fv.system_tags": "系统化标签",
+            "fv.security_level": "安全等级",
+            "fv.quality_level": "质量等级",
+            "fv.display_ratio": "画面",
+            "fv.source": "来源",
+            "fv.cp_id": "CPid",
+            "cp.name": "CP账号",
+            "fv.duration": "时长",
+            '_fv.system_tags_shenheliucheng': '审核流程',
+        },
+        tables:{
+            fv:{ext:{}}
+        }
+    }
+    json_pre.innerHTML = '';
+    json_pre.appendChild(view_json(t));
+    var str = JSON.stringify(t);
+    var str1 = "\nphp export_vr_videos_debug.php  -api fd73pqe -cpfile 30_cpids.csv -export tmp.txt -debug 1 -fields '" + str + "'\n";
+    var str2 = "\n/usr/local/php5.3.11/bin/php  /usr/website_server_alpha/psms.funshion.com/v1/script/send_counter_debug.php '" + str + "'\n";
+    //document.write(str1,str2);
+    console.log(str1, str2);
+    box.textContent = str1 + "\n" + str2;
+
+
+</script>
+</body>
+</html>
