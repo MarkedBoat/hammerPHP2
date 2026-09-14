@@ -53,6 +53,7 @@ class OldPdoCmd
         $this->db = $db;
         return $this;
     }
+
     /**
      * @throws Exception
      */
@@ -60,6 +61,7 @@ class OldPdoCmd
     {
         throw new \Exception($msg);
     }
+
     public function setSql($commandText)
     {
         if ($this->readOnly && (strstr($commandText, 'insert ') || strstr($commandText, 'update ')))
@@ -212,7 +214,7 @@ class OldPdoCmd
                 }
                 //   echo "\n error_sql {$list_sql_replace}\n";
 
-                Sys::app()->setFileLog(false)->log('sql_execute:' . json_encode([$sql2, $param, join('', $ar), debug_backtrace()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+                Sys::app()->letFileLogging(false)->log('sql_execute:' . json_encode([$sql2, $param, join('', $ar), debug_backtrace()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             }
 
 
@@ -239,7 +241,7 @@ class OldPdoCmd
                 }
             }
             //   echo "\n error_sql {$list_sql_replace}\n";
-            Sys::app()->setFileLog(false)->logData([$sql, $param, join('', $ar)], 'sql_execute', true, false);
+            Sys::app()->letFileLogging(false)->logData([$sql, $param, join('', $ar)], 'sql_execute', true, false);
         }
 
         try
@@ -467,10 +469,10 @@ class OldPdoCmd
 
     /**
      * @param string $tableName
-     * @param array  $whereAttributes [ 'id'=>[ $in=>[1,2,3] ]  ]    [ 'id'=>[1,2,3] ,'id2'=>["$gte"=>1]  ]
-     * @param array  $selectFields    []  [*] [a,b,c]
-     * @param array  $sortInfo        ['id'=>'desc']
-     * @param array  $pageInfo        ['page_index' => 1, 'page_size' => $limit]
+     * @param array $whereAttributes [ 'id'=>[ $in=>[1,2,3] ]  ]    [ 'id'=>[1,2,3] ,'id2'=>["$gte"=>1]  ]
+     * @param array $selectFields []  [*] [a,b,c]
+     * @param array $sortInfo ['id'=>'desc']
+     * @param array $pageInfo ['page_index' => 1, 'page_size' => $limit]
      *
      * @return array|void
      */
@@ -844,7 +846,7 @@ class OldPdoCmd
      * 尝试安全插入数据并返回插入ID,不抛异常     *
      *
      * @param string $try_insert_sql 要尝试执行的插入SQL语句,不要带ignore 和 on duplicate key update 不然跳行
-     * @param array  $binds          SQL语句中需要绑定的参数。
+     * @param array $binds SQL语句中需要绑定的参数。
      *
      * @return int|false  int:成功插入的id，false:插入失败,存在或者字段不对。
      */
@@ -873,10 +875,10 @@ class OldPdoCmd
      * 1.先检查是否存在，1.1如果存在走修改  1.2 不存->插入->[成功返回 ,失败则尝试修改 ]
      * <br> 主要返回类型不如  checkUpsert
      *
-     * @param array  $where_columns  这其实是  组合唯一索引，如果不存在也是要被插入的
-     * @param array  $update_columns 如果存在，就只修改这些值
-     * @param string $returnType     rows_cnt:rows_cnt,   pk:row.pk  all:[rows_cnt,pk]
-     * @param bool   $autoUpdate     !!!!!自动更新，   默认为true 自动更新，   false:不更新
+     * @param array $where_columns 这其实是  组合唯一索引，如果不存在也是要被插入的
+     * @param array $update_columns 如果存在，就只修改这些值
+     * @param string $returnType rows_cnt:rows_cnt,   pk:row.pk  all:[rows_cnt,pk]
+     * @param bool $autoUpdate !!!!!自动更新，   默认为true 自动更新，   false:不更新
      *
      * @return false|int|array|string
      * @throws Exception
@@ -1025,10 +1027,10 @@ class OldPdoCmd
      * <br> 比 checkExistAndUpsert 的返回类型做了优化
      *
      * @param array $unique_or_where_columns 组合唯一索引，用来查询是否存在，不存在时，也作为插入值
-     * @param array $update_columns          如果存在，就只修改这些值，不存在也作为插入值.
+     * @param array $update_columns 如果存在，就只修改这些值，不存在也作为插入值.
      *                                       <br> 只填写 update_columns  而不填写 unique_or_where_columns  那就是只管插入
-     * @param bool  $update_exist            !!!!!自动更新，   默认为true 自动更新，   false:不更新
-     * @param array $insert_data             在检查不存在时 作为插入值.
+     * @param bool $update_exist !!!!!自动更新，   默认为true 自动更新，   false:不更新
+     * @param array $insert_data 在检查不存在时 作为插入值.
      *
      * @return DbDataExecRes
      * @throws Exception
@@ -1386,12 +1388,10 @@ class OldPdoCmd
     }
 
 
-
-
     /**
      * @param string $tablename
-     * @param string $be_update_filed      被修改的值
-     * @param array  $pk2updateFiledVal_KV pk必须是 id , int类型
+     * @param string $be_update_filed 被修改的值
+     * @param array $pk2updateFiledVal_KV pk必须是 id , int类型
      *
      * @return false|PDOStatement
      * @throws Exception
@@ -1496,13 +1496,13 @@ where id IN ({$ids_str});";
     }
 
     /**
-     * @param string $table     表名
-     * @param array  $whereData 查询条件，建议是唯一索引或者组合
+     * @param string $table 表名
+     * @param array $whereData 查询条件，建议是唯一索引或者组合
      *                          <br> !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      *                          <br>这个玩意 一定不要多写，缩小查询范围，没查到，导致插入的时候报错
      *                          <br> !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     * @param array  $extData   其他非查询条件的插入值
-     * @param bool   $returnPK  返回 false:是否插入成功  true:插入成功时返回PK
+     * @param array $extData 其他非查询条件的插入值
+     * @param bool $returnPK 返回 false:是否插入成功  true:插入成功时返回PK
      *
      * @return false|int
      * @throws Exception
@@ -1617,11 +1617,11 @@ FROM JSON_TABLE(
             $insertKeys[] = "`{$k}`";
             if (in_array($k, $jsonAttrs))
             {
-                $tmpSelects[] = "JSON_UNQUOTE(jt.`${k}`) as `${k}`";
+                $tmpSelects[] = "JSON_UNQUOTE(jt.`{$k}`) as `{$k}`";
             }
             else
             {
-                $tmpSelects[] = "jt.`${k}`";
+                $tmpSelects[] = "jt.`{$k}`";
             }
 
             $collection     = empty($key2collections[$k]) ? '' : "COLLATE {$key2collections[$k]}";
@@ -1690,13 +1690,13 @@ FROM JSON_TABLE(
         {
             if (in_array($k, $jsonAttrs))
             {
-                $tmpSelects[] = "JSON_UNQUOTE(jt.`${k}`) as `${k}`";
+                $tmpSelects[] = "JSON_UNQUOTE(jt.`{$k}`) as `{$k}`";
             }
             else
             {
-                $tmpSelects[] = "jt.`${k}`";
+                $tmpSelects[] = "jt.`{$k}`";
             }
-            //$tmpSelects[]   = "jt.`${k}`";
+            //$tmpSelects[]   = "jt.`{$k}`";
             $collection     = empty($key2collections[$k]) ? '' : "COLLATE {$key2collections[$k]}";
             $tmpTableStrs[] = "`{$k}` {$key2types[$k]} {$collection} PATH '$.{$k}'";
         }
@@ -1883,7 +1883,7 @@ FROM JSON_TABLE(
         // Same syntax works for NULL as well.
         foreach ($columns as $col => $val)
         {
-            $tmp[] = "`${col}`=?";
+            $tmp[] = "`{$col}`=?";
         }
         return implode(', ', $tmp);
     }
@@ -1921,11 +1921,12 @@ FROM JSON_TABLE(
             }
             else
             {
-                $tmp[]    = "${col}=?";
+                $tmp[]    = "{$col}=?";
                 $params[] = $colValue;
             }
         }
-        return implode(" ${conjunction} ", $tmp);
+      //  $tmp2 = " {$conjunction} ";//"Using ${var} in strings is deprecated, use {$var} instead"
+        return implode(" {$conjunction} ", $tmp);
     }
 
     public function makeOrderBy($orders)

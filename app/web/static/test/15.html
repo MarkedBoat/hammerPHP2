@@ -979,7 +979,7 @@
                     </div>
                     <div style="margin-bottom:6px;">
                         <strong>公司：</strong><span>{{ detailForm.com_name }}</span>
-                        <button @click="openUrlInNewWindow(`https://www.google.com/search?q=${detailForm.area_city} ${detailForm.com_name}+是IT外包吗?`)">
+                        <button @click="openUrlInNewWindow(`https://www.google.com/search?q=${detailForm.area_city} ${detailForm.com_name}+是IT外包吗?`)" @test="`https://www.google.com/search?q=${detailForm.area_city} ${detailForm.com_name}+是IT外包吗?`">
                             search
                         </button>
                     </div>
@@ -1190,13 +1190,17 @@
                 {key: 'is_php', label: 'PHP岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
                 {key: 'is_match', label: '匹配?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
                 {key: 'is_self_biz', label: '自营岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_out_src', label: '外包?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_saas', label: 'saas?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+
                 {key: 'is_hr_live', label: 'hr活跃?', type: 'tinyint', isShowInGrid: false, isAllowQuery: true, isTinyInt: true, readOnly: true},
                 {key: 'is_true', label: '真实?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
                 {key: 'is_edu_ok', label: '学历OK?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
-                {key: 'is_jd_ol', label: '岗位在线?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, readOnly: true},
+                {key: 'is_jd_ol', label: '岗位在线?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, readOnly: false},
                 {key: 'is_salary_ok', label: '薪水?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_age_ok', label: '年龄?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
 
-                {key: 'is_ds_ok', label: 'DS ok?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1, readOnly: true},
+                {key: 'is_ds_ok', label: 'deepseek判断', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1, readOnly: true},
                 {
                     key: 'is_boss_fav',
                     label: 'src fav?',
@@ -1216,7 +1220,7 @@
                     isAllowQuery: true,
                     isTinyInt: true,
                     defaultVal: '',
-                    readOnly: true,
+                   // readOnly: true,
                     //1一点不想    2有点不想    3 不确定   4有点兴趣   5特别有兴趣
                     items: [
                         {text: '未标记', val: 0},
@@ -1635,7 +1639,7 @@
 
 
             function openDetail(row) {
-                const comName = companyMap.value[row.com_id] || row.com_id || '';
+                const comName = row.company1 || row.company2 || companyMap.value[row.com_id] || row.com_id || '';
 
                 detailForm.value = {
                     msg: '新打开',
@@ -1693,6 +1697,7 @@
                         }
                     };
                     editIsFields.value.forEach(f => {
+                        console.log( f.key, payload.attrs[f.key], detailForm.value[f.key] );
                         if (f.readOnly !== true) {
                             payload.attrs[f.key] = detailForm.value[f.key];
                         }
@@ -1912,21 +1917,22 @@
             }
 
             function openUrlInNewWindow(url) {
-                window.open(url + '#autoCloseWindow=yes', '_blank',
-                    `
-                popup,
-    width=1200,
-    height=800,
-    left=500,
-    top=300,
-    menubar=no,
-    toolbar=no,
-    location=no,
-    status=no,
-    scrollbars=yes,
-    resizable=yes
-    `
-                );
+                console.log({url});
+                const features = [
+                    'popup',
+                    'width=1200',
+                    'height=800',
+                    'left=500',
+                    'top=300',
+                    'menubar=no',
+                    'toolbar=no',
+                    'location=no',
+                    'status=no',
+                    'scrollbars=yes',
+                    'resizable=yes'
+                ].join(',');  // 自动拼接为无空格的字符串
+
+                window.open(url + '#autoCloseWindow=yes', '_blank', features);
             }
 
             // ================================================================

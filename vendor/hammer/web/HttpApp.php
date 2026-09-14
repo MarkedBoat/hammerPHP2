@@ -68,25 +68,49 @@ class HttpApp extends BaseApp
     {
         try
         {
-            $data = $this->__action->run();
+            $res = $this->__action->run();
             @ob_end_clean();
-            @header('content-Type:application/json;charset=utf8');
-            $data = [
-                'status' => 200,
-                'data'   => $data,
-                'code'   => Sys::app()->interruption()->getCode(),
-            ];
-            if ($this->__action->isDebug())
+            if (is_object($res) && get_class($res) === ' hammer\common\Respone')
             {
-                $data['__debugs'] = [
-                    'out'   => __CLASS__ . '==>' . __METHOD__ . '() ##' . __LINE__,
-                    'log'   => Sys::app()->interruption()->getLogs(),
-                    'error' => error_get_last()
-                ];
+                $resFormatterClassname = Sys::app()->params['http']['resFormatterClassname'] ?? '';
+                if (empty($resFormatterClassname) || !class_exists($resFormatterClassname))
+                {
+
+                }
+                else
+                {
+                    /** @var  InterfaceResFormatter $formatter */
+                    $formatter = new  $resFormatterClassname();
+                    $formatter->outputAndReturnState($res);
+                }
+
             }
-            $json            = json_encode($data, JSON_UNESCAPED_SLASHES);
-            self::$hasOutput = true;
-            die($json);
+            else if (is_string($res))
+            {
+                @header('content-Type:text/html;charset=utf8');
+                die($res);
+            }
+            else
+            {
+                @header('content-Type:application/json;charset=utf8');
+                $data = [
+                    'status' => 200,
+                    'data'   => $res,
+                    'code'   => Sys::app()->interruption()->getCode(),
+                ];
+                if ($this->__action->isDebug())
+                {
+                    $data['__debugs'] = [
+                        'out'   => __CLASS__ . '==>' . __METHOD__ . '() ##' . __LINE__,
+                        'log'   => Sys::app()->interruption()->getLogs(),
+                        'error' => error_get_last()
+                    ];
+                }
+                $json            = json_encode($data, JSON_UNESCAPED_SLASHES);
+                self::$hasOutput = true;
+                die($json);
+            }
+
 
         } catch (\Exception $exception)
         {

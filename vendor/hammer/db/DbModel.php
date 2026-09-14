@@ -361,11 +361,29 @@ class DbModel
                 }
                 continue;
             }
+            if (is_array($val))
+            {
+                $vkeys = [];
+                foreach ($val as $vi => $v)
+                {
+                    $vkey        = ":{$key}_{$vi}";
+                    $vkeys[]     = $vkey;
+                    $bind[$vkey] = $v;
+                }
+                $sqls[':' . $key] = "`$key` in (" . join(',', $vkeys) . ")";
+            }
+            else
+            {
+                $sqls[':' . $key] = "`$key`=:$key";
+                $bind[':' . $key] = $val;
+            }
 
-            $sqls[':' . $key] = "`$key`=:$key";
-            $bind[':' . $key] = $val;
+
         }
+        $sql='SELECT * FROM ' . $this->getTableName() . ' WHERE ' . join(' and ', $sqls) . $this->order . ';';
+        //var_dump($sql,$bind);
         $table       = $this->getConnection()->setText('SELECT * FROM ' . $this->getTableName() . ' WHERE ' . join(' and ', $sqls) . $this->order . ';')->bindArray($bind)->queryAll();
+        //var_dump($table);
         $this->order = '';
         $list        = array();
         if ($table)

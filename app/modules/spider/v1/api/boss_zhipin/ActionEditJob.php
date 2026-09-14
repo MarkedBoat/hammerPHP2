@@ -19,12 +19,13 @@ class ActionEditJob extends ActionBase
      */
     public function run()
     {
+        ini_set('memory_limit', '2048M');
 
 
         $jobPK = $this->inputBox->getNotEmptyString('id');
         $attrs = $this->inputBox->getNotEmptyArray('attrs');
 
-        Sys::app()->setFileLog(true)->log('editJob', $this->inputBox->getCoreArray());
+        Sys::app()->letFileLogging(true)->log('editJob', $this->inputBox->getCoreArray());
         $jobDao = new BossJob();
 
         $errors = [];
@@ -42,6 +43,7 @@ class ActionEditJob extends ActionBase
         {
             $jobDao->$attr = $val;
         }
+
         if (isset($attrs['deny_reason']))
         {
             if (strstr($attrs['deny_reason'], '外包'))
@@ -56,8 +58,48 @@ class ActionEditJob extends ActionBase
         }
 
         $jobDao->save();
+        $comInfo = [];
+        if ($jobDao->is_out_src === Def::staYes || $jobDao->is_saas === Def::staYes || $jobDao->is_age_ok === Def::staNot)
+        {
+            $comDao = BossComp::model()->findByAttributes(['com_id' => $jobDao->com_id]);
+            if (empty($comDao))
+            {
+                $comInfo[] = "empty comDao";
+            }
+            else
+            {
+                if ($comDao->is_out_src === Def::staNot && $jobDao->is_out_src === Def::staYes)
+                {
+                    $comDao->is_out_src = Def::staYes;
+                }
+                else
+                {
+                    $comInfo[] = "comDao is not out src v:{$comDao->is_out_src}";
+                }
 
-        return $jobDao->getOpenInfo();
+                if ($comDao->is_saas === Def::staNot && $jobDao->is_saas === Def::staYes)
+                {
+                    $comDao->is_saas = Def::staYes;
+                }
+                else
+                {
+                    $comInfo[] = "comDao is not saas v:{$comDao->is_saas}";
+                }
+
+                if ($comDao->is_age_ok === Def::staYes && $jobDao->is_age_ok === Def::staNot)
+                {
+                    $comDao->is_age_ok = Def::staNot;
+                }
+                else
+                {
+                    $comInfo[] = "comDao is not age ok v:{$comDao->is_age_ok}";
+                }
+
+                $comInfo = $comDao->getOpenInfo();
+                $comDao->save();
+            }
+        }
+        return ['job' => $jobDao->getOpenInfo(), 'company' => $comInfo];
 
 
     }

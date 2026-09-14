@@ -2,78 +2,146 @@
 
 namespace hammer\logs;
 
-class Log
+class Log implements InterfaceLog
 {
-    private $recordToMemory = false;
-    private $recordToFile   = true;
+
+    private $logDir;
+    private $logDatePathStyle = 'Ym/d/H';
+    private $logDatePath      = '';
+    private $dataStyle        = 'php';
+    private $logFile;
+
+
+    private $isMemoryLogging = false;
+    private $isFileLogging   = true;
+    private $isPretty        = false;
+
+
+    private $tmpSetting = [];
 
     private $logs = [];
-    private $logDir;
-    private $logFile;
-    private $logFilePath;
 
+
+    /**
+     * 设置日志目录
+     * @param $dir
+     * @return static
+     */
     public function setDir($dir)
     {
+
         $this->logDir = $dir;
+        //var_dump($dir,  $this->logDir);
+        return $this;
+    }
+
+    /**
+     * 设置 文件路径风格
+     * @param string $style 默认  'Ym/d/H'
+     * @return static
+     */
+    public function setlogDatePathStyle($style)
+    {
+        $this->logDatePathStyle = $style;
         return $this;
     }
 
 
     /**
      * 记录到内存中
-     * @param $state
-     * @return $this
+     * @param bool $state
+     * @return static
      */
-    public function setMemLog($state)
+    public function letMemLogging($state)
     {
-        $this->recordToMemory = $state;
+        $this->isMemoryLogging = $state;
         return $this;
     }
 
-    public function setFileLog($state)
+    public function tmpLetMemLogging()
     {
-        $this->recordToFile = $state;
+        $this->tmpSetting['isMemoryLogging'] = true;
+        return $this;
+    }
+
+    /**
+     * @param $state
+     * @return static
+     */
+    public function letFileLogging($state)
+    {
+        $this->isFileLogging = $state;
+        return $this;
+    }
+
+    public function tmpLetFileLogging()
+    {
+        $this->tmpSetting['isFileLogging'] = true;
+        return $this;
+    }
+
+    public function letLogPretty($state)
+    {
+        $this->isPretty = $state;
+        return $this;
+    }
+
+    public function tmpLetLogPretty()
+    {
+        $this->tmpSetting['isPretty'] = true;
+        return $this;
+    }
+
+    public function setDataStyle($flag)
+    {
+        $this->dataStyle = $flag;
+        return $this;
+    }
+
+
+    public function tmpSetDataStyle($flag)
+    {
+        $this->tmpSetting['dataStyle'] = $flag;
         return $this;
     }
 
     /**
      * 记录日志
      * @param $text
-     * @return void
+     * @return bool
      */
     public function log($text, $data = [])
     {
-        if ($this->recordToMemory)
+        if ($this->isMemoryLogging || isset($this->tmpSetting['isMemoryLogging']))
         {
-            $this->logs[]         = [$text, $data];
-            $this->recordToMemory = false;
+            $this->logs[] = [$text, $data];
         }
-        if ($this->recordToFile)
+        if ($this->isFileLogging || isset($this->tmpSetting['isFileLogging']))
         {
             $this->logToFile($text, $data);
         }
-        else
-        {
-            $this->recordToFile = true;
-        }
+        $this->tmpSetting = [];
+        return true;
     }
 
 
     public function logToFile($title, $data = [])
     {
-        $date = date('Y-m-d H:i:s', time());
+        // var_dump($this->logDir);die;
+        $ts       = time();
+        $date     = date('Y-m-d H:i:s', $ts);
+        $datePath = date($this->logDatePathStyle, $ts);
 
-        if (empty($this->log_filename))
+        if ($datePath !== $this->logDatePath)
         {
-            list($ym, $d, $h) = explode('/', date('Ym/d/H'));
-
-            $filename = "{$this->logDir}/{$ym}/{$d}/{$h}.log";
-
-            $fileDir = "{$this->logDir}/{$ym}/{$d}";
+            $this->logDatePath = $datePath;
+            $filename          = "{$this->logDir}/{$this->logDatePath}.log";
+            //   var_dump($this->logDir,$filename);die;
+            $fileDir = dirname($filename);
             if (!file_exists($fileDir))
             {
                 mkdir($fileDir, 0777, true);
-                usleep(10);
+                usleep(100);
             }
             if (!file_exists($fileDir))
             {
@@ -82,11 +150,13 @@ class Log
 
             if (!file_exists($filename))
             {
+                exec("touch {$filename}; chmod 777 {$filename}");
                 file_put_contents($filename, $date . "->create<-\n", FILE_APPEND);
             }
             if (file_exists($filename))
             {
-                $this->log_filename = $filename;
+                $this->logFile = $filename;
+                //@chmod($this->logFile, 0777);
             }
             else
             {
@@ -94,8 +164,29 @@ class Log
             }
         }
 
-        file_put_contents($this->log_filename, "{$date}->{$title}\n" . print_r($data,true) . "\n<-\n", FILE_APPEND);
+        if (($this->tmpSetting['dataStyle'] ?? $this->dataStyle) === 'php')
+        {
+            if ($this->tmpSetting['isPretty'] ?? $this->isPretty)
+            {
+                file_put_contents($this->logFile, "{$date}->{$title}##DATA##_PHP_PRETTY:\n" . print_r($data, true) . "\n", FILE_APPEND);
+            }
+            else
+            {
+                file_put_contents($this->logFile, "{$date}->{$title}##DATA##_PHP_LINE:" . str_replace("\n", ' ', print_r($data, true)) . "\n", FILE_APPEND);
+            }
+        }
+        else
+        {
+            if ($this->tmpSetting['isPretty'] ?? $this->isPretty)
+            {
+                file_put_contents($this->logFile, "{$date}->{$title}##DATA##_JSON_PRETTY:\n" . json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
+            }
+            else
+            {
+                file_put_contents($this->logFile, "{$date}->{$title}##DATA##_JSON_LINE:" . json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND);
 
+            }
+        }
     }
 
     public function getMemLogs()

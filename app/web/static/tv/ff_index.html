@@ -65,25 +65,10 @@
         let moveFilesBtn = kl.HTML.BUTTON_BUTTON('', 'move files to tmp', {});
 
         let cnofigResPre = kl.HTML.PRE();
-        let formatNameResPre = kl.HTML.PRE();
-        let tmp2phpResPre = kl.HTML.PRE();
-        let makeTaskResPre = kl.HTML.PRE();
-
-        let testConvResPre = kl.HTML.PRE();
 
 
-        let fetch1ResPre = kl.HTML.PRE();
-        let fetch2ResPre = kl.HTML.PRE();
-        let fetch3ResPre = kl.HTML.PRE();
-        let fetch4ResPre = kl.HTML.PRE();
-
-        let configsBtn = kl.HTML.BUTTON_BUTTON('', '输入/配置 ', {});
-
-        let callFormatTmpFilenameBtn = kl.HTML.BUTTON_BUTTON('', 'format filename -> tmp', {});
-        let tmp2phpBtn = kl.HTML.BUTTON_BUTTON('', 'tmp to php', {});
-        let callMakeTasksBtn = kl.HTML.BUTTON_BUTTON('', 'mark task', {});
         let callFetchTasksBtn = kl.HTML.BUTTON_BUTTON('', 'fetch task', {});
-        let testConvBtn = kl.HTML.BUTTON_BUTTON('', 'test conv', {});
+        let taskSwithCheckbox = kl.HTML.CHECKBOX('', 'task swith', {});
 
 
         let advMenusDiv = kl.HTML.DIV('class="menus"', '');
@@ -114,19 +99,81 @@
         let cfgHDsDiv = kl.HTML.DIV('class="input-lv2-div input"');
 
 
-        let advMenus = [
-            {startBtn: configsBtn, resPre: cnofigResPre, inputDiv: configsDiv, text: '', detail: ''},
-            {startBtn: callFormatTmpFilenameBtn, resPre: formatNameResPre, text: '', detail: ''},
-            {startBtn: tmp2phpBtn, resPre: tmp2phpResPre, text: '', detail: ''},
-            {startBtn: callMakeTasksBtn, resPre: makeTaskResPre, text: '', detail: ''},
-            {startBtn: testConvBtn, resPre: testConvResPre, text: '', detail: ''},
+        const advMenus = [
+            {
+                startBtn: kl.HTML.BUTTON_BUTTON('', '输入/配置 ', {}), resPre: cnofigResPre, inputDiv: configsDiv, text: '', detail: '', call: () => {
+                    configsDiv.classList.toggle('hidden');
+                }
+            },
+            {
+                startBtn: kl.HTML.BUTTON_BUTTON('', 'format filename -> tmp', {}), text: '', detail: '', call: async (item) => {
+
+                    return startSimpleSSE('/dev/v1/KL_PC/xx/op/Cli/formatFileTitle', item.resPre);
+
+                }
+            },
+            {
+                startBtn: kl.HTML.BUTTON_BUTTON('', 'tmp to php', {}), text: '', detail: '', call: async (item) => {
+                    return startSimpleSSE('/dev/v1/KL_PC/xx/op/cli/tmp2src', item.resPre);
+
+                }
+            },
+            {
+                startBtn: kl.HTML.BUTTON_BUTTON('', 'mark task', {}), text: '', detail: '', call: async (item) => {
+                    return startSimpleSSE('/dev/v1/KL_PC/xx/op/cli/markTasks', item.resPre);
+
+                 //   return startSimpleSSE('/dev/v1/KL_PC/testConv', item.resPre);
+                }
+            },
+            {
+                startBtn: taskSwithCheckbox, text: '任务开关', detail: '', call: async (item) => {
+
+                    kl.ajax({
+                        url: '/dev/v1/KL_PC/xx/op/task/swith/set',
+                        data: {sta: taskSwithCheckbox.checked ? 'ok' : 'stop'},
+                        success: function (reqText) {
+                            if (reqText === 'ok') {
+                                taskSwithCheckbox.checked = true;
+                            } else if (reqText === 'stop') {
+                                taskSwithCheckbox.false = true;
+                            }
+                            item.resPre.textContent = reqText;
+                            loadTaskSwith();
+                        }
+                    });
+
+
+                }
+            },
+            {
+                startBtn: kl.HTML.BUTTON_BUTTON('', 'test conv', {}), text: '', detail: '', call: async (item) => {
+
+                    return startSimpleSSE('/dev/v1/KL_PC/testConv', item.resPre);
+                }
+            },
             //   {startBtn:callFetchTasksBtn,resPre:fetch1ResPre,text:'',detail:''},
         ];
         advMenus.forEach((item, i) => {
-            let btn = kl.HTML.BUTTON_BUTTON('', item.text || item.startBtn.textContent, {});
-            advMenusDiv.addNodes([btn])
-            advMenus[i].menuBtn = btn;
+            console.log(item.startBtn.type);
+            if (item.startBtn.type === 'checkbox') {
+                advMenusDiv.addNodes([
+                    kl.HTML.LABEL().addNode(item.startBtn, kl.HTML.SPAN('', item.text)),
+                ])
+                item.rootEle = item.startBtn.parentElement;
+            } else {
+                // btn = kl.HTML.BUTTON_BUTTON('', item.text || item.startBtn.textContent, {});
+                advMenusDiv.addNodes([item.startBtn]);
+                item.rootEle = item.startBtn;
+            }
+
+
+            if (item.resPre === undefined) {
+                item.resPre = kl.HTML.PRE();
+            }
+            item.startBtn.resPre = item.resPre;
+
         })
+        console.log({advMenus});
 
 
         let hdItem = function (hdInfo) {
@@ -289,56 +336,32 @@
             };
         }
 
-        kl.ajax({
-            url: '/dev/v1/KL_PC/readFile',
-            data: {file: '/data/sysadv.debug'},
-            success: function (file_result) {
-                console.log(file_result);
-                let list = kl.getValByPath(file_result, 'data.list');
-                if (list && Array.isArray(list)) {
-                    console.log(file_result);
-                    list.forEach((item, i) => {
 
-
-                    });
-                } else {
-                    alert(file_result.msg || '未知');
+        function loadTaskSwith() {
+            kl.ajax({
+                url: '/dev/v1/KL_PC/xx/op/task/swith/get',
+                data: {},
+                success: function (reqText) {
+                    if (reqText === 'ok') {
+                        taskSwithCheckbox.checked = true;
+                    } else if (reqText === 'stop') {
+                        taskSwithCheckbox.false = true;
+                    } else {
+                        alert('load task swith state:' + reqText);
+                    }
                 }
-            },
-            type: 'json'
-        });
+            });
+        }
+
         saveMoveFilenamesBtn.addEventListener('click', async () => {
 
-            return startSimpleSSE('/dev/v1/KL_PC/saveMoveTaskFilenames?sse=yes&text=' + encodeURIComponent(moveFilenamesTextarea.value.trim()), cnofigResPre);
+            return startSimpleSSE('/dev/v1/KL_PC/xx/op/saveMoveTaskFilenames?sse=yes&text=' + encodeURIComponent(moveFilenamesTextarea.value.trim()), cnofigResPre);
         });
 
 
-        tmp2phpBtn.addEventListener('click', async () => {
-            await kl.ajax({
-                url: '/dev/v1/KL_PC/tmp2php',
-                data: {},
-                // type: 'json',
-                async: true,
-            }).then(aysncRes => {
-                console.log(aysncRes.result);
-                let op_res = aysncRes.result;
-                tmp2phpResPre.textContent = op_res;
-            });
-        });
-
-
-        callMakeTasksBtn.addEventListener('click', async () => {
-
-            return startSimpleSSE('/dev/v1/KL_PC/makeConvTasks', makeTaskResPre);
-
-        });
-        testConvBtn.addEventListener('click', async () => {
-
-            return startSimpleSSE('/dev/v1/KL_PC/testConv', testConvResPre);
-        });
         callFetchTasksBtn.addEventListener('click', async () => {
             await kl.ajax({
-                url: '/dev/v1/KL_PC/fetchConvTasks',
+                url: '/dev/v1/KL_PC/xx/op/cli/fetchTask',
                 data: {},
                 // type: 'json',
                 async: true,
@@ -350,15 +373,8 @@
         });
 
 
-        callFormatTmpFilenameBtn.addEventListener('click', async () => {
-
-            return startSimpleSSE('/dev/v1/KL_PC/callFormatFilenames', formatNameResPre);
-
-        });
-
-
         kl.ajax({
-            url: '/dev/v1/KL_PC/getRubishAdTimes',
+            url: '/dev/v1/KL_PC/xx/op/config/getRubishAdTimes',
             data: {},
             type: 'json',
             success: function (cfg_res) {
@@ -382,7 +398,7 @@
         saveRubishAdTimesBtn.addEventListener('click', async () => {
             cnofigResPre.textContent = '';
             await kl.ajax({
-                url: '/dev/v1/KL_PC/saveRubishAdTimes',
+                url: '/dev/v1/KL_PC/xx/op/config/saveRubishAdTimes',
                 data: {text: rubishAdTimesTextarea.value},
                 // type: 'json',
                 async: true,
@@ -395,7 +411,7 @@
 
 
         kl.ajax({
-            url: '/dev/v1/KL_PC/getRubishWords',
+            url: '/dev/v1/KL_PC/xx/op/config/getRubishWords',
             data: {},
             type: 'json',
             success: function (cfg_res) {
@@ -419,7 +435,7 @@
         saveRubishWordsBtn.addEventListener('click', async () => {
             cnofigResPre.textContent = '';
             await kl.ajax({
-                url: '/dev/v1/KL_PC/saveRubishWords',
+                url: '/dev/v1/KL_PC/xx/op/config/saveRubishWords',
                 data: {text: rubishWordsTextarea.value},
                 // type: 'json',
                 async: true,
@@ -432,7 +448,7 @@
 
 
         kl.ajax({
-            url: '/dev/v1/KL_PC/getHdItems',
+            url: '/dev/v1/KL_PC/xx/op/config/getHdItems',
             data: {},
             type: 'json',
             success: function (cfg_res) {
@@ -472,7 +488,7 @@
                 return false;
             }
             await kl.ajax({
-                url: '/dev/v1/KL_PC/saveHdItems',
+                url: '/dev/v1/KL_PC/xx/op/config/saveHdItems',
                 data: {json: JSON.stringify(items)},
                 // type: 'json',
                 async: true,
@@ -488,9 +504,6 @@
             hdItem();
         });
 
-        configsBtn.addEventListener('click', () => {
-            configsDiv.classList.toggle('hidden');
-        });
 
         let configsMenusAR = [[moveFileTaskDiv, '移动任务'],
             [cfgADTimesDiv, '垃圾广告时间'],
@@ -520,30 +533,41 @@
         advMenus.forEach(item => {
             //  item.resPre.textContent = item.startBtn.textContent;
             outsDiv.addNodes([item.resPre]);
-            item.menuBtn.addEventListener('click', () => {
-                console.log(item.menuBtn.classList.contains('selected'));
-                if (item.menuBtn.classList.contains('selected') || item.resPre.textContent.length === 0) {
-                    item.startBtn.click();
+            let call = function () {
+                console.log(item.rootEle.classList.contains('selected'));
+                if (item.rootEle.classList.contains('selected') || item.resPre.textContent.length === 0) {
+                    item.call(item);
                 }
                 advMenus.forEach(item_new => {
                     if (item_new === item) {
-                        item.menuBtn.classList.add('selected');
+                        item.rootEle.classList.add('selected');
                         item.resPre.classList.remove('hidden');
                         if (item.inputDiv) {
                             item.inputDiv.classList.remove('hidden');
                         }
                     } else {
-                        item_new.menuBtn.classList.remove('selected');
+                        item_new.rootEle.classList.remove('selected');
                         item_new.resPre.classList.add('hidden');
                         if (item_new.inputDiv) {
                             item_new.inputDiv.classList.add('hidden');
                         }
                     }
                 })
-            });
+            }
+            if (item.startBtn.type === 'checkbox') {
+                item.startBtn.addEventListener('change', () => {
+                    call();
+                });
+            } else {
+                item.startBtn.addEventListener('click', () => {
+                    call();
+                });
+            }
+
+
         })
 
-
+        loadTaskSwith();
     })
 
 </script>

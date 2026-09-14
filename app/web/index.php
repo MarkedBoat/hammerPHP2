@@ -3,8 +3,9 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
 
-defined('__HAMMER_DIR__') or define('__HAMMER_DIR__', dirname(dirname(__DIR__)));
 defined('__APP_DIR__') or define('__APP_DIR__', dirname(__DIR__));
+defined('__HAMMER_DIR__') or define('__HAMMER_DIR__', dirname(__APP_DIR__));
+
 
 defined('__HOST__') or define('__HOST__', $_SERVER['HTTP_HOST']);
 defined('__HAMMER_DEBUG__') or define('__HAMMER_DEBUG__', true);
@@ -22,9 +23,12 @@ $configFiles = [
     //'porter.kl.com'             => 'dev0',
     'porter.dev.com'            => 'poseidon_test',
     'kl-home-pc:8001'           => 'kl-pc',
+    '127.0.0.1:8001'            => 'kl-pc',
     'kl-home-pc:8002'           => 'kl-pc',
+    '127.0.0.1:8002'            => 'kl-pc',
     'kl-home-pc:8003'           => 'kl-pc',
-    '124.112.79.235:8002'           => 'kl-pc',
+    'kl-home-pc:8004'           => 'kl-pc',
+    '124.112.79.235:8002'       => 'kl-pc',
 
 ];
 
@@ -43,7 +47,7 @@ function lastError()
         //}
 
         @header('content-Type:text/json;charset=utf8');
-        $res = ['status' => 400, 'code' => 'code_error_', 'msg' => '服务器错误','_'=>\hammer\sys\Sys::app()->isDebug()];
+        $res = ['status' => 400, 'code' => 'code_error_', 'msg' => '服务器错误', '_' => \hammer\sys\Sys::app()->isDebug()];
         if (1 || \hammer\sys\Sys::app()->isDebug())
         {
             $err['message'] = explode("\n", $err['message']);
@@ -53,6 +57,7 @@ function lastError()
                 'error' => $err
             ];
         }
+        \hammer\sys\Sys::app()->log('ERROR', $res);
         echo json_encode($res);
     }
     else
@@ -62,8 +67,8 @@ function lastError()
 }
 
 register_shutdown_function('lastError');
-require '../../autoloader.php';
-require '../../vendor/autoload.php';
+require __HAMMER_DIR__ . '/autoloader.php';
+require __HAMMER_DIR__ . '/vendor/autoload.php';
 
 if (isset($configFiles[__HOST__]))
 {

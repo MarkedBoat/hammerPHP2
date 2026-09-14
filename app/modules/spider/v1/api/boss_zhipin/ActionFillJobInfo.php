@@ -26,7 +26,7 @@ class ActionFillJobInfo extends ActionBase
 
         //$jobInfo = $this->getRawJsonData();
       //  $jobInfo = $this->inputBox->getCoreArray();
-        Sys::app()->setFileLog(true)->log(json_encode($jobInfo, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        Sys::app()->letFileLogging(true)->log(json_encode($jobInfo, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         // jobId: _jobInfo.job_id || '',
         //                    salary: _jobInfo.job_salary || '',

@@ -860,7 +860,7 @@ if (typeof window.hasKl === 'undefined') {
              @return {HTMLImageElement}
              */
             IMAGE: function (attrsStr = '', textContent = '', prototypeMap = {}) {
-                return new Emt('image', attrsStr, textContent, prototypeMap);
+                return new Emt('img', attrsStr, textContent, prototypeMap);
             },
             /**
              @return {HTMLFormElement}
@@ -1159,6 +1159,50 @@ if (typeof window.hasKl === 'undefined') {
             },
 
         },
+        ARRAY: {
+            lib: {
+                sortArrayByFields: function (data, sortConfigs) {
+                    const sorters = sortConfigs.map(([field, direction, type]) => {
+                        const dir = direction.toLowerCase() === 'desc' ? -1 : 1;
+                        return {field, dir, type: type.toLowerCase()};
+                    });
+
+                    return [...data].sort((a, b) => {
+                        for (const s of sorters) {
+                            let valA = a[s.field];
+                            let valB = b[s.field];
+
+                            // 处理null/undefined
+                            if (valA == null) valA = s.type === 'number' || s.type === 'int' ? 0 : '';
+                            if (valB == null) valB = s.type === 'number' || s.type === 'int' ? 0 : '';
+
+                            let result = 0;
+                            switch (s.type) {
+                                case 'string':
+                                case 'str':
+                                    result = String(valA).localeCompare(String(valB));
+                                    break;
+                                case 'number':
+                                case 'int':
+                                case 'integer':
+                                    result = Number(valA) - Number(valB);
+                                    break;
+                                case 'date':
+                                    result = new Date(valA).getTime() - new Date(valB).getTime();
+                                    break;
+                                default:
+                                    result = String(valA).localeCompare(String(valB));
+                            }
+
+                            if (result !== 0) {
+                                return result * s.dir;
+                            }
+                        }
+                        return 0;
+                    });
+                }
+            }
+        },
 
 
     };
@@ -1209,30 +1253,17 @@ function Emt(tagName, attrsStr = '', textContent = '', prototypeMap = {}) {
     return ele;
 }
 
+const klTmpRange = document.createRange();
+klTmpRange.selectNode(document.documentElement); // 范围固定指向 <html> 标签
 
-HTMLElement.prototype.addNode = function () {
-    let self = this;
-    for (let i = 0; i < arguments.length; i++) {
-        if (typeof arguments[i] !== 'string') {
-            this.appendChild(arguments[i]);
-            arguments[i].boss = self;
-            arguments[i].parent = self;
-            if (typeof arguments[i + 1] === 'string') {
-                if (arguments[i + 1]) self[arguments[i + 1]] = arguments[i];
-            }
-        }
-    }
-    return self;
-};
-
-HTMLElement.prototype.addNodes = function (nodes) {
+HTMLElement.prototype.addNode = function (nodes) {
     let self = this;
     if (!Array.isArray(nodes)) {
         nodes = [...arguments];
     }
     nodes.forEach((node) => {
         if (typeof node === 'string') {
-            self.innerHTML += node;
+            self.appendChild(klTmpRange.createContextualFragment(node));
         } else if (node === false) {
             //
         } else if (node === undefined) {
@@ -1248,10 +1279,43 @@ HTMLElement.prototype.addNodes = function (nodes) {
             }
         }
     });
-
-
     return self;
 };
+
+HTMLElement.prototype.addNodeKV = function (kv) {
+    let self = this;
+
+    for (const [k, node] of Object.entries(kv)) {
+        if (Array.isArray(node)) {
+            self[k] = [];
+            node.forEach((node2) => {
+                self[k].push(node2);
+                self.appendChild(node2);
+            });
+        } else {
+            if (typeof node === 'string') {
+                if (k === node) {
+                    self.appendChild(klTmpRange.createContextualFragment(node));//没必要标记了
+                } else {
+                    self[k] = klTmpRange.createContextualFragment(node);
+                    self.appendChild(self[k]);
+                }
+            } else if (node === false) {
+                self[k] = false;
+            } else if (node === undefined) {
+                self[k] = false;
+            } else {
+                self.appendChild(node);
+                self[k] = node;
+            }
+        }
+    }
+    return self;
+};
+
+
+HTMLElement.prototype.addNodes = HTMLElement.prototype.addNode;
+
 
 HTMLElement.prototype.setStyle = function (configs) {
     for (let attr in configs) {

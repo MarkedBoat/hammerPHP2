@@ -7,13 +7,23 @@ use models\common\Def;
 use hammer\sys\Sys;
 use modules\dev\v1\dao\video\FfmpegTask;
 
-
+/**
+ * @deprecated  已经废弃，比如得经过转码，不许未转码得作为res
+ * @date 2026/9/14 16:48
+ * @author yangjl02@fun.tv
+ * @example
+ * @link
+ * @desc
+ * Class ActionMoveVideoSrcToRes
+ * @package modules\dev\v1\api\KL_PC
+ */
 class ActionMoveVideoSrcToRes extends ActionBase
 {
 //后期静态绑定代替了
 
     public function run()
     {
+        throw new \Exception('废弃');
 
         Sys::app()->setDebug(true);
         $rootDir = "/mnt/f/tmp2/format/wait/php";

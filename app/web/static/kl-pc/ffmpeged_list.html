@@ -148,8 +148,13 @@
                 float: left;
             }
 
-            .op {
+            .compare {
                 width: 20em;
+                float: left;
+            }
+
+            .op {
+                width: 30em;
                 float: left;
             }
 
@@ -198,7 +203,8 @@
             left: 2em;
             background: #DDD;
         }
-        .wave-canvas{
+
+        .wave-canvas {
 
         }
     </style>
@@ -229,6 +235,9 @@
 
         let waveCanvas = new Emt('canvas', 'class="wave-canvas"');
 
+        let delAllSrcBtn = kl.HTML.BUTTON_BUTTON('', 'del all src');
+        let allDelSrcBtns = [];
+        rootDiv.parentElement.insertBefore(delAllSrcBtn, rootDiv);
         rootDiv.addNodes([
 
             videoPlayerDiv.addNodes([
@@ -268,7 +277,7 @@
             videoPlayer.pause();
         }
 
-        let initWaveCanvas=()=>{
+        let initWaveCanvas = () => {
             // ========== 核心部分：监听指定的 video 元素 ==========
             const video = videoPlayer;   // ⬅️ 您只需修改这里的 ID，或者直接传入 video 元素
             const canvas = waveCanvas;
@@ -298,6 +307,7 @@
                     canvas.height = h || 140;
                 }
             }
+
             window.addEventListener('resize', resizeCanvasToDisplay);
             resizeCanvasToDisplay();
 
@@ -346,7 +356,7 @@
                     ctx.font = '12px monospace';
                     ctx.fillStyle = '#3f5975';
                     ctx.textAlign = 'center';
-                    ctx.fillText('等待音频...', canvas.width/2, canvas.height/2);
+                    ctx.fillText('等待音频...', canvas.width / 2, canvas.height / 2);
                     animationId = requestAnimationFrame(drawWave);
                     return;
                 }
@@ -367,8 +377,8 @@
                 ctx.strokeStyle = '#2f4b68';
                 ctx.setLineDash([4, 6]);
                 ctx.lineWidth = 1;
-                ctx.moveTo(0, height/2);
-                ctx.lineTo(width, height/2);
+                ctx.moveTo(0, height / 2);
+                ctx.lineTo(width, height / 2);
                 ctx.stroke();
                 ctx.setLineDash([]); // 恢复实线
 
@@ -381,7 +391,7 @@
                     // 128 为中心参考值，v/128 使中心对应 1.0
                     const v = dataArray[i] / 128.0;
                     // y 轴翻转：v=1 时 y 在中点，v=2 时 y 在底部，v=0 时 y 在顶部
-                    const y = height/2 + (v - 1.0) * (height/2) * 0.9;  // 0.9 防止溢出边缘
+                    const y = height / 2 + (v - 1.0) * (height / 2) * 0.9;  // 0.9 防止溢出边缘
 
                     if (i === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
@@ -421,15 +431,17 @@
             if (video.readyState >= 2) {  // HAVE_CURRENT_DATA 或更高
                 initAudio();  // 内部会检测重复，创建 suspended 上下文
             } else {
-                video.addEventListener('canplay', initAudio, { once: true });
+                video.addEventListener('canplay', initAudio, {once: true});
             }
 
             // 可选：点击页面任意位置恢复音频 (应对严格自动播放策略)
             function resumeContext() {
                 if (audioContext && audioContext.state === 'suspended') {
-                    audioContext.resume().catch(() => {});
+                    audioContext.resume().catch(() => {
+                    });
                 }
             }
+
             document.body.addEventListener('click', resumeContext);
             document.body.addEventListener('touchstart', resumeContext);
 
@@ -441,7 +453,7 @@
                 }
             });
         }
-       // initWaveCanvas();
+        // initWaveCanvas();
 
 
         document.addEventListener('keydown', function (e) {
@@ -492,9 +504,15 @@
             videoPlayer.volume = parseInt(volumeInput.value) / 100;
         });
 
+        delAllSrcBtn.addEventListener('click', async () => {
+            for (let i = 0; i < allDelSrcBtns.length; i++) {
+                allDelSrcBtns[i].disabled = false;
+                await allDelSrcBtns[i].delSrc();
+            }
+        });
 
         kl.ajax({
-            url: '/dev/v1/KL_PC/FfmpegedList',
+            url: '/dev/v1/KL_PC/xx/op/task/okList',
             data: {file: '/data/sysadv.debug'},
             success: function (file_result) {
                 console.log(file_result);
@@ -505,10 +523,13 @@
                         if (videoInfo.is_pre === 1) {
                             //  return false;
                         }
+                        let fileKv = videoInfo?.fileKV;
+
+
                         let sizeM = parseInt(videoInfo.filesize / 1024 / 1024);
                         let srcInfo = videoInfo.src_video_info;
                         let taskManualInfo = kl.getValByPath(videoInfo, 'task_info.manual', {});
-                        let srcTitle = `${videoInfo.id} ${videoInfo.video_basename}.${videoInfo.video_ext} `;
+                        let srcTitle = `${videoInfo.id} ${videoInfo.video_title}.${videoInfo.video_ext} `;
                         let infospan = new Emt('span', '', '', {textContent: ''});
 
 
@@ -524,9 +545,12 @@
                         let dstInfoDiv = new Emt('div', 'class="src-info"');
 
 
-                        let opBtn = new Emt('button', 'type="button" class="hidden"', 'DEL SRC');
+                        let delSrcBtn = new Emt('button', 'type="button" class="hidden1"', 'DEL SRC', {disabled: true});
+                        let delAllBtn = new Emt('button', 'type="button" class="hidden1"', '垃圾视频', {disabled: true});
+                        let needPreFixBtn = new Emt('button', 'type="button" class="hidden1"', '需要前置处/pre理', {disabled: false});
+
                         let rollbackBtn = new Emt('button', 'type="button" class=""', 're_conv');
-                        let moveAsUnformatBtn = new Emt('button', 'type="button" class=""', '作为未转码',{title:'转码结果需要二次处理，将成果文件挪到未转码目录'});
+                        let moveAsUnformatBtn = new Emt('button', 'type="button" class=""', '作为未转码', {title: '转码结果需要二次处理，将成果文件挪到未转码目录'});
 
 
                         let opDiv = new Emt('div', 'class="op"');
@@ -536,7 +560,7 @@
                         let videoInfoDiv = new Emt('div', 'class="conv-task"').addNodes([
                             srcDiv,
 
-                            new Emt('div', 'class="op"').addNodes([
+                            new Emt('div', 'class="compare"').addNodes([
                                 srcInfoDiv.addNodes([
                                     kl.HTML.SPAN(`class="wh-rate-${whFlag}"`,),
                                     kl.HTML.EM('class="size"', `${srcInfo.width}X${srcInfo.height}`),
@@ -558,10 +582,14 @@
                             dstDiv.addNodes([]),
                             opDiv.addNodes([
                                 rollbackBtn,
-                                opBtn,
+                                delSrcBtn,
+                                delAllBtn,
+                                needPreFixBtn,
                                 moveAsUnformatBtn,
                             ]),
                         ]);
+
+                        allDelSrcBtns.push(delSrcBtn);
 
                         let dirname = false;
                         if (videoInfo.album_dir === '') {
@@ -584,20 +612,19 @@
                                     }
                                     let pairInfos = {};
                                     for (const [tmp_j, videoInfoObj] of itemListDiv[videoInfo.album_dir].videoInfos.entries()) {
-                                        await videoInfoObj.opBtn.click();
+                                        videoInfoObj.delSrcBtn.disabled = false;
+                                        await videoInfoObj.delSrcBtn.delSrc();
                                     }
                                 });
                             }
 
-                            opDiv.addNodes([
-
-                            ])
+                            opDiv.addNodes([])
 
 
                             itemListDiv[videoInfo.album_dir].addNode(videoInfoDiv);
                             itemListDiv[videoInfo.album_dir].videoInfos.push({
                                 videoInfo: videoInfo,
-                                opBtn: opBtn,
+                                delSrcBtn: delSrcBtn,
                             });
 
                         }
@@ -605,66 +632,114 @@
 
                         let items = [];
 
+                        let updateTaskFun = async function (extParam) {
+
+                            await kl.ajax({
+                                url: '/dev/v1/KL_PC/xx/op/task/update',
+                                data: {id: videoInfo.id, attrs: {is_ok: 2, run_lc: 0}},
+                                type: 'json',
+                                async: true,
+                            }).then(aysncRes => {
+                                console.log(aysncRes.result);
+                                videoInfoDiv.remove();
+
+                            });
+                        }
+
                         if (videoInfo.src) {
                             console.log(videoInfo.src);
                             items.push(videoInfo.src);
-                            let btn = new Emt('button', 'type="button" class="play_btn"', srcTitle);
-                            srcDiv.addNode(btn);
+                            let playSrcBtn = new Emt('button', 'type="button" class="play_btn"', srcTitle);
+                            srcDiv.addNode(playSrcBtn);
 
-                            btn.addEventListener('click', () => {
+                            playSrcBtn.addEventListener('click', () => {
                                 console.log('play:', videoInfo);
                                 event.preventDefault(); //阻止冒泡
                                 functionPlay(videoInfo);
                             });
 
+                            rollbackBtn.addEventListener('click', async () => {
+                                console.log('rollback:', videoInfo);
+                                await updateTaskFun({id: videoInfo.id, attrs: {is_ok: 2, run_lc: 0}});
 
+                            });
+                            needPreFixBtn.addEventListener('click', async () => {
+                                console.log('needPreFixBtn:', videoInfo);
+                                await updateTaskFun({id: videoInfo.id, attrs: {is_ok: 2, run_lc: 0, is_pre: 1}});
+
+                            });
                         }
 
+                        delSrcBtn.delSrc = async function () {
+                        };
                         if (videoInfo.dst) {
-                            let btn = new Emt('button', 'type="button" class="play_btn"', `RES ${sizeRate}%`);
-                            dstDiv.addNode(btn);
 
-                            btn.addEventListener('click', () => {
+                            let delFun = async function (extParamKV) {
+                                if (extParamKV === undefined) {
+                                    extParamKV = {};
+                                }
+                                try {
+                                    const res = await kl.ajax({
+                                        url: '/dev/v1/KL_PC/xx/op/task/finish',
+                                        data: Object.assign({id: videoInfo.id}, extParamKV),
+                                        type: 'json',
+                                        async: true,
+                                    });
+                                    console.log(res.result);
+                                    if (kl.getValByPath(res, 'result.data.src_exist') === false) {
+                                        videoInfoDiv.remove();          // 移除对应的视频卡片
+                                    } else {
+                                        this.textContent = 'error';
+                                        console.error( res.result);
+                                    }
+                                } catch (error) {
+                                    this.textContent = 'error';
+                                    console.error('删除失败', error);
+                                } finally {
+                                    // 可选：操作完成后重置状态，允许再次点击（如果需要）
+                                    // this.isClicked = false;
+                                }
+                            }
+                            let playResBtn = new Emt('button', 'type="button" class="play_btn"', `RES ${sizeRate}%`);
+                            dstDiv.addNode(playResBtn);
+
+                            playResBtn.addEventListener('click', () => {
+                                delSrcBtn.disabled = false;
+                                delAllBtn.disabled = false;
+
                                 console.log('play dst:', videoInfo);
                                 console.log(videoInfo.dst);
 
                                 event.preventDefault(); //阻止冒泡
-                                functionPlay({type: 'dst', src: videoInfo.dst, btn: opBtn});
-                            });
-                            opBtn.addEventListener('click', async () => {
-                                await kl.ajax({
-                                    url: '/dev/v1/KL_PC/FfmpegTaskDelSrc',
-                                    data: {id: videoInfo.id},
-                                    type: 'json',
-                                    async: true,
-                                }).then(aysncRes => {
-                                    console.log(aysncRes.result);
-                                    let op_res = aysncRes.result;
-                                    if (kl.getValByPath(aysncRes, 'result.data.src_exist') === false) {
-                                        videoInfoDiv.remove();
-                                    }
-
-                                });
+                                functionPlay({type: 'dst', src: videoInfo.dst, btn: delSrcBtn});
                             });
 
-                            rollbackBtn.addEventListener('click', async () => {
+                            // 挂载异步删除方法
+                            delSrcBtn.delSrc = async function () {
+                                // 防止重复点击（方法内控制）
+                                if (this.isClicked) return;
+                                this.isClicked = true;
+                                this.textContent = 'src deleting';
+                                await delFun();
 
-                                await kl.ajax({
-                                    url: '/dev/v1/KL_PC/FfmpegTaskUpdate',
-                                    data: {id: videoInfo.id, attrs: {is_ok: 2, run_lc: 0}},
-                                    type: 'json',
-                                    async: true,
-                                }).then(aysncRes => {
-                                    console.log(aysncRes.result);
-                                    videoInfoDiv.remove();
+                            };
 
-                                });
 
+                            delSrcBtn.addEventListener('click', async () => {
+                                await delSrcBtn.delSrc();
                             });
+                            delAllBtn.addEventListener('click', async () => {
+                                if (this.isClicked) return;
+                                this.isClicked = true;
+                                this.textContent = 'all deleting';
+                                await delFun({isRubish: 'yes'});
+                            });
+
+
                             moveAsUnformatBtn.addEventListener('click', async () => {
                                 if (window.prompt('确定？会删除原src的,确定输入[1]') === '1') {
                                     await kl.ajax({
-                                        url: '/dev/v1/KL_PC/moveAsUnformatVideo',
+                                        url: '/dev/v1/KL_PC/xx/moveAsUnformatVideo',
                                         data: {id: videoInfo.id, attrs: {is_ok: 2, run_lc: 0}},
                                         type: 'json',
                                         async: true,

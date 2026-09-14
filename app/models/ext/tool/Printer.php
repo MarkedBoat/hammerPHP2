@@ -33,7 +33,8 @@ class Printer
     private        $_has_listen_shutdown     = false;
     private        $_dump_tmp_outtype        = '';
     private        $_has_start_debug         = false;
-    private        $_output_state            = true;//是否关闭输出
+    private        $_output_state            = true;     //是否关闭输出
+    private        $data2textType            = 'print_r';//json
 
     private $adv_fcgi_url;
     private $adv_tabecho;
@@ -146,6 +147,16 @@ class Printer
     }
 
     /**
+     * @param string $type
+     * @return static
+     */
+    public function setData2TextType(string $type)
+    {
+        $this->data2textType = $type;
+        return $this;
+    }
+
+    /**
      * tab 输出
      * @param $text
      * @param int $deep
@@ -163,7 +174,15 @@ class Printer
         {
             if (is_array($text) || is_object($text))
             {
-                $text = print_r($text, true);
+                if ($this->data2textType === 'json')
+                {
+                    $text = json_encode($text, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+                }
+                else
+                {
+                    $text = print_r($text, true);
+                }
+
             }
             else if (!is_string($text) && !is_int($text))
             {

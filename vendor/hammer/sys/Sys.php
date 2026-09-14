@@ -6,6 +6,7 @@ use hammer\cli\CliApp;
 use hammer\db\MCD;
 use hammer\db\MysqlPdo;
 use hammer\error\Interruption;
+use hammer\logs\InterfaceLog;
 use hammer\logs\Log;
 use hammer\param\WebRequest;
 use hammer\web\HttpApp;
@@ -22,7 +23,7 @@ class Sys
     /** @var $__instance static|null */
     private static $__instance;
     private        $__instances       = [];//实例
-    private        $__configs         = [];
+    private        $__configKV        = [];
     private        $__isDebug         = false;
     private        $__magic_propertys = [];
     private        $__log_trace_step  = 1;
@@ -49,6 +50,11 @@ class Sys
      * @var $inputDataBox DataBox
      */
     private $inputDataBox;
+
+    /**
+     * @var InterfaceLog
+     */
+    private $logger;
 
     /**
      * @return static
@@ -109,12 +115,13 @@ class Sys
                 die;
             }
         }
-        self::$__instance            = new static();
-        self::$__instance->__configs = $configs;
+        self::$__instance             = new static();
+        self::$__instance->__configKV = $configs;
         if (isset($configs['params']))
             self::$__instance->params = $configs['params'];
         self::$__instance->__isDebug = isset(self::$__instance->params['is_debug']) && self::$__instance->params['is_debug'] === true;
         self::$__instance->__initLoger();
+        ini_set('date.timezone', 'Asia/Shanghai');
 
         return self::$__instance;
     }
@@ -161,17 +168,17 @@ class Sys
 
     public function getConfig()
     {
-        return $this->__configs;
+        return $this->__configKV;
     }
 
     public function setConfig($configs)
     {
-        $this->__configs = $configs;
+        $this->__configKV = $configs;
     }
 
     public function addConfig($key, $config)
     {
-        $this->__configs[$key] = $config;
+        $this->__configKV[$key] = $config;
     }
 
     public function addCase($key, $case)
@@ -192,7 +199,7 @@ class Sys
      */
     public function redis($redisKey = 'default')
     {
-        if (isset($this->__configs['redis'][$redisKey]))
+        if (isset($this->__configKV['redis'][$redisKey]))
         {
             if (!isset($this->__instances['redis']))
                 $this->__instances['redis'] = [];
@@ -201,15 +208,15 @@ class Sys
                 try
                 {
                     $this->__instances['redis'][$redisKey] = new \Redis();
-                    $this->__instances['redis'][$redisKey]->connect($this->__configs['redis'][$redisKey]['host'], $this->__configs['redis'][$redisKey]['port']);
-                    if (isset($this->__configs['redis'][$redisKey]['password']))
-                        $this->__instances['redis'][$redisKey]->auth($this->__configs['redis'][$redisKey]['password']);
-                    if (isset($this->__configs['redis'][$redisKey]['db']))
-                        $this->__instances['redis'][$redisKey]->select($this->__configs['redis'][$redisKey]['db']);
+                    $this->__instances['redis'][$redisKey]->connect($this->__configKV['redis'][$redisKey]['host'], $this->__configKV['redis'][$redisKey]['port']);
+                    if (isset($this->__configKV['redis'][$redisKey]['password']))
+                        $this->__instances['redis'][$redisKey]->auth($this->__configKV['redis'][$redisKey]['password']);
+                    if (isset($this->__configKV['redis'][$redisKey]['db']))
+                        $this->__instances['redis'][$redisKey]->select($this->__configKV['redis'][$redisKey]['db']);
 
                 } catch (\Exception $exception)
                 {
-                    throw  new \Exception($exception->getMessage(), $exception->getCode(), '', $this->__configs['redis'][$redisKey]);
+                    throw  new \Exception($exception->getMessage(), $exception->getCode(), '', $this->__configKV['redis'][$redisKey]);
                 }
 
             }
@@ -229,13 +236,13 @@ class Sys
     {
         if (isset($this->__instances['memcached']))
             return $this->__instances['memcached'];
-        if (isset($this->__configs['memcached']))
+        if (isset($this->__configKV['memcached']))
         {
             if (!isset($this->__instances['memcached']))
             {
                 try
                 {
-                    $this->__instances['memcached'] = new MCD($this->__configs['memcached']);
+                    $this->__instances['memcached'] = new MCD($this->__configKV['memcached']);
                 } catch (\Exception $exception)
                 {
                     throw  new \Exception($exception->getMessage(), $exception->getCode(), '');
@@ -257,13 +264,13 @@ class Sys
      */
     public function db($dbKey)
     {
-        if (isset($this->__configs['db'][$dbKey]))
+        if (isset($this->__configKV['db'][$dbKey]))
         {
             if (!isset($this->__instances['db']))
                 $this->__instances['db'] = [];
             if (!isset($this->__instances['db'][$dbKey]))
             {
-                $this->__instances['db'][$dbKey] = MysqlPdo::configDb($this->__configs['db'][$dbKey]);
+                $this->__instances['db'][$dbKey] = MysqlPdo::configDb($this->__configKV['db'][$dbKey]);
             }
         }
         else
@@ -275,7 +282,7 @@ class Sys
 
     public function unsetDb($dbKey)
     {
-        if (isset($this->__configs['db'][$dbKey]))
+        if (isset($this->__configKV['db'][$dbKey]))
         {
             if (!isset($this->__instances['db']))
                 $this->__instances['db'] = [];
@@ -354,8 +361,7 @@ class Sys
             // $step = debug_backtrace()[$deep];
             self::app()->log((($title ? $title : '') . '                     #==>' . $step['class'] . '->' . $step['function'] . '() #') . "#             " . $step['file'] . ':' . $step['line'] . "     ",
 
-                $data,
-            );
+                $data,);
         }
         else
         {
@@ -384,15 +390,6 @@ class Sys
         return $this->addLog($data, $title ? "__ERROR__:{$title}" : '__ERROR__', $trace = true, 'addError');
     }
 
-
-    /**
-     * @return static
-     */
-    public function clearLogs()
-    {
-        $this->__logs = [];
-        return $this;
-    }
 
     public function __get($name)
     {
@@ -465,47 +462,110 @@ class Sys
      */
     private function __initLoger()
     {
-        if (!isset($this->__instances['log']))
+        if (empty($this->logger))
         {
-            $this->__instances['log'] = new Log();
-            $this->__instances['log']->setDir(__HAMMER_DIR__ . '/runtimes/log');
+
+            $this->logger = new $this->__configKV['log']['classname']();
+            if (isset($this->__configKV['log']['fullDir']) && $this->__configKV['log']['fullDir'])
+            {
+                $this->logger->setDir($this->__configKV['log']['fullDir']);
+            }
+            else
+            {
+                if (isset($this->__configKV['log']['dir']) && $this->__configKV['log']['dir'])
+                {
+                    $this->logger->setDir(__HAMMER_DIR__ . $this->__configKV['log']['dir']);
+                }
+                else
+                {
+                    $this->logger->setDir(__HAMMER_DIR__ . '/runtimes/log');
+                }
+            }
+            $this->logger->setlogDatePathStyle($this->__configKV['log']['datePathStyle'] ?? 'Ymd');
+            if (isset($this->__configKV['log']['dataStyle']))
+            {
+                $this->logger->setDataStyle($this->__configKV['log']['dataStyle']);
+            }
         }
     }
 
+    /**
+     * @return InterfaceLog
+     */
     public function getLogger()
     {
-        return $this->__instances['log'];
+        return $this->logger;
     }
 
-    public function setMemLog($sta)
+    public function letMemLogging($sta)
     {
-        $this->__instances['log']->setMemLog($sta);
+        $this->logger->letMemLogging($sta);
         return $this;
     }
 
-    public function setFileLog($sta)
+    public function letFileLogging($sta)
     {
-        $this->__instances['log']->setFileLog($sta);
+        $this->logger->letFileLogging($sta);
         return $this;
     }
 
-    public function log($text, $data = [])
+    public function log($v1defText, $v2defData = false)
     {
-
-        // $this->__initLoger();
 
         if ($this->__isDebug)
         {
-            //必须要实现 log2Mem 或者改写
-            $this->__instances['log']->setMemLog(true);
+            $this->logger->letMemLogging(true);
         }
-        //必须要实现 log，或者改写
-        $this->__instances['log']->log($text, $data);
+        if ($v2defData === false)
+        {
+            if (is_string($v1defText))
+            {
+                $this->logger->log($v1orText);
+            }
+            else if (is_array($v1defText) || is_object($v1defText))
+            {
+                $this->logger->log('', $v1orText);
+            }
+            else
+            {
+                $this->logger->log('', [$v1defText]);
+            }
+        }
+        else
+        {
+            if (is_string($v1defText))
+            {
+                if (is_array($v2defData) || is_object($v2defData))
+                {
+                    $this->logger->log($v1defText, $v2defData);
+                }
+                else
+                {
+                    $this->logger->log($v1defText, [$v2defData]);
+                }
+            }
+            else if (is_array($v1defText) || is_object($v1defText))
+            {
+                if (is_string($v1defText))
+                {
+                    $this->logger->log($v1defText . $v2defData);
+                }
+                else
+                {
+                    $this->logger->log('', [$v1defText, $v2defData]);
+                }
+            }
+            else
+            {
+                $this->logger->log('', [$v1defText, $v2defData]);
+            }
+        }
+
     }
 
     public function getLogs()
     {
-        return $this->__instances['log']->getMemLogs();
+        return $this->logger->getMemLogs();
     }
 }
 

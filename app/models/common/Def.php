@@ -12,6 +12,10 @@ namespace models\common;
 
 class Def
 {
-    const staYes = 1;
-    const staNot = 2;
+    const staYes    = 1;
+    const staNot    = 2;
+
+    const isOK      = 1;
+    const isPending = 2;
+    const isError   = 3;
 }

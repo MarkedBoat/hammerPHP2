@@ -25,7 +25,7 @@ class ActionDeepseekVoice2Text extends ActionBase
 
         // 获取 DEEPSEEK_API_KEY
         $apiKey = getenv('DEEPSEEK_API_KEY');
-        $apiKey='sk-f4cb183d9079490387a64c3ae61caedb';
+        $apiKey='sk-59b8ed4bd3ee4fddb31f86222afff87c';
         if (empty($apiKey)) {
             $this->setMsg("DEEPSEEK_API_KEY 未设置")->outError();
         }

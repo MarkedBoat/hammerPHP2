@@ -19,7 +19,7 @@ class ActionSubmitJobsList extends ActionBase
 
         $sourceFlag = $this->inputBox->tryGetInt('sourceFlag');
         $jobs       = json_decode($this->inputBox->getNotEmptyString('json'), true);
-        Sys::app()->setFileLog(true)->log(json_encode($jobs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        Sys::app()->letFileLogging(true)->log(json_encode($jobs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         $reffer = $_SERVER['HTTP_REFERER'] ?? 'empty reffer';
         $date   = date('Y-m-d H:i:s');
@@ -82,7 +82,7 @@ class ActionSubmitJobsList extends ActionBase
                 {
                     $jobId2Dao[$jobId]->spider_times = $jobId2Dao[$jobId]->spider_times + 1;
                     $jobId2Dao[$jobId]->is_jd_ol     = Def::staYes;
-                    $jobId2Dao[$jobId]->source_flag  = intval($jobId2Dao[$jobId]->source_flag) | $sourceFlag;
+                    $jobId2Dao[$jobId]->source_flags = intval($jobId2Dao[$jobId]->source_flag) | $sourceFlag;
 
                     $records[$jobId] = $jobId2Dao[$jobId]->getOpenInfo();
                     $jobId2Dao[$jobId]->save();
@@ -103,6 +103,7 @@ class ActionSubmitJobsList extends ActionBase
                     $jobDao->hr_title       = '';
                     $jobDao->hr_active_time = '';
                     $jobDao->source_flag    = $sourceFlag;
+                    $jobDao->source_flags   = $sourceFlag;
 
                     // $jobDao->salary_text = $job['salary'];
                     $jobDao->tags = json_encode($job['tags'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

@@ -1816,11 +1816,11 @@ FROM JSON_TABLE(
             $insertKeys[] = "`{$k}`";
             if (in_array($k, $jsonAttrs))
             {
-                $tmpSelects[] = "JSON_UNQUOTE(jt.`${k}`) as `${k}`";
+                $tmpSelects[] = "JSON_UNQUOTE(jt.`{$k}`) as `{$k}`";
             }
             else
             {
-                $tmpSelects[] = "jt.`${k}`";
+                $tmpSelects[] = "jt.`{$k}`";
             }
 
             $collection     = empty($key2collections[$k]) ? '' : "COLLATE {$key2collections[$k]}";
@@ -1889,13 +1889,13 @@ FROM JSON_TABLE(
         {
             if (in_array($k, $jsonAttrs))
             {
-                $tmpSelects[] = "JSON_UNQUOTE(jt.`${k}`) as `${k}`";
+                $tmpSelects[] = "JSON_UNQUOTE(jt.`{$k}`) as `{$k}`";
             }
             else
             {
-                $tmpSelects[] = "jt.`${k}`";
+                $tmpSelects[] = "jt.`{$k}`";
             }
-            //$tmpSelects[]   = "jt.`${k}`";
+            //$tmpSelects[]   = "jt.`{$k}`";
             $collection     = empty($key2collections[$k]) ? '' : "COLLATE {$key2collections[$k]}";
             $tmpTableStrs[] = "`{$k}` {$key2types[$k]} {$collection} PATH '$.{$k}'";
         }
@@ -2082,7 +2082,7 @@ FROM JSON_TABLE(
         // Same syntax works for NULL as well.
         foreach ($columns as $col => $val)
         {
-            $tmp[] = "`${col}`=?";
+            $tmp[] = "`{$col}`=?";
         }
         return implode(', ', $tmp);
     }
@@ -2120,11 +2120,11 @@ FROM JSON_TABLE(
             }
             else
             {
-                $tmp[]    = "${col}=?";
+                $tmp[]    = "{$col}=?";
                 $params[] = $colValue;
             }
         }
-        return implode(" ${conjunction} ", $tmp);
+        return implode(" {$conjunction} ", $tmp);
     }
 
     public function makeOrderBy($orders)

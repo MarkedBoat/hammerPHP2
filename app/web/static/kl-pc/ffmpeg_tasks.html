@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script src="../file/js/kl-hammer.20240811.js" charset="UTF-8"></script>
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
 
     <title>转码任务</title>
     <style>
@@ -11,13 +11,13 @@
             float: left;
         }
 
-        .item_list, attrs-input-div {
+        .task-list, attrs-input-div {
             width: 100%;
             float: left;
             margin-bottom: 100em;
         }
 
-        .item_list > button {
+        .task-list > button {
             display: block;
             width: 90%;
             float: left;
@@ -25,23 +25,30 @@
             text-align: left;
         }
 
-        .attrs-input-div > div {
+        .attrs-input-div > label {
             float: left;
             margin-left: 2em;
         }
 
-        .attrs-input-div > div > span {
-            float: left;
-            display: block;
-            width: 100%;
+        .attrs-input-div > label > span {
+
         }
 
-        .attrs-input-div > div > select {
-            float: left;
+        .attrs-input-div > label > select {
+
         }
 
         .hidden {
             display: none !important;
+        }
+
+        .video_operation_div {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 998;
+            background: rgba(0, 0, 0, 0.5);
         }
 
         .video_player_div {
@@ -49,8 +56,11 @@
             top: 0;
             left: 3em;
             width: 90%;
-            height: calc(100vh - 30em);
+            height: calc(100vh - 25em);
+            max-height: calc(100vh - 25em);
             z-index: 999;
+            border: 1px solid #AA0;
+            padding: 0.3em;
         }
 
         .video_player_div > video {
@@ -63,7 +73,7 @@
             border: 0.3em solid #666;
         }
 
-        .conv-task {
+        .task-item {
             width: 100%;
             float: left;
             border: 1px solid #F00;
@@ -81,7 +91,7 @@
             }
 
             .src-info {
-                width: 15em;
+                width: 8em;
                 float: left;
 
                 span, em {
@@ -106,7 +116,7 @@
                 }
 
                 .file-size {
-                    width: 6em;
+                    width: 5em;
                 }
 
                 .duration {
@@ -120,7 +130,7 @@
             }
 
             .compare-src-info {
-                width: 20em;
+                width: 25em;
                 float: left;
 
                 span, em {
@@ -152,6 +162,7 @@
                 .rate-k {
                     width: 5em;
                 }
+
                 .ver {
                     width: 5em;
                 }
@@ -224,6 +235,62 @@
             width: calc(100vw - 3em);
             left: 2em;
             background: #DDD;
+            max-height: 25em;
+
+            overflow: scroll;
+
+            .stills {
+                border: 1px solid #000;
+                height: 300px;
+                overflow-x: scroll;
+
+                * {
+                    display: block;
+                    float: left;
+                }
+
+                .still {
+                    padding: 1em;
+                    max-height: 280px;
+                    max-width: 200px;
+                    border: 1px solid #000;
+
+                    span {
+                        margin-top: -1px;
+                    }
+
+                    img {
+                        max-height: 280px;
+                        max-width: 200px;
+                    }
+                }
+
+                .empty-still {
+                    max-height: 280px;
+                    width: 100px;
+                    border: 1px solid #000;
+
+                    span {
+                        margin-top: -1px;
+                    }
+
+                    img {
+                        max-height: 280px;
+                        max-width: 200px;
+                    }
+                }
+
+
+                .header {
+                    height: auto;
+                    width: max-content;
+                }
+
+                .tail {
+                    height: auto;
+                    width: max-content;
+                }
+            }
         }
 
         .sec-input {
@@ -258,7 +325,7 @@
 
         .duration-info-p > div > canvas {
             max-width: 20em;
-            max-height: 20em;
+            max-height: 12em;
         }
 
         .duration-start-range {
@@ -282,7 +349,7 @@
 
     </div>
     <div id="root_div">
-
+        <h2 id="wait-for-config">wait....</h2>
     </div>
 
 </div>
@@ -295,14 +362,22 @@
 
         let attrInputDiv = new Emt('div', 'class="attrs-input-div"');
         let queryBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '查询');
+        let fetchResBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', 'fetch res');
 
 
-        let itemListDiv = new Emt('div', 'class="item_list"', {album2div: {}});
-        let videoPlayerDiv = new Emt('div', 'class="video_player_div hidden"');
+        let taskListDiv = new Emt('div', 'class="task-list"', {album2div: {}});
+
+        let videoOperationDiv = new Emt('div', 'class="video_operation_div hidden"');
+        let videoPlayerDiv = new Emt('div', 'class="video_player_div "');
         let playerControllerDiv = new Emt('div', 'class="video_player_ctrl_div "');
         let videoPlayer = new Emt('video', 'controls="controls"', '', {volume: 0.1});
         window.videoPlayer = videoPlayer;
         let volumeInput = new Emt('input', 'type="range" class="volume-input"', '', {max: 100, value: 5});
+        let stillsDiv = new Emt('div', 'class="stills "');
+        let headerStillsDiv = new Emt('div', 'class="header "');
+        let tailStillsDiv = new Emt('div', 'class="tail"');
+
+
         let headerAdSecondsRange = new Emt('input', 'type="range" class="duration-input duration-start-range"', '', {max: 1000, value: 0, step: 1});
         let tailAdSecondsRange = new Emt('input', 'type="range" dir="rtl" class="duration-input duration-end-range"', '', {
             max: 1000,
@@ -312,7 +387,13 @@
         let rubishAdDurationSizeInput = kl.HTML.SELECT('class="mark-ad-select"').setItems([
             {val: 100, text: 100},
             {val: 250, text: 250},
-            {val: 500, text: 500}
+            {val: 500, text: 500},
+            {val: 1000, text: 1000},
+            {val: 3600, text: 3600},
+            {val: 7200, text: 7200},
+            {val: 10800, text: 10800},
+
+
         ]).setPros({value: 250});
 
         let durationStartImg = kl.HTML.CANVAS('class="start-img"');
@@ -329,6 +410,8 @@
         let durationCurrentSecInput = kl.HTML.INPUT_NUMBER('class="duration-start-val" max="100000" style="width:7em;"');
         let durationLeftSecInput = kl.HTML.INPUT_NUMBER('class="duration-end-val" max="100000" style="width:7em;"');
 
+
+        let opConfig = {};
 
         let ajaxHooks = {
             id: {isSend: true, data: {}},
@@ -357,12 +440,27 @@
             is_ok: {text: '转码完成?', val: {1: '转码好了', 2: '没能转码结束'}, default: 2},
             run_lc: {text: '运行锁?', val: {0: 'free', '>0': '被锁了'}},
             album_dir: {text: 'album', val: 'string'},
-            video_basename: {text: 'video name', val: 'string'},
-            limit: {text: 'limit', val: 100, default: 100},
+            video_title: {text: 'video name', val: 'string'},
+            hr1: kl.HTML.HR('style="height:1em;"').setPros({isTextEle: true}),
+            sortAttr1: {text: 'sort1', val: {album_dir: 'album_dir', video_title: 'video_title',run_lc:'run_lc',id:'id',update_date:'update_date'},default:'album_dir'},
+            sortType1: {text: ':', val: {'asc': 'asc', 'desc': 'desc'},default:'asc'},
+
+            sortAttr2: {text: 'sort2', val: {album_dir: 'album_dir', video_title: 'video_title',run_lc:'run_lc',id:'id',update_date:'update_date'},default:'video_title'},
+            sortType2: {text: ':', val: {'asc': 'asc', 'desc': 'desc'},default:'asc'},
+            sortAttr3: {text: 'sort3', val: {album_dir: 'album_dir', video_title: 'video_title',run_lc:'run_lc',id:'id',update_date:'update_date'},default:'run_lc'},
+            sortType3: {text: ':', val: {'asc': 'asc', 'desc': 'desc'},default:'asc'},
+
+            limit: {text: 'limit', val: 100, default: 100,},
+            listSrcFile: {text: '扫描src文件', val: {yes:'扫描src', no: '不需要'},default:'yes'},
+
         };
         let attrInputKV = {};
         let attrInputs = [];
         for (const [attr, cfg] of Object.entries(attrsKV)) {
+            if (cfg.isTextEle === true) {
+                attrInputs.push(cfg);
+                continue;
+            }
             cfg.attr = attr;
             let items = [{text: '#', val: '#'}];
             let input;
@@ -393,6 +491,8 @@
             } else {
                 input.value = cfg.default;
             }
+            input.isTextEle = false;
+
             attrInputs.push(input);
         }
 
@@ -417,53 +517,61 @@
             });
         })
         rootDiv.addNodes([
+            videoOperationDiv.addNodes([
+                videoPlayerDiv.addNodes([
+                    playerControllerDiv,
+                    videoPlayer,
+                ]),
+                kl.HTML.DIV(`class="common-tool-bar"`,).addNodes([
+                    stillsDiv.addNode(
+                        headerStillsDiv,
+                        tailStillsDiv,
+                    ),
+                    kl.HTML.DIV().addNode([
+                        headerAdSecondsRange,
+                        kl.HTML.PARAGRAPH('class="duration-info-p"').addNodes([
+                            kl.HTML.DIV('class="duration-start-info"').addNodes([
+                                durationStartImg,
+                                durationStartSecInput
+                            ]),
+                            kl.HTML.DIV('class="duration-ad-size"').addNodes([
+                                kl.HTML.PARAGRAPH().addNodes([
+                                    kl.HTML.SPAN('', '垃圾广告时间范围:'), rubishAdDurationSizeInput
+                                ]),
+                                kl.HTML.PARAGRAPH().addNodes([
+                                    kl.HTML.SPAN('', '当前:').addNodes([durationCurrentSecInput]),
 
-            videoPlayerDiv.addNodes([
-                playerControllerDiv,
-                videoPlayer,
+                                    kl.HTML.SPAN('', '还剩:').addNodes([durationLeftSecInput,
+                                    ]),
+                                ]),
+
+
+                            ]),
+                            kl.HTML.DIV('class="duration-end-info"').addNodes([
+                                durationEndImg,
+                                durationEndSecInput
+                            ]),
+                        ]),
+                        //durationInput,
+                        tailAdSecondsRange,
+                        kl.HTML.SPAN().addNodes(timeBtns.slice(3)),
+                        kl.HTML.SPAN().addNodes(timeBtns.slice(0, 3)),
+                    ])
+                ]),
             ]),
+
+
             attrInputDiv.addNodes(attrInputs.map(input => {
-                return kl.HTML.DIV().addNodes([
+                if (input.isTextEle === true) {
+                    return input;
+                }
+                return kl.HTML.LABEL().addNodes([
                     kl.HTML.SPAN('', input.label),
                     input,
                 ])
-            })).addNodes([queryBtn]),
-            itemListDiv,
-            kl.HTML.DIV(`class="common-tool-bar"`,).addNodes([
+            })).addNodes([queryBtn, fetchResBtn]),
+            taskListDiv,
 
-                headerAdSecondsRange,
-
-                kl.HTML.PARAGRAPH('class="duration-info-p"').addNodes([
-                    kl.HTML.DIV('class="duration-start-info"').addNodes([
-                        durationStartImg,
-                        durationStartSecInput
-                    ]),
-                    kl.HTML.DIV('class="duration-ad-size"').addNodes([
-                        kl.HTML.PARAGRAPH().addNodes([
-                            kl.HTML.SPAN('', '垃圾广告时间范围:'), rubishAdDurationSizeInput
-                        ]),
-                        kl.HTML.PARAGRAPH().addNodes([
-                            kl.HTML.SPAN('', '当前:').addNodes([durationCurrentSecInput]),
-
-                            kl.HTML.SPAN('', '还剩:').addNodes([durationLeftSecInput,
-                            ]),
-                        ]),
-
-
-                    ]),
-                    kl.HTML.DIV('class="duration-end-info"').addNodes([
-                        durationEndImg,
-                        durationEndSecInput
-                    ]),
-                ]),
-
-
-                //durationInput,
-                tailAdSecondsRange,
-
-                kl.HTML.SPAN().addNodes(timeBtns.slice(3)),
-                kl.HTML.SPAN().addNodes(timeBtns.slice(0, 3)),
-            ]),
 
         ]);
         document.body.append(volumeInput);
@@ -482,7 +590,7 @@
 
 
             window.currItem = item;
-            videoPlayerDiv.classList.remove('hidden');
+            videoOperationDiv.classList.remove('hidden');
             videoPlayer.volume = parseInt(volumeInput.value) / 100;
             videoPlayer.src = getVdieoSrc(item.src);
 
@@ -554,23 +662,29 @@
         let getQueryAttrs = () => {
             let attrs = {};
             attrInputs.forEach(input => {
-                if (input.value !== '#' && input.value !== '') {
+
+                if (input.isTextEle === false && input.value !== '#' && input.value !== '') {
                     attrs[input.attrKey] = input.value;
                 }
             });
             return attrs;
         };
         let query = () => {
-            itemListDiv.album2div = {};
-            itemListDiv.removeAllChildNodes();
+            taskListDiv.album2div = {};
+            taskListDiv.removeAllChildNodes();
             queryBtn.classList.add('hide');
             kl.ajax({
-                url: '/dev/v1/KL_PC/FfmpegTasks',
+                url: '/dev/v1/KL_PC/xx/op/task/list',
                 data: {file: '/data/sysadv.debug', attrs: getQueryAttrs(), kldebug: 'x'},
                 success: function (file_result) {
                     queryBtn.classList.remove('hide');
 
                     console.log(file_result);
+                    let srcVideoInfoKV = kl.getValByPath(file_result, 'data.srcVideoInfoKV');
+                    if(opConfig.srcVideoInfoKV===undefined){
+                        opConfig.srcVideoInfoKV={};
+                    }
+                    opConfig.srcVideoInfoKV = Object.assign(opConfig.srcVideoInfoKV, srcVideoInfoKV);
                     let list = kl.getValByPath(file_result, 'data.list');
                     if (list && Array.isArray(list)) {
                         console.log(file_result);
@@ -578,18 +692,40 @@
                             if (videoInfo.is_pre === 1) {
                                 // return false;
                             }
+
+                            if (opConfig.srcVideoInfoKV[videoInfo.id36]) {
+                                let srcInfo = opConfig.srcVideoInfoKV[videoInfo.id36];
+                                videoInfo.src = srcInfo.fullFilename;
+                                videoInfo.filesize = srcInfo.filesize;
+                            }
                             let sizeM = parseInt(videoInfo.filesize / 1024 / 1024);
                             let srcInfo = videoInfo.src_video_info;
                             let taskManualInfo = kl.getValByPath(videoInfo, 'task_info.manual', {});
-                            let srcTitle = `${videoInfo.id} ${videoInfo.video_basename}.${videoInfo.video_ext} `;
+                            let srcTitle = `${videoInfo.id}/${videoInfo.id36} ${videoInfo.video_title}.${videoInfo.video_ext} `;
                             let infospan = new Emt('span', '', '', {textContent: ''});
 
                             let taskSelect = makeDstTaskSelect(videoInfo);
+                            let transposeSelect = kl.HTML.SELECT('').setItems([{text: '方向不变', val: ''}, {
+                                text: '⬆️↻顺时针90度⬇️',
+                                val: 'transpose=1'
+                            }, {text: '️⬇️逆时针90度↺⬆️', val: 'transpose=2'}]);
+                            if (taskManualInfo?.ext?.transpose) {
+                                transposeSelect.value = taskManualInfo.ext.transpose;
+                            }
 
-                            let srcDiv = new Emt('div', 'class="src"');
+                            let isPreSelect = kl.HTML.SELECT('').setItems([{text: '不需要pre转码', val: '2'}, {
+                                text: '需要pree转化️',
+                                val: '1'
+                            }]);
+                            if (videoInfo.is_pre) {
+                                isPreSelect.value = videoInfo.is_pre;
+                            }
+
+                            let srcBtnsDiv = new Emt('div', 'class="src src-btns"');
                             let srcInfoDiv = new Emt('div', 'class="src-info"');
                             let compareSrcInfoDiv = new Emt('div', 'class="compare-src-info"');
                             let dstManualInfoDiv = new Emt('div', 'class="compare-src-info"');
+                            let resDiv = new Emt('div', 'class="res-info"');
 
                             let snapshotDiv = new Emt('div', 'class="snapshots"');
 
@@ -613,36 +749,34 @@
 
                             let whRate = parseInt(srcInfo.width * 100 / srcInfo.height);
                             let whFlag = whRate >= 100 ? 'tv' : 'phone';
-                            let videoInfoDiv = new Emt('div', 'class="conv-task"').addNodes([
-                                srcDiv,
-                                srcInfoDiv.addNodes([
-                                    kl.HTML.SPAN(`class="wh-rate-${whFlag}"`,),
-                                    kl.HTML.EM('class="size"', `${srcInfo.width}X${srcInfo.height}`),
+                            let taskDiv = new Emt('div', 'class="task-item"', '', {taskInfo: videoInfo}).addNodeKV({
+                                srcBtnsDiv: srcBtnsDiv,
+                                srcInfoDiv: srcInfoDiv.addNodes([
+                                    //  kl.HTML.EM('class="try-times"', `${videoInfo.try_times}`),
                                     kl.HTML.EM('class="file-size"', `${sizeM}M`),
                                     kl.HTML.EM('class="duration"', `${srcInfo.duration}s`),
-                                    kl.HTML.EM('class="rate-k"', `${srcInfo.rateK}K`),
-
                                 ]),
-                                opDiv.addNodes([
+                                opDiv: opDiv.addNodes([
                                     compareSrcInfoDiv.addNodes([
-                                        kl.HTML.SPAN(`class="wh-rate-${whFlag}"`,),
-                                        kl.HTML.EM('class="size"', `${srcInfo.height}`),
-                                        kl.HTML.EM('class="rate-k"', `${srcInfo.rateK}K`),
-                                        kl.HTML.EM('class="fps"', `${srcInfo.fps}fps`),
+                                        `<span class="wh-rate-${whFlag}"></span>
+                                        <span class="size">${srcInfo.width}x</span>
+                                        <span class="size">${srcInfo.height}</span>
+                                        <span class="rate-k">${srcInfo.rateK}K</span>
+                                        <span class="fps">${srcInfo.fps}fps</span>`,
+                                        `<span class="ver">${videoInfo.try_times || '0'}</span>`,
 
                                     ]),
                                     dstManualInfoDiv.addNodes([
-                                        kl.HTML.SPAN(`class="wh-rate-${whFlag}"`,),
-                                        kl.HTML.EM('class="size"', `${taskManualInfo.height || ''}`),
-                                        kl.HTML.EM('class="rate-k"', `${taskManualInfo.maxRateK || ''}`),
-                                        kl.HTML.EM('class="fps"', `${taskManualInfo.fps || ''}fps`),
-                                        kl.HTML.EM('class="ver"', `[${taskManualInfo.resVer || ''}]`),
-
-
+                                        `<span class="wh-rate-${whFlag}"></span>`,
+                                        '<span class="size">widthx</span>',
+                                        `<span class="size">${taskManualInfo.height || ''}</span>`,
+                                        `<span class="rate-k">${taskManualInfo.maxRateK || ''}</span>`,
+                                        `<span class="fps">${taskManualInfo.fps || ''}fps</span>`,
+                                        `<span class="ver">${taskManualInfo.resVer || ''}</span>`,
                                     ]),
-                                    taskSelect, infospan, opBtn
+                                    taskSelect, transposeSelect, isPreSelect, infospan, opBtn
                                 ]),
-                                snapshotDiv.addNodes([
+                                snapshotDiv: snapshotDiv.addNodes([
                                     kl.HTML.DIV('class="header-ad"').addNodes([
                                         headerAdCanvas,
                                         kl.HTML.HR(),
@@ -654,10 +788,13 @@
                                         tailAdSecondsInput,
                                     ])
                                 ]),
-                            ]);
+                                resDiv: resDiv.addNode(
+
+                                )
+                            });
 
                             if (videoInfo.is_pre === 1) {
-                                videoInfoDiv.classList.add('fuck-type-video');
+                                taskDiv.classList.add('fuck-type-video');
                             }
 
                             videoInfo = Object.assign(videoInfo, {
@@ -793,16 +930,16 @@
                             });
                             let dirname = false;
                             if (videoInfo.album_dir === '') {
-                                itemListDiv.addNode(videoInfoDiv);
+                                taskListDiv.addNode(taskDiv);
                             } else {
-                                if (itemListDiv.album2div[videoInfo.album_dir] === undefined) {
+                                if (taskListDiv.album2div[videoInfo.album_dir] === undefined) {
 
-                                    itemListDiv.album2div[videoInfo.album_dir] = new Emt('div', 'class="dir-conv-task"');
-                                    itemListDiv.album2div[videoInfo.album_dir].videoInfos = [];
+                                    taskListDiv.album2div[videoInfo.album_dir] = new Emt('div', 'class="dir-task-item"');
+                                    taskListDiv.album2div[videoInfo.album_dir].videoInfos = [];
                                     let dirOpBtn = new Emt('button', 'type="button" class=""', '清理目录');
 
 
-                                    itemListDiv.addNode(itemListDiv.album2div[videoInfo.album_dir].addNodes([
+                                    taskListDiv.addNode(taskListDiv.album2div[videoInfo.album_dir].addNodes([
                                         new Emt('p').addNodes([
                                             new Emt('strong', '', videoInfo.album_dir), dirOpBtn,
                                         ])
@@ -823,8 +960,8 @@
                                 ])
 
 
-                                itemListDiv.album2div[videoInfo.album_dir].addNode(videoInfoDiv);
-                                itemListDiv.album2div[videoInfo.album_dir].videoInfos.push({
+                                taskListDiv.album2div[videoInfo.album_dir].addNode(taskDiv);
+                                taskListDiv.album2div[videoInfo.album_dir].videoInfos.push({
                                     videoInfo: videoInfo,
                                     opBtn: opBtn,
                                 });
@@ -835,7 +972,7 @@
 
                                     async function exampleUsage() {
 
-                                        for (const [key, videoInfoObj] of Object.entries(itemListDiv.album2div[videoInfo.album_dir].videoInfos)) {
+                                        for (const [key, videoInfoObj] of Object.entries(taskListDiv.album2div[videoInfo.album_dir].videoInfos)) {
                                             try {
                                                 await videoInfoObj.videoInfo.getAdImg(headerAdSeconds, tailAdSeconds); // 片头5秒，片尾10秒
                                                 console.log('截图处理完成');
@@ -859,19 +996,24 @@
                                 let delSrcBtn = new Emt('button', 'type="button" class="del-src-btn"', 'DEL SRC');
                                 let renameBtn = new Emt('button', 'type="button" class="rename-src-btn"', 'rename');
                                 let asResBtn = new Emt('button', 'type="button" class="del-src-btn"', 'src to res', {title: '无需再次转码，直接当成转码后的'});
-                                let btn = new Emt('button', 'type="button" class="play_btn"', srcTitle);
-                                srcDiv.addNodes([delSrcBtn, renameBtn, asResBtn, btn]);
+                                let srcVideoPlayBtn = new Emt('button', 'type="button" class="play_btn"', srcTitle);
+                                srcBtnsDiv.addNodes([
+                                    delSrcBtn, renameBtn, asResBtn,
+                                    srcVideoPlayBtn,
+                                    new Emt('em', ``, `${videoInfo.id}/${videoInfo.id36} ${videoInfo.video_title} `),
+                                ]);
 
-                                btn.addEventListener('click', () => {
+                                srcVideoPlayBtn.addEventListener('click', () => {
                                     console.log('play:', videoInfo);
                                     event.preventDefault(); //阻止冒泡
                                     functionPlay(videoInfo);
+                                    opConfig.loadStill(videoInfo.id36);
                                 });
 
                                 delSrcBtn.addEventListener('click', async () => {
                                     if (window.confirm(`确定删除 ${srcTitle}?`)) {
                                         await kl.ajax({
-                                            url: '/dev/v1/KL_PC/FfmpegTaskDelSrc',
+                                            url: '/dev/v1/KL_PC/xx/op/task/delSrc',
                                             data: {id: videoInfo.id},
                                             type: 'json',
                                             async: true,
@@ -879,7 +1021,7 @@
                                             console.log(aysncRes.result);
                                             let op_res = aysncRes.result;
                                             if (kl.getValByPath(aysncRes, 'result.data.src_exist') === false) {
-                                                videoInfoDiv.remove();
+                                                taskDiv.remove();
                                             }
 
                                         });
@@ -888,6 +1030,8 @@
                                 });
 
                                 asResBtn.addEventListener('click', async () => {
+                                    alert('禁止本操作,必须得经过转码');
+                                    return false;
                                     if (window.confirm(`确定  src to res? ${srcTitle}?`)) {
                                         await kl.ajax({
                                             url: '/dev/v1/KL_PC/moveVideoSrcToRes',
@@ -899,11 +1043,11 @@
                                             let op_res = aysncRes.result;
                                             if (kl.getValByPath(aysncRes, 'result.data.src_exist') === false) {
                                                 if (kl.getValByPath(aysncRes, 'result.data.dst_exist') === true) {
-                                                    videoInfoDiv.remove();
+                                                    taskDiv.remove();
                                                 } else {
                                                     alert('异常,src 没了，但 dst 也没了');
                                                 }
-                                                //  videoInfoDiv.remove();
+                                                //  taskDiv.remove();
                                             } else {
                                                 alert('异常,src 还在');
                                             }
@@ -913,18 +1057,18 @@
 
                                 });
                                 renameBtn.addEventListener('click', async () => {
-                                    let str = window.prompt(`输入新name:`, `${videoInfo.video_basename}`);
-                                    if (str && str !== videoInfo.video_basename) {
+                                    let str = window.prompt(`输入新name:`, `${videoInfo.video_title}`);
+                                    if (str && str !== videoInfo.video_title) {
                                         await kl.ajax({
-                                            url: '/dev/v1/KL_PC/FfmpegTaskRenameFile',
-                                            data: {id: videoInfo.id, oldStr: `${videoInfo.video_basename}`, newStr: str},
+                                            url: '/dev/v1/KL_PC/xx/op/task/renameFileTitle',
+                                            data: {id: videoInfo.id, oldStr: `${videoInfo.video_title}`, newStr: str},
                                             type: 'json',
                                             async: true,
                                         }).then(aysncRes => {
                                             console.log(aysncRes.result);
                                             let op_res = aysncRes.result;
                                             if (kl.getValByPath(aysncRes, 'result.data.src_exist') === false) {
-                                                videoInfoDiv.remove();
+                                                taskDiv.remove();
                                             }
 
                                         });
@@ -935,29 +1079,30 @@
 
                             } else {
 
-                                srcDiv.addNodes([kl.HTML.SPAN('class="play_btn"', srcTitle)]);
+                                srcBtnsDiv.addNodes([kl.HTML.SPAN('class="play_btn"', srcTitle)]);
                             }
                             if (parseInt(videoInfo.run_lc) > 0) {
-                                let btn = new Emt('button', 'type="button" class="play_btn"', 'free run lcok');
-                                srcDiv.addNode(btn);
+                                let lc_date = videoInfo.run_lc.toString().replace(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1-$2-$3 $4:$5:$6');
+                                let btn = new Emt('button', 'type="button" class="play_btn"', `free run lcok  [${lc_date}]   try_times:${videoInfo.try_times}`);
+                                srcBtnsDiv.addNode(btn);
 
                                 btn.addEventListener('click', async () => {
                                     if (window.confirm('确定解锁?')) {
                                         await kl.ajax({
-                                            url: '/dev/v1/KL_PC/FfmpegTaskUpdate',
+                                            url: '/dev/v1/KL_PC/xx/op/task/update',
                                             data: {id: videoInfo.id, attrs: {is_ok: 2, run_lc: 0}},
                                             type: 'json',
                                             async: true,
                                         }).then(aysncRes => {
                                             console.log(aysncRes.result);
-                                            videoInfoDiv.remove();
+                                            taskDiv.remove();
 
                                         });
 
                                     }
                                 });
                             }
-                            [headerAdSecondsInput, tailAdSecondsInput, taskSelect].forEach(input => {
+                            [headerAdSecondsInput, tailAdSecondsInput, taskSelect, transposeSelect, isPreSelect].forEach(input => {
                                 input.addEventListener('change', async () => {
                                     console.log('xxxx', taskSelect.value);
                                     let ar = taskSelect.value.split('_');
@@ -997,12 +1142,13 @@
                                             to: videoDuration === 0 ? 0 : (tailAdSeconds > 0 ? parseInt(videoDuration - tailAdSeconds) : 0),
                                         };
                                     }
+                                    tmp.ext = {transpose: transposeSelect.value, isPre: parseInt(isPreSelect.value)};
 
 
                                     ajaxHooks[videoInfo.id] = {
                                         isSend: false,
                                         ajaxParam: {
-                                            url: '/dev/v1/KL_PC/FfmpegTaskUpdate',
+                                            url: '/dev/v1/KL_PC/xx/op/UpdateFfmpegTask',
                                             data: {id: videoInfo.id, task: tmp, isCopy: tmp.isCopy},
                                             type: 'json',
                                             async: true,
@@ -1031,10 +1177,58 @@
         };
         //  query();
 
+
+        let fetchResFun = () => {
+            kl.ajax({
+                url: '/dev/v1/KL_PC/xx/getResInfoKV',
+                data: {},
+                type: 'json',
+                success: function (cfg_res) {
+                    console.log(cfg_res);
+                    let kv = kl.getValByPath(cfg_res, 'data.resInfoKV');
+                    if (kv !== undefined) {
+                        let itemDivs = Object.values(taskListDiv.querySelectorAll('.task-item'));
+
+                        itemDivs.forEach(taskDiv => {
+                            let idFlag = `kl${taskDiv.taskInfo.id}`;
+                            let id36flag = `kl${taskDiv.taskInfo.id36}`;
+                            let resInfo = false;
+                            if (kv[id36flag] !== undefined) {
+                                resInfo = kv[id36flag];
+                            } else if (kv[idFlag] !== undefined) {
+                                resInfo = kv[idFlag];
+                            }
+                            if (resInfo && taskDiv.resDiv.playBtn === undefined) {
+                                let sizeM = parseInt(resInfo.filesize / 1024 / 1024);
+
+                                let playBtn = kl.HTML.BUTTON_BUTTON('class="play-btn"', `play ${sizeM}M`);
+                                taskDiv.resDiv.addNodeKV({playBtn});
+                                playBtn.addEventListener('click', function () {
+
+                                    videoPlayer.src = getVdieoSrc(resInfo.fullFilename);
+                                    videoPlayer.play();
+                                    console.log('playBtn click');
+                                });
+                            }
+                        });
+
+                    } else {
+                        let err_msg = kl.getValByPath(cfg_res, 'msg', '未知错误');
+                        alert(err_msg);
+                        throw err_msg;
+                    }
+                },
+                error: (error) => {
+                    console.error(error);
+                }
+            });
+        }
         queryBtn.addEventListener('click', query);
+        fetchResBtn.addEventListener('click', fetchResFun);
+
 
         let functionPause = () => {
-            videoPlayerDiv.classList.add('hidden');
+            videoOperationDiv.classList.add('hidden');
             videoPlayer.pause();
         }
 
@@ -1077,7 +1271,7 @@
                 case 'Escape':
                 case 'Backquote':
                     console.log('player div exit');
-                    videoPlayerDiv.classList.add('hidden');
+                    videoOperationDiv.classList.add('hidden');
                     videoPlayer.pause();
                     break;
                 case 'ArrowLeft':
@@ -1142,7 +1336,6 @@
             durationStartSecInput.value = startSec;
 
 
-
             durationStartImg.width = videoPlayer.videoWidth;
             durationStartImg.height = videoPlayer.videoHeight;
             durationStartCtx.drawImage(videoPlayer, 0, 0, durationStartImg.width, durationStartImg.height);
@@ -1202,24 +1395,77 @@
 
         });
 
+        stillsDiv.addEventListener('click', function (e) {
+            console.log(e.target);
+            if (e.target.ttype !== undefined && e.target.sec !== undefined) {
+                let type = e.target.ttype;
+                let sec = e.target.sec;
+                if (type === 'header') {
+                    let startSec = sec;
+                    videoPlayer.currentTime = startSec;
+                    durationStartSecInput.value = startSec;
+                    durationStartImg.width = videoPlayer.videoWidth;
+                    durationStartImg.height = videoPlayer.videoHeight;
+                    durationStartCtx.drawImage(videoPlayer, 0, 0, durationStartImg.width, durationStartImg.height);
+                    if (startSec > 0) {
+                        if (window.currItem.headerAdCanvas) {
+                            window.currItem.headerAdCanvas.width = durationStartImg.width;
+                            window.currItem.headerAdCanvas.height = durationStartImg.height;
+
+                            const ctx = window.currItem.headerAdCanvas.getContext('2d');
+                            ctx.drawImage(durationStartImg, 0, 0);
+                            window.currItem.headerAdSecondsInput.value = startSec;
+                            window.currItem.headerAdSecondsInput.dispatchEvent(new CustomEvent('change'));
+
+                        }
+                    }
+                } else {
+                    //不用  size*(1-rate) 浮点费劲
+                    let tailSec = sec;
+
+                    videoPlayer.currentTime = videoPlayer.duration - tailSec;
+                    durationEndSecInput.value = tailSec;
+                    durationEndImg.width = videoPlayer.videoWidth;
+                    durationEndImg.height = videoPlayer.videoHeight;
+                    durationEndCtx.drawImage(videoPlayer, 0, 0, durationEndImg.width, durationEndImg.height);
+                    if (window.currItem.tailAdCanvas) {
+                        window.currItem.tailAdCanvas.width = durationEndImg.width;
+                        window.currItem.tailAdCanvas.height = durationEndImg.height;
+                        const ctx = window.currItem.tailAdCanvas.getContext('2d');
+                        ctx.drawImage(durationEndImg, 0, 0);
+                        window.currItem.tailAdSecondsInput.value = tailSec;
+                        window.currItem.tailAdSecondsInput.dispatchEvent(new CustomEvent('change'));
+                    }
+                }
+
+            }
+        });
 
         volumeInput.addEventListener('input', () => {
             //cli.log(durationInput.value);
             videoPlayer.volume = parseInt(volumeInput.value) / 100;
         });
 
-
+        let waitMsg = kl.id('wait-for-config');
+        let waitI = 0;
+        let waitSi = window.setInterval(() => {
+            waitI += 1;
+            waitMsg.textContent = `wait ${waitI}s`;
+        }, 1000);
         kl.ajax({
-            url: '/dev/v1/KL_PC/getHdItems',
+            url: '/dev/v1/KL_PC/xx/op/config/kv',
             data: {},
             type: 'json',
+            timeout: 60,
             success: function (cfg_res) {
                 console.log(cfg_res);
                 let hdItems = kl.getValByPath(cfg_res, 'data.hdItems');
                 if (Array.isArray(hdItems)) {
-                    console.log(hdItems);
+                    opConfig = cfg_res.data;
+                    console.log({opConfig});
                     let tmp = {};
-
+                    window.clearInterval(waitSi);
+                    waitMsg.textContent += ` ok`;
                     hdItems.forEach((gear, i) => {
                         let ar = [];
                         ar.push(gear.resAs.toString().padStart(6));
@@ -1242,6 +1488,57 @@
                         taskGears.push(tmp[text]);
                     });
 
+
+                    opConfig.headerTsList = opConfig.headerTs.sort((a, b) => {
+                        return a - b;
+                    });
+                    opConfig.tailTsList = opConfig.tailTs.sort((a, b) => {
+                        return b - a;
+                    });
+                    opConfig.sec2stillImg = {};
+
+                    opConfig.headerTsList.forEach(sec => {
+                        let imgDiv = kl.HTML.DIV('class="still"', '', {sec: sec, ttype: 'header'});
+                        let img = kl.HTML.IMAGE('', '', {sec: sec, ttype: 'header'});
+                        headerStillsDiv.addNode(
+                            imgDiv.addNode(
+                                img,
+                                `<span>h${sec}</span>`
+                            )
+                        );
+                        img.addEventListener('load', () => {
+                            imgDiv.classList.remove('empty-still');
+                        });
+                        img.addEventListener('error', () => {
+                            imgDiv.classList.add('empty-still');
+                        });
+                        opConfig.sec2stillImg[`start_${sec}`] = img;
+                    });
+                    opConfig.tailTsList.forEach(sec => {
+                        let imgDiv = kl.HTML.DIV('class="still"', '', {sec: sec, ttype: 'tail'});
+                        let img = kl.HTML.IMAGE('', '', {sec: sec, ttype: 'tail'});
+                        tailStillsDiv.addNode(
+                            imgDiv.addNode(
+                                `<span>t${sec}</span>`,
+                                img
+                            )
+                        );
+                        img.addEventListener('load', () => {
+                            imgDiv.classList.remove('empty-still');
+                        });
+                        img.addEventListener('error', () => {
+                            imgDiv.classList.add('empty-still');
+                        });
+                        opConfig.sec2stillImg[`tail_${sec}`] = img;
+                    });
+
+                    opConfig.loadStill = (id36) => {
+                        for (const [key, img] of Object.entries(opConfig.sec2stillImg)) {
+                            img.src = `http://kl-home-pc:8001/mnt/f/tmp2/format/wait/FFOutput_stills/${id36}/${key}.jpg`;
+                        }
+                    };
+
+
                     query();
                 } else {
                     let err_msg = kl.getValByPath(cfg_res, 'msg', '未知错误');
@@ -1250,6 +1547,8 @@
                 }
             },
             error: (error) => {
+                window.clearInterval(waitSi);
+                waitMsg.textContent += ` error`;
                 console.error(error);
             }
         });

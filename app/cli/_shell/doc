@@ -1,0 +1,45 @@
+-逗号转 换行
+cat '/d/Documents/WeChat Files/wxid_mnzh222xbhpg22/FileStorage/File/2020-10/milike竖屏重新推.txt' |awk 'BEGIN{RS=","}{print $1}' > ~/xiaomi.txt
+
+
+-重新推送
+-- 补入队列  papi/push_retry:video:0:fr5dey2:1
+cd /usr/website_server_alpha/papi.funshion.com/script; /usr/local/php5.3.11/bin/php cp_mv_enqueue_debug.php -mtype video -cps fi15kur -idfile /home/nginx/yangjl/xiaomi.txt -qid 1 -speedlimiter 3600_50000 -msleep 1000 > /home/nginx/yangjl/61.txt &
+-- 计划任务
+cd /usr/website_server_alpha/papi.funshion.com/script/; /usr/local/php5.3.11/bin/php push_retry.php -mtype video -unit 0 -cp f8xeo2d  -qid 1
+
+-重新推送 media  fn5zmc4就是波塞冬
+-- 补队列
+ cd /usr/website_server_alpha/papi.funshion.com/script; /usr/local/php5.3.11/bin/php cp_mv_enqueue_debug.php -mtype media -cps fn5zmc4 -idfile /home/nginx/mids.txt -qid 1 -speedlimiter 3600_50000 -msleep 1000
+-- 推送
+ /usr/local/php5.3.11/bin/php push_retry.php  -mtype media -unit 0 -cp fn5zmc4 -qid  1
+
+
+
+export EDITOR="/usr/bin/vim" ; crontab -e
+export EDITOR="/usr/bin/vim"; sudo -u nginx  crontab -e
+
+#ids重现进入授权，所有渠道，非某个渠道的
+cd fcgapi.funshion.com/v1/script; ~/php53 vr_authorize_enqueue.php -mtype video -idfile ids_in_wrong.csv -qid default -new 0
+
+
+-- composer 安装很慢！建议设置国内腾讯云镜像源
+建议建议设置国内腾讯云镜像源：composer config -g repos.packagist composer https://mirrors.tencent.com/composer/
+
+- linux 用主机代理
+export http_proxy="socks5://192.168.137.1:7890"
+export https_proxy="socks5://192.168.137.1:7890"
+-- 其它形式
+export http_proxy="http://localhost:port"
+export https_proxy="http://localhost:port"
+--
+export http_proxy="socks5://192.168.13.53:7890"
+export https_proxy="socks5://192.168.13.53:7890"
+-- 取消
+unset http_proxy;unset https_proxy
+-- 检验本机ip
+curl 'http://markedboat.com/test/ip'|grep REMOTE_ADDR
+curl 'https://www.baidu.com/s?ie=UTF-8&wd=%E6%9C%AC%E6%9C%BAip'|grep '我的ip地址'
+
+-- 已经压缩的日志
+ls -l /data/log/api/api.log202011*.gz|tr -s " "|cut -d" " -f9|xargs -I {} sh -c 'date;echo {}; zgrep "ip\[" {}|cut -d" " -f6 |sort|uniq' >> ~/api_ips.txt
