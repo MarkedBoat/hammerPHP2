@@ -518,14 +518,8 @@ or title     like '%php%'
         $jobDao  = new BossJob();
         $jobTn   = $jobDao->getTableName();
 
-        $apiKey = getenv('DEEPSEEK_API_KEY');
-        if (empty($apiKey))
-        {
-            echo "请设置环境变量 DEEPSEEK_API_KEY 为 DeepSeek API Key。\n";
-            passthru("echo \$DEEPSEEK_API_KEY");
-            //   exit(1);
-            $apiKey = 'sk-59b8ed4bd3ee4fddb31f86222afff87c';
-        }
+        $apiKey = __DEEPSEEK_API_KEY__;
+
 
         // 每次处理的批量大小，可根据API速率限制调整[reference:9]
         $batchSize = 100;
@@ -722,14 +716,8 @@ or title     like '%php%'
         $jobDao  = new BossJob();
         $jobTn   = $jobDao->getTableName();
 
-        $apiKey = getenv('DEEPSEEK_API_KEY');
-        if (empty($apiKey))
-        {
-            echo "请设置环境变量 DEEPSEEK_API_KEY 为 DeepSeek API Key。\n";
-            passthru("echo \$DEEPSEEK_API_KEY");
-            //   exit(1);
-            $apiKey = 'sk-59b8ed4bd3ee4fddb31f86222afff87c';
-        }
+        $apiKey = __DEEPSEEK_API_KEY__;
+
 
         // 每次处理的批量大小，可根据API速率限制调整[reference:9]
         $batchSize  = 1000;
@@ -811,7 +799,7 @@ or title     like '%php%'
         $jobDao = new BossJob();
         $jobTn  = $jobDao->getTableName();
 
-        $apiKey = 'sk-59b8ed4bd3ee4fddb31f86222afff87c';
+        $apiKey = __DEEPSEEK_API_KEY__;
 
         // 每次处理的批量大小，可根据API速率限制调整[reference:9]
         $queryM = DbQuery::m($jobDao)->setSelects(['id', 'title', 'detail'])->setWheres(['id' => $id]);
