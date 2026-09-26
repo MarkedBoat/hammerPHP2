@@ -107,7 +107,7 @@ class MysqlPdoCmd
         } catch (\PDOException $e)
         {
 
-            Sys::app()->logData([$e->getMessage(), $this->getDebugInfo()], 'sql_error');
+            Sys::app()->getLogger()->log('sql_error',[$e->getMessage(), $this->getDebugInfo()]);
             Sys::app()->interruption()->setMsg('操作失败' . $e->getMessage())->setCode('mysql_error_exec_error')->outError();
         }
     }
