@@ -1,4 +1,7 @@
 <?php
+
+include '_env.danger.php';
+
 defined('ENV_NAME') or define('ENV_NAME', 'kl-pc');
 
 
