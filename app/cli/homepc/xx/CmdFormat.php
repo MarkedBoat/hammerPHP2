@@ -52,6 +52,7 @@ class CmdFormat extends CmdBase
      */
     public function v1()
     {
+        $printerOutState = true;
         Sys::app()->initPrinter();
         Sys::app()->getPrinter()->setBaseTabNumber(0)->newTabEcho('init', '初始化根目录');
         $this->rootDir = $this->inputBox->tryGetString('root_dir') ? $this->inputBox->tryGetString('root_dir') : '/mnt/f/tmp2/tmp';
@@ -61,7 +62,13 @@ class CmdFormat extends CmdBase
         }
 
         $isDebug = $this->inputBox->tryGetString('is_debug') === 'yes';
-
+        if ($isDebug === false)
+        {
+            $isDebug = $this->inputBox->tryGetString('isDebug') === 'yes';
+        }
+        $isLsAll        = $this->inputBox->tryGetString('isLsAll') === 'yes';
+        $isShowStrMatch = $this->inputBox->tryGetString('isShowStrMatch') === 'yes';
+        $isPreview      = $this->inputBox->tryGetString('isPreview') === 'yes';
 
         /**
          * 去除文件名/目录名中紧邻 "/" 的空格，并批量重命名
@@ -71,7 +78,7 @@ class CmdFormat extends CmdBase
          *   php trim_rename.php /path/to/dir --dry-run  # 只预览，不改动
          */
 
-        $dry  = false;
+        $dry = false;
 
         $root = $this->rootDir;
 
@@ -90,6 +97,11 @@ class CmdFormat extends CmdBase
         pclose($fp);
 
         $paths = array_filter(explode("\0", $raw), 'strlen');
+
+        if ($isLsAll)
+        {
+            var_export($paths);
+        }
 
         $count = 0;
         $skip  = 0;
@@ -150,7 +162,7 @@ class CmdFormat extends CmdBase
         }
 
 
-      //  die;
+        //  die;
 
 
         $cmdTask           = new CmdTask();
@@ -167,7 +179,9 @@ class CmdFormat extends CmdBase
         if (file_exists($rubishWordsFilename))
         {
             $this->printer->tabEcho("load {$rubishWordsFilename}");
+
             $rubbishWords = explode("\n", file_get_contents($rubishWordsFilename));
+
 
         }
         else
@@ -181,11 +195,12 @@ class CmdFormat extends CmdBase
             unset($rubbishWords[$tmpIndex]);
         }
         $rubbishWordEmpty = array_fill(0, count($rubbishWords), ' ');
-
-        $this->printer->newTabEcho('rubishWords');
-        $this->printer->tabEcho($rubbishWords);
-        $this->printer->endTabEcho('rubishWords');
-
+        if ($isShowStrMatch)
+        {
+            $this->printer->newTabEcho('rubishWords');
+            $this->printer->tabEcho($rubbishWords);
+            $this->printer->endTabEcho('rubishWords');
+        }
         $i              = 0;
         $cnt            = count($id36toLsCmdFileinfoKV);
         $dir2id36toInfo = [];
@@ -197,32 +212,46 @@ class CmdFormat extends CmdBase
             }
             $dir2id36toInfo[$lsCmdFileinfo->albumNameDir][$id36] = $lsCmdFileinfo;
         }
+
+        if ($isShowStrMatch)
+        {
+            $this->printer->tabEcho("dir => id36 => lsCmdFileinfo  \$dir2id36toInfo");
+            $this->printer->tabEcho($dir2id36toInfo);
+        }
+
         $oldDir2newDir2list = [];
+        $this->printer->newTabEcho('oldDir2newDir2list', '将   dir => id36 => lsCmdFileinfo 处理成  old dir =>  new dir => files');
         foreach ($dir2id36toInfo as $albumDir => $id36toLsCmdFileinfoKV)
         {
+            $this->printer->newTabEcho('oldDir', $albumDir);
             if (!isset($oldDir2newDir2list[$albumDir]))
             {
                 $oldDir2newDir2list[$albumDir] = [];
             }
             $dirnameVideosCnt = count($id36toLsCmdFileinfoKV);
+            $this->printer->tabEcho("old Dir:[{$albumDir}] VideosCnt:[{$dirnameVideosCnt}]");
             if ($dirnameVideosCnt === 1)
             {
+                $this->printer->tabEcho('目录下只有一个video,直接提到根目录');
                 if (!isset($oldDir2newDir2list[$albumDir]['']))
                 {
                     $oldDir2newDir2list[$albumDir][''] = [];
                 }
                 foreach ($id36toLsCmdFileinfoKV as $id36 => $lsCmdFileinfo)
                 {
+
                     $i++;
                     $this->printer->tabEcho("{$i}/{$cnt} {$lsCmdFileinfo->relativePath}");
                     $relativeFilename = str_replace("^{$id36}^.{$lsCmdFileinfo->ext}", '', $lsCmdFileinfo->relativePath);
                     //    $this->printer->tabEcho("$relativeFilename");
+                    //$this->printer->
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $relativeFilename);
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
+                    $trimedRelativeFilename = str_replace(['_'], [' '], $trimedRelativeFilename);
                     $trimedRelativeFilename = str_replace([' / ', ' /', '/ '], ['/', '/', '/'], $trimedRelativeFilename);
                     $trimedRelativeFilename = preg_replace('/[a-zA-Z0-9_.-]{30,}/m', '', $trimedRelativeFilename);
 
@@ -249,6 +278,8 @@ class CmdFormat extends CmdBase
 
                     }
 
+                    $this->printer->setOutputState($isShowStrMatch);
+
                     //$fileTitleLength = $this->getDescFilename($fileTitle);
 
                     $titleAr = array_unique(array_filter(array_map(function ($s) { return trim($s); }, explode(' ', join(' ', $paths))), function ($s) { return $s !== ''; }));
@@ -266,7 +297,7 @@ class CmdFormat extends CmdBase
                                 continue;
                             }
 
-                            // $this->printer->tabEcho("check title:{$tmp_i}:{$title_i}  title:{$tmp_j}:{$title_j} ".strstr($title_j,$title_i));
+                            $this->printer->tabEcho("check title:{$tmp_i}:{$title_i}  title:{$tmp_j}:{$title_j} " . strstr($title_j, $title_i));
                             $title_j = strtolower($title_j);
                             if (strlen(strstr($title_j, $title_i)) > 2)
                             {
@@ -287,7 +318,7 @@ class CmdFormat extends CmdBase
                             {
                                 continue;
                             }
-                            //  $this->printer->tabEcho("{$j}_{$titleAr[$j]}  -> [".strstr($titleAr[$j], $titleAr[$i]).']'.(strlen(strstr($titleAr[$j], $titleAr[$i]))>2?'yes':'no') );
+                            $this->printer->tabEcho("{$j}_{$titleAr[$j]}  -> [" . strstr($titleAr[$j], $titleAr[$i]) . ']' . (strlen(strstr($titleAr[$j], $titleAr[$i])) > 2 ? 'yes' : 'no'));
                             $title_j = strtolower($titleAr[$j]);
                             if (strlen(strstr($title_j, $title_i)) > 2)
                             {
@@ -304,14 +335,14 @@ class CmdFormat extends CmdBase
                     //  $pathAr = array_unique(array_filter(array_map(function ($s) { return trim($s); }, explode(' ', $trimedRelativeFilename)), function ($s) { return $s !== ''; }));
                     if ($isDebug)
                     {
-                        // $this->printer->tabEcho($pathAr);
+                        //    $this->printer->tabEcho($pathAr);
                     }
-                    $uniqPath = join(' ', $titleAr) . '.' . $lsCmdFileinfo->ext;
+                    $uniqPath = join(' ', $titleAr) . "^{$id36}^." . $lsCmdFileinfo->ext;
                     //  $uniqPath = str_replace([' / ', ' /', '/ '], ['/', '/', '/'], $uniqPath);
 
-                    $this->printer->tabEcho("-- single video \n");
+                    $this->printer->setOutputState($printerOutState);
 
-                    // $this->printer->tabEcho("{$trimedRelativeFilename}");
+                    $this->printer->tabEcho("-- single video \n");
                     $this->printer->tabEcho("-- new:{$uniqPath}\n");
                     $oldDir2newDir2list[$albumDir][''][] = ['old' => $lsCmdFileinfo->fullFilename, 'new' => $uniqPath];
 
@@ -324,9 +355,11 @@ class CmdFormat extends CmdBase
                 $trimedAlbumDir = str_replace($rubbishWords, $rubbishWordEmpty, $trimedAlbumDir);
                 $trimedAlbumDir = str_replace($rubbishWords, $rubbishWordEmpty, $trimedAlbumDir);
                 $trimedAlbumDir = str_replace($rubbishWords, $rubbishWordEmpty, $trimedAlbumDir);
-
+                $trimedAlbumDir = str_replace(['_'], [' '], $trimedAlbumDir);
                 $trimedAlbumDir = str_replace([' / ', ' /', '/ '], ['/', '/', '/'], $trimedAlbumDir);
 
+
+                $this->printer->setOutputState($isShowStrMatch);
 
                 $dirAr     = array_unique(array_filter(array_map(function ($s) { return trim($s); }, explode(' ', $trimedAlbumDir)), function ($s) { return $s !== ''; }));
                 $dirAr     = array_values($dirAr);
@@ -389,9 +422,11 @@ class CmdFormat extends CmdBase
                     //    $this->printer->tabEcho("$relativeFilename");
                     $trimedTitle = str_replace($rubbishWords, $rubbishWordEmpty, $lsCmdFileinfo->title);
                     // $trimedTitle = str_replace($rubbishWords, $rubbishWordEmpty, $trimedTitle);
+                    $trimedTitle = str_replace(['_'], [' '], $trimedTitle);
                     $trimedTitle = str_replace([' / ', ' /', '/ '], ['/', '/', '/'], $trimedTitle);
                     // $this->printer->tabEcho("-- \n{$trimedRelativeFilename}\n");
                     $this->printer->tabEcho("-- \n{$trimedTitle}\n");
+                    $this->printer->setOutputState($isShowStrMatch);
 
 
                     $titleAr = array_unique(array_filter(array_map(function ($s) { return trim($s); }, explode(' ', $trimedTitle)), function ($s) { return $s !== ''; }));
@@ -468,6 +503,8 @@ class CmdFormat extends CmdBase
                     $uniqPath = $trimedAlbumDir . $uniqPathStr . '.' . $lsCmdFileinfo->ext;
                     //  $uniqPath = str_replace([' / ', ' /', '/ '], ['/', '/', '/'], $uniqPath);
 
+                    $this->printer->setOutputState($printerOutState);
+
                     $this->printer->tabEcho("--videos \n");
 
                     // $this->printer->tabEcho("{$trimedRelativeFilename}");
@@ -476,7 +513,9 @@ class CmdFormat extends CmdBase
 
                 }
             }
+            $this->printer->endTabEcho('oldDir');
         }
+        $this->printer->endTabEcho('oldDir2newDir2list');
 
         $this->printer->tabEcho("\n注意检查 oldDir2newDir2list   ");
         $this->printer->tabEcho("\n注意检查 oldDir2newDir2list   ");
@@ -490,12 +529,20 @@ class CmdFormat extends CmdBase
         $this->printer->tabEcho("\n注意检查 oldDir2newDir2list   ");
         $this->printer->tabEcho("\n注意检查 oldDir2newDir2list   ");
         $this->printer->tabEcho(CLIStrFormatter::info("\n注意检查 oldDir2newDir2list   "));
+
+        $this->printer->newTabEcho('show_oldDir2newDir2list', '\$oldDir2newDir2list  展示: old dir =>  new dir => listIndex => [oldFullpath,newRelativePath]');
         $this->printer->tabEcho($oldDir2newDir2list);
+        $this->printer->endTabEcho('show_oldDir2newDir2list');
 
-
+        if ($isPreview)
+        {
+            // $this->printer->tabEcho(CLIStrFormatter::info("\n只是预览,下面处理就不进行了  "));
+            //  return false;
+        }
         foreach ($oldDir2newDir2list as $oldDir => $newDir2list)
         {
-            $this->printer->newTabEcho('old_dir', "OLD DIR:{$oldDir}");
+            $this->printer->newTabEcho('old_dir', "OLD DIR:[{$oldDir}]");
+
             $newDirCnt = count($newDir2list);
             $this->printer->tabEcho(" 理论上，一个old dir 下面只有一个新dir , new dir count: {$newDirCnt}\n");
             if (count($newDir2list) !== 1)
@@ -507,6 +554,7 @@ class CmdFormat extends CmdBase
                 $this->printer->tabEcho("OK {$oldDir} \n");
                 foreach ($newDir2list as $newDir => $list)
                 {
+                    $this->printer->newTabEcho('new_dir', "NEW DIR:[{$newDir}]");
                     if ($newDir === '')
                     {
                         $newDirFullPath = $this->rootDir;
@@ -526,11 +574,10 @@ class CmdFormat extends CmdBase
                         continue;
                     }
 
-                    $this->printer->newTabEcho('newDir', "NEW DIR [{$newDir}]");
-                    $this->printer->newTabEcho('newDir', "NEW DIR [{$newDirFullPath}]");
+                    $this->printer->tabEcho("NEW DIR fullPath [{$newDirFullPath}]");
 
                     $listCnt = count($list);
-                    $this->printer->tabEcho("OK {$oldDir}\n->\n{$newDir} count: {$listCnt}\n");
+                    $this->printer->tabEcho("old dir [{$oldDir}]\n->\nnew dir:[{$newDir}] count: [{$listCnt}]\n");
 
                     if (false && $newDir === '')
                     {
@@ -545,19 +592,46 @@ class CmdFormat extends CmdBase
                         {
                             $this->printer->tabEcho("list count/1 OK ");
 
-                            $this->printer->tabEcho("ONE list:{$list[0]['old']}\n->\n{$list[0]['new']} \n");
-                            rename($list[0]['old'], $newDirFullPath . '/' . $list[0]['new']);
+                            $this->printer->tabEcho("ONE list:{$list[0]['old']}\n->\n{$newDirFullPath}/{$list[0]['new']} \n");
+                            if ($isPreview)
+                            {
+                                $this->printer->tabEcho("PREVIEW,并没有真 mv");
+                            }
+                            else
+                            {
+                                rename($list[0]['old'], $newDirFullPath . '/' . $list[0]['new']);
+                            }
                         }
                     }
                     else
                     {
+                        $this->printer->newTabEcho('fetch_list', '开始梳理list');
                         $this->printer->tabEcho("list count OK \n");
                         $tmp_i = 0;
                         foreach ($list as $item)
                         {
+
                             $tmp_i++;
-                            $this->printer->tabEcho("{$tmp_i}/{$listCnt}\n{$item['old']}\n->\n{$item['new']}\n");
-                            rename($item['old'], $this->rootDir . '/' . $item['new']);
+                            $old = $item['old'];
+                            $new = "{$this->rootDir}/{$item['new']}";
+                            $this->printer->newTabEcho('list_item', "{$tmp_i}/{$listCnt}");
+                            $this->printer->tabEcho("{$old}\n->\n{$new}");
+
+                            if ($new !== $old)
+                            {
+                                if ($isPreview)
+                                {
+                                    $this->printer->tabEcho("PREVIEW,并没有真 mv");
+                                }
+                                else
+                                {
+                                    rename($item['old'], $this->rootDir . '/' . $item['new']);
+                                }
+                            }
+                            else
+                            {
+                                $this->printer->tabEcho("NOOP,文件名相同");
+                            }
                         }
                     }
                 }

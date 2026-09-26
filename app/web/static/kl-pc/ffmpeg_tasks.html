@@ -361,6 +361,7 @@
         let rootDiv = kl.id('root_div');
 
         let attrInputDiv = new Emt('div', 'class="attrs-input-div"');
+        let loadAdImgsCheckbox=kl.HTML.CHECKBOX().setPros({checked:false});
         let queryBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '查询');
         let fetchResBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', 'fetch res');
 
@@ -442,16 +443,28 @@
             album_dir: {text: 'album', val: 'string'},
             video_title: {text: 'video name', val: 'string'},
             hr1: kl.HTML.HR('style="height:1em;"').setPros({isTextEle: true}),
-            sortAttr1: {text: 'sort1', val: {album_dir: 'album_dir', video_title: 'video_title',run_lc:'run_lc',id:'id',update_date:'update_date'},default:'album_dir'},
-            sortType1: {text: ':', val: {'asc': 'asc', 'desc': 'desc'},default:'asc'},
+            sortAttr1: {
+                text: 'sort1',
+                val: {album_dir: 'album_dir', video_title: 'video_title', run_lc: 'run_lc', id: 'id', update_date: 'update_date'},
+                default: 'album_dir'
+            },
+            sortType1: {text: ':', val: {'asc': 'asc', 'desc': 'desc'}, default: 'asc'},
 
-            sortAttr2: {text: 'sort2', val: {album_dir: 'album_dir', video_title: 'video_title',run_lc:'run_lc',id:'id',update_date:'update_date'},default:'video_title'},
-            sortType2: {text: ':', val: {'asc': 'asc', 'desc': 'desc'},default:'asc'},
-            sortAttr3: {text: 'sort3', val: {album_dir: 'album_dir', video_title: 'video_title',run_lc:'run_lc',id:'id',update_date:'update_date'},default:'run_lc'},
-            sortType3: {text: ':', val: {'asc': 'asc', 'desc': 'desc'},default:'asc'},
+            sortAttr2: {
+                text: 'sort2',
+                val: {album_dir: 'album_dir', video_title: 'video_title', run_lc: 'run_lc', id: 'id', update_date: 'update_date'},
+                default: 'video_title'
+            },
+            sortType2: {text: ':', val: {'asc': 'asc', 'desc': 'desc'}, default: 'asc'},
+            sortAttr3: {
+                text: 'sort3',
+                val: {album_dir: 'album_dir', video_title: 'video_title', run_lc: 'run_lc', id: 'id', update_date: 'update_date'},
+                default: 'run_lc'
+            },
+            sortType3: {text: ':', val: {'asc': 'asc', 'desc': 'desc'}, default: 'asc'},
 
             limit: {text: 'limit', val: 100, default: 100,},
-            listSrcFile: {text: '扫描src文件', val: {yes:'扫描src', no: '不需要'},default:'yes'},
+            listSrcFile: {text: '扫描src文件', val: {yes: '扫描src', no: '不需要'}, default: 'yes'},
 
         };
         let attrInputKV = {};
@@ -569,7 +582,13 @@
                     kl.HTML.SPAN('', input.label),
                     input,
                 ])
-            })).addNodes([queryBtn, fetchResBtn]),
+            })).addNodes([
+                kl.HTML.LABEL().addNode(
+                  kl.HTML.SPAN('', '加载广告图片:'),
+                  loadAdImgsCheckbox
+                ),
+                queryBtn, fetchResBtn
+            ]),
             taskListDiv,
 
 
@@ -606,6 +625,14 @@
 
             videoPlayer.play();
         }
+        let functionPlaySrc = (src) => {
+            videoOperationDiv.classList.remove('hidden');
+            videoPlayer.volume = parseInt(volumeInput.value) / 100;
+            videoPlayer.src = getVdieoSrc(src);
+            console.log(videoPlayer);
+            videoPlayer.play();
+        }
+
 
 
         let makeGearVal = (gear) => {
@@ -681,8 +708,8 @@
 
                     console.log(file_result);
                     let srcVideoInfoKV = kl.getValByPath(file_result, 'data.srcVideoInfoKV');
-                    if(opConfig.srcVideoInfoKV===undefined){
-                        opConfig.srcVideoInfoKV={};
+                    if (opConfig.srcVideoInfoKV === undefined) {
+                        opConfig.srcVideoInfoKV = {};
                     }
                     opConfig.srcVideoInfoKV = Object.assign(opConfig.srcVideoInfoKV, srcVideoInfoKV);
                     let list = kl.getValByPath(file_result, 'data.list');
@@ -997,9 +1024,20 @@
                                 let renameBtn = new Emt('button', 'type="button" class="rename-src-btn"', 'rename');
                                 let asResBtn = new Emt('button', 'type="button" class="del-src-btn"', 'src to res', {title: '无需再次转码，直接当成转码后的'});
                                 let srcVideoPlayBtn = new Emt('button', 'type="button" class="play_btn"', srcTitle);
+
+                                let playTmpBtn = new Emt('button', 'type="button" class="rename-src-btn"', 'play tmp');
+                                let playPreBtn = new Emt('button', 'type="button" class="rename-src-btn"', 'play pre');
+
+                                let preSrc=  videoInfo.src.split('/src/')[0]+`/FFOutput_pre/${videoInfo.id}^${videoInfo.id36}^.mp4`;
+                                let tmpSrc=  videoInfo.src.split('/src/')[0]+`/FFOutput_tmp/${videoInfo.id}^${videoInfo.id36}^.mp4`;
+
+                                //videoPlayer.src = getVdieoSrc(item.src);
+
                                 srcBtnsDiv.addNodes([
                                     delSrcBtn, renameBtn, asResBtn,
                                     srcVideoPlayBtn,
+                                    playTmpBtn,
+                                    playPreBtn,
                                     new Emt('em', ``, `${videoInfo.id}/${videoInfo.id36} ${videoInfo.video_title} `),
                                 ]);
 
@@ -1008,6 +1046,15 @@
                                     event.preventDefault(); //阻止冒泡
                                     functionPlay(videoInfo);
                                     opConfig.loadStill(videoInfo.id36);
+                                });
+                                playTmpBtn.addEventListener('click',function (){
+                                    event.preventDefault(); //阻止冒泡
+                                    functionPlaySrc(tmpSrc);
+
+                                });
+                                playPreBtn.addEventListener('click',function (){
+                                    event.preventDefault(); //阻止冒泡
+                                    functionPlaySrc(preSrc);
                                 });
 
                                 delSrcBtn.addEventListener('click', async () => {
@@ -1148,7 +1195,7 @@
                                     ajaxHooks[videoInfo.id] = {
                                         isSend: false,
                                         ajaxParam: {
-                                            url: '/dev/v1/KL_PC/xx/op/UpdateFfmpegTask',
+                                            url: '/dev/v1/KL_PC/xx/op/task/update',
                                             data: {id: videoInfo.id, task: tmp, isCopy: tmp.isCopy},
                                             type: 'json',
                                             async: true,
@@ -1533,8 +1580,10 @@
                     });
 
                     opConfig.loadStill = (id36) => {
-                        for (const [key, img] of Object.entries(opConfig.sec2stillImg)) {
-                            img.src = `http://kl-home-pc:8001/mnt/f/tmp2/format/wait/FFOutput_stills/${id36}/${key}.jpg`;
+                        if(loadAdImgsCheckbox.checked) {
+                            for (const [key, img] of Object.entries(opConfig.sec2stillImg)) {
+                                img.src = `http://kl-home-pc:8001/mnt/f/tmp2/format/wait/FFOutput_stills/${id36}/${key}.jpg`;
+                            }
                         }
                     };
 

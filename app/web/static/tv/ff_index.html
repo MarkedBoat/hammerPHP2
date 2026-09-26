@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script src="../file/js/kl-hammer.20240811.js" charset="UTF-8"></script>
+    <script src="../file/js/kl-hammer.js" charset="UTF-8"></script>
 
     <title>ff index</title>
     <style>
@@ -106,9 +106,24 @@
                 }
             },
             {
-                startBtn: kl.HTML.BUTTON_BUTTON('', 'format filename -> tmp', {}), text: '', detail: '', call: async (item) => {
+                startBtn: kl.HTML.BUTTON_BUTTON('', 'format filename -> tmp', {}),
+                text: '',
+                detail: '',
+                opt: {
+                    isDebug: {input: kl.HTML.CHECKBOX().setPros({checked: true}), text: 'debug'},
+                    isShowStrMatch: {input: kl.HTML.CHECKBOX().setPros({checked: false}), text: '展示字符处理过程'},
+                    isLsAll: {input: kl.HTML.CHECKBOX().setPros({checked: true}), text: '展示所有文件'},
+                    isPreview: {input: kl.HTML.CHECKBOX().setPros({checked: false}), text: '预览'},
 
-                    return startSimpleSSE('/dev/v1/KL_PC/xx/op/Cli/formatFileTitle', item.resPre);
+                },
+                call: async (item) => {
+                    let tmp = {};
+                    for (const [k, optItem] of Object.entries(item.opt)) {
+                        tmp[k] = optItem.input.checked;
+                    }
+
+                    let tmpStr = JSON.stringify(tmp);
+                    return startSimpleSSE(`/dev/v1/KL_PC/xx/op/Cli/formatFileTitle?extOpt=${tmpStr}`, item.resPre);
 
                 }
             },
@@ -122,7 +137,7 @@
                 startBtn: kl.HTML.BUTTON_BUTTON('', 'mark task', {}), text: '', detail: '', call: async (item) => {
                     return startSimpleSSE('/dev/v1/KL_PC/xx/op/cli/markTasks', item.resPre);
 
-                 //   return startSimpleSSE('/dev/v1/KL_PC/testConv', item.resPre);
+                    //   return startSimpleSSE('/dev/v1/KL_PC/testConv', item.resPre);
                 }
             },
             {
@@ -532,7 +547,21 @@
 
         advMenus.forEach(item => {
             //  item.resPre.textContent = item.startBtn.textContent;
-            outsDiv.addNodes([item.resPre]);
+            let outDiv = kl.HTML.DIV('class="hidden"');
+            if (item.opt !== undefined) {
+                let div = kl.HTML.DIV();
+                for (const [k, cfg] of Object.entries(item.opt)) {
+                    //   console.log(k, cfg);
+                    div.addNode(
+                        kl.HTML.LABEL().addNode(
+                            kl.HTML.SPAN('', cfg.text),
+                            cfg.input,
+                        )
+                    )
+                }
+                outDiv.addNode(div);
+            }
+            outsDiv.addNodes([outDiv.addNode(item.resPre)]);
             let call = function () {
                 console.log(item.rootEle.classList.contains('selected'));
                 if (item.rootEle.classList.contains('selected') || item.resPre.textContent.length === 0) {
@@ -541,13 +570,13 @@
                 advMenus.forEach(item_new => {
                     if (item_new === item) {
                         item.rootEle.classList.add('selected');
-                        item.resPre.classList.remove('hidden');
+                        item.resPre.parentElement.classList.remove('hidden');
                         if (item.inputDiv) {
                             item.inputDiv.classList.remove('hidden');
                         }
                     } else {
                         item_new.rootEle.classList.remove('selected');
-                        item_new.resPre.classList.add('hidden');
+                        item_new.resPre.parentElement.classList.add('hidden');
                         if (item_new.inputDiv) {
                             item_new.inputDiv.classList.add('hidden');
                         }

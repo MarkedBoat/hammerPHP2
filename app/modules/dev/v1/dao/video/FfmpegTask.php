@@ -347,7 +347,7 @@ class FfmpegTask extends FfmpegTasksAR
         ];
         foreach ($tmp as $cfg)
         {
-            $fullPath  = "{$cfg['srcDir']}{$cfg['album']}{$cfg['title']}.mp4";
+            $fullPath  =str_replace('//', '/',"{$cfg['srcDir']}{$cfg['album']}{$cfg['title']}.mp4");
             $file_info = pathinfo($fullPath, PATHINFO_DIRNAME | PATHINFO_BASENAME | PATHINFO_EXTENSION | PATHINFO_FILENAME);
 
             $obj = new LsCmdFileinfo();

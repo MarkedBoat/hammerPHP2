@@ -39,7 +39,7 @@ class ActionDetailTasks extends ActionBase
                                           )   order by id desc";
         if ($this->inputBox->getNotEmptyString('detailNullOnly') === 'yes')
         {
-            $sql = "select id,job_id,title from {$tn} where    is_ok=1 and   detail is null  order by id desc";
+            $sql = "select id,job_id,title from {$tn} where    is_ok=1 and   detail is null and is_match=1  order by id desc";
         }
         else
         {

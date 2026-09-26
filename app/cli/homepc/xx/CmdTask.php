@@ -1663,6 +1663,8 @@ class CmdTask extends CmdBase
 
         $cmdTpl        = '';
         $manualSetting = $taskM->task_info['manual'] ?? [];
+        $resTypeAs     = $manualSetting['resAs'] ?? '';
+        $resVer        = $manualSetting['resVer'] ?? '';
         if ($isPreOK === false && (isset($manualSetting['isCopy']) && ($manualSetting['isCopy'] === true || $manualSetting['isCopy'] === 'true')))
         {
             //-------------------------------------------------------------------
@@ -1700,8 +1702,7 @@ class CmdTask extends CmdBase
                 // $cutAr[] = '\\';
                 $cutStr = implode(' ', $cutAr);
             }
-            $resTypeAs = $manualSetting['resAs'];
-            $resVer    = $manualSetting['resVer'];
+
             switch ($resTypeAs)
             {
                 case 'mkv':
@@ -1888,8 +1889,16 @@ ffmpeg -hide_banner -i '{srcFile}' {$cutStr} \
             }
             if ($dstMaxHeight > 0)
             {
-                $vfs[] = "scale=-2:if(gte(ih\,{$dstMaxHeight})\,{$dstMaxHeight}\,ih)";
+                if ($resTypeAs === 'h264')
+                {
+                    $vfs[] = "scale_cuda=-2:if(gte(ih\,{$dstMaxHeight})\,{$dstMaxHeight}\,ih):format=yuv420p";
+                }
+                else
+                {
+                    $vfs[] = "scale=-2:if(gte(ih\,{$dstMaxHeight})\,{$dstMaxHeight}\,ih)";
+                }
             }
+
 
             if ($dstFps > 0)
             {
@@ -1910,20 +1919,58 @@ ffmpeg -hide_banner -i '{srcFile}' {$cutStr} \
              * -map_metadata 0 -movflags use_metadata_tags \
              * '{$tmpVideoAbsoluteFilename}'";
              **/
-            $common_cmd = "ffmpeg -hide_banner -copyts -start_at_zero -i '{$mixSrcVideoFullname}' {$cutStr} \
+            if ($resTypeAs === 'h264')
+            {
+                //ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i '/mnt/f/tmp2/format/wait/src/cant_play_ol_1^91f^.mp4' \
+                //  -map 0:v:0 -c:v h264_nvenc -rc vbr -cq 22 -maxrate 1600k -bufsize 9000k \
+                //  -vf "scale_cuda=-2:if(gte(ih\,1080)\,1080\,ih):format=yuv420p,fps=24,setpts=PTS-STARTPTS" \
+                //  -preset p7 -enc_time_base -1 -vsync 0 \
+                //  -map 0:a? -c:a aac -ac 2 -b:a 192k -af "volume=5dB" \
+                //  -map_metadata 0 -movflags use_metadata_tags \
+                //  -avoid_negative_ts make_zero -write_tmcd 0 \
+                //  '/mnt/f/tmp2/format/wait/FFoutput_pre/11715^91f^.mp4'
+                $common_cmd = "ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i '{$mixSrcVideoFullname}' {$cutStr}\
+  -map 0:v:0 -c:v h264_nvenc -rc vbr -cq {$csf} {maxrateStr} -bufsize {$bufsize}k {$extParamSrt}\
+  {vfStr} \
+  -preset p7 -enc_time_base -1 -vsync 0 \
+  -map 0:a? -c:a aac -ac 2 -b:a 192k -af \"volume=5dB\" \
+  -map_metadata 0 -movflags use_metadata_tags \
+  -avoid_negative_ts make_zero -write_tmcd 0 \
+  '{$taskM->tmpLsCmdFileinfo->fullFilename}'";
+                $cmdTpl     = "ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i '{srcFile}' {$cutStr}\
+  -map 0:v:0 -c:v h264_nvenc -rc vbr -cq {$csf} {maxrateStr} -bufsize {$bufsize}k {$extParamSrt}\
+  {vfStr} \
+  -preset p7 -enc_time_base -1 -vsync 0 \
+  -map 0:a? -c:a aac -ac 2 -b:a 192k -af \"volume=5dB\" \
+  -map_metadata 0 -movflags use_metadata_tags \
+  -avoid_negative_ts make_zero -write_tmcd 0 \
+  '{resFile}'";
+            }
+            else
+            {
+                //ffmpeg -hide_banner -copyts -start_at_zero -i '/mnt/f/tmp2/format/wait/FFoutput_pre/11715^91f^.mp4'  \
+                //-map 0:v:0 -c:v hevc_nvenc -crf 0 -maxrate 1600k -bufsize 4000k  \
+                //-vf "scale=-2:if(gte(ih\,720)\,720\,ih),fps=24,setpts=PTS-STARTPTS" -preset p7 \
+                //-map 0:a? -c:a aac -ac 2 -b:a 192k -af "loudnorm=I=-16:TP=-1.5:LRA=11,asetpts=PTS-STARTPTS" \
+                //-map 0:s? -c:s mov_text \
+                //-map_metadata 0 -movflags use_metadata_tags \
+                //'/mnt/f/tmp2/format/wait/FFoutput_tmp/11715^91f^.mp4'
+                $common_cmd = "ffmpeg -hide_banner -copyts -start_at_zero -i '{$mixSrcVideoFullname}' {$cutStr} \
 -map 0:v:0 -c:v hevc_nvenc -crf {$csf} {maxrateStr} -bufsize {$bufsize}k {$extParamSrt} \
 {vfStr} -preset p7 \
 -map 0:a? -c:a aac -ac 2 -b:a 192k -af \"loudnorm=I=-16:TP=-1.5:LRA=11,asetpts=PTS-STARTPTS\" \
 -map 0:s? -c:s mov_text \
 -map_metadata 0 -movflags use_metadata_tags \
 '{$taskM->tmpLsCmdFileinfo->fullFilename}'";
-            $cmdTpl     = "ffmpeg -hide_banner -copyts -start_at_zero -i '{srcFile}' {$cutStr} \
+                $cmdTpl     = "ffmpeg -hide_banner -copyts -start_at_zero -i '{srcFile}' {$cutStr} \
 -map 0:v:0 -c:v hevc_nvenc -crf {$csf} {maxrateStr} -bufsize {$bufsize}k {$extParamSrt} \
 {vfStr} -preset p7 \
 -map 0:a? -c:a aac -ac 2 -b:a 192k -af \"loudnorm=I=-16:TP=-1.5:LRA=11,asetpts=PTS-STARTPTS\" \
 -map 0:s? -c:s mov_text \
 -map_metadata 0 -movflags use_metadata_tags \
 '{resFile}'";
+            }
+
 
             $paramKeys = array_keys($map);
             $paramVals = array_values($map);
@@ -2086,6 +2133,7 @@ ffmpeg -hide_banner -i '{srcFile}' {$cutStr} \
         {
             $srcRootDir = '/mnt/f/tmp2/format/wait/src';
         }
+
         $tmpRootDir = dirname($srcRootDir) . "/FFOutput_tmp";//不要直接拼接，因为有时候一开始就是src
         $dstRootDir = dirname($srcRootDir) . "/FFOutput_res";
         $preRootDir = dirname($srcRootDir) . "/FFOutput_pre";

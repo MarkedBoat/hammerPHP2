@@ -365,7 +365,10 @@ or title     like '%php%'
                     "update spider.boss_job set is_self_biz=2 where  salary_text  like '%/时%' ;",
                     "update spider.boss_job set is_self_biz=2 where  salary_text  like '%小时%' ;",
                     "update spider.boss_job set is_self_biz=2 where  title like '%某知名%' ;",
-                    "update spider.boss_job set is_self_biz=2 where  detail  like '%短期%' ;",
+                    "update spider.boss_job set is_self_biz=2 where  detail  like '%短期项目%'  or title like '%短期%';",
+                    "update spider.boss_job set is_self_biz=2 where  title like '%半年%' ;",
+                    "update spider.boss_job set is_self_biz=2 where  title like '%三个月%' ;",
+
                     "update boss_job as jt left join  boss_comp as ct on jt.com_id=ct.com_id set jt.is_out_src=1  where ct.is_out_src=1 and jt.is_out_src=2;",
                     "update boss_job as jt left join  boss_comp as ct on jt.com_id=ct.com_id set jt.is_saas=1  where ct.is_saas=1 and jt.is_saas=2;",
 
@@ -416,14 +419,17 @@ or title     like '%php%'
             [
                 'detail' => '薪资',
                 'sqls'   => [
-                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_阜阳%' and (salary_gte>=7  or salary_lte>8);",
-                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_合肥%' and (salary_gte>=12 or salary_lte>12);",
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_上海%' and (salary_gte>=10 or salary_lte>12);",
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_北京%' and (salary_gte>=10 or salary_lte>12);",
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_广州%' and (salary_gte>=13 or salary_lte>12);",
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_深圳%' and (salary_gte>=14 or salary_lte>12);",
-                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_苏州%' and (salary_gte>=12 or salary_lte>12);",
+                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_苏州%' and (salary_gte>=12 or salary_lte>=12);",
+                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_常州%' and (salary_gte>=12 or salary_lte>=12);",
+                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_无锡%' and (salary_gte>=12 or salary_lte>=12);",
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_南京%' and (salary_gte>=12 or salary_lte>=12);",
+                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_合肥%' and (salary_gte>=12 or salary_lte>=12);",
+                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_阜阳%' and (salary_gte>=7  or salary_lte>=8);",
+
 
                 ]
             ],

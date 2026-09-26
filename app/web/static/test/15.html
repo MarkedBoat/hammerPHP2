@@ -909,7 +909,7 @@
                             </template>
                         </td>
                         <td>
-                            <button class="btn btn-sm" @click.stop="showJson(row)">修改</button>
+                            <button class="btn btn-sm" @click.stop="showJson(row)">show json</button>
                             <button class="btn btn-sm" @click.stop="openEdit(row)">编辑</button>
                         </td>
                     </tr>
@@ -979,7 +979,8 @@
                     </div>
                     <div style="margin-bottom:6px;">
                         <strong>公司：</strong><span>{{ detailForm.com_name }}</span>
-                        <button @click="openUrlInNewWindow(`https://www.google.com/search?q=${detailForm.area_city} ${detailForm.com_name}+是IT外包吗?`)" @test="`https://www.google.com/search?q=${detailForm.area_city} ${detailForm.com_name}+是IT外包吗?`">
+                        <button @click="openUrlInNewWindow(`https://www.google.com/search?q=${detailForm.area_city} ${detailForm.com_name}+是IT外包吗?`)"
+                                @test="`https://www.google.com/search?q=${detailForm.area_city} ${detailForm.com_name}+是IT外包吗?`">
                             search
                         </button>
                     </div>
@@ -1187,17 +1188,17 @@
                 {key: 'hr_active_int', label: 'HR活跃状态', type: 'int', render: (col, row) => row.hr_active_time || '-'},
                 {key: 'hr_hot_date', label: 'HR最新在线', type: 'datetime', isShowInGrid: false},
                 // tinyint 字段
-                {key: 'is_php', label: 'PHP岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
-                {key: 'is_match', label: '匹配?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_php', label: 'PHP岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1},
+                {key: 'is_match', label: '匹配?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1},
                 {key: 'is_self_biz', label: '自营岗?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
-                {key: 'is_out_src', label: '外包?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_out_src', label: '外包?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 2},
                 {key: 'is_saas', label: 'saas?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
 
                 {key: 'is_hr_live', label: 'hr活跃?', type: 'tinyint', isShowInGrid: false, isAllowQuery: true, isTinyInt: true, readOnly: true},
                 {key: 'is_true', label: '真实?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
                 {key: 'is_edu_ok', label: '学历OK?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
                 {key: 'is_jd_ol', label: '岗位在线?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, readOnly: false},
-                {key: 'is_salary_ok', label: '薪水?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
+                {key: 'is_salary_ok', label: '薪水?', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1},
                 {key: 'is_age_ok', label: '年龄?', type: 'tinyint', isAllowQuery: true, isTinyInt: true},
 
                 {key: 'is_ds_ok', label: 'deepseek判断', type: 'tinyint', isAllowQuery: true, isTinyInt: true, defaultVal: 1, readOnly: true},
@@ -1219,8 +1220,8 @@
                     type: 'tinyint',
                     isAllowQuery: true,
                     isTinyInt: true,
-                    defaultVal: '',
-                   // readOnly: true,
+                    defaultVal: 0,
+                    // readOnly: true,
                     //1一点不想    2有点不想    3 不确定   4有点兴趣   5特别有兴趣
                     items: [
                         {text: '未标记', val: 0},
@@ -1303,12 +1304,34 @@
             // 1一点不想    2有点不想    3 不确定   4有点兴趣   5特别有兴趣
             const favLevs = ref([
                 {val: 0, label: '未标记'},
-                {val: 1, label: '一点不想'},
-                {val: 2, label: '有点不想'},
-                {val: 3, label: '不确定'},
-                {val: 4, label: '有点兴趣'},
-                {val: 5, label: '特别有兴趣'}
+                {val: 10, label: '一点不想'},
+                {val: 20, label: '有点不想'},
+                {val: 30, label: '不确定'},
+                {val: 35, label: '有点兴趣-不符合'},
+                {val: 39, label: '有点兴趣-稍后'},
+                {val: 40, label: '有点兴趣'},
+                {val: 45, label: '特别兴趣-不符合'},
+                {val: 49, label: '特别兴趣-稍后'},
+                {val: 50, label: '特别兴趣'}
             ]);
+            /*
+            const favVal2indexKV = favLevs.value.reduce((acc, cur) => {
+                acc[cur.val] = cur.label;
+                return acc;
+            }, {});
+
+             */
+            let favVal2indexKV = {};
+            let favIndex2ValKV = {};
+
+            for (const [k, v] of Object.entries(favLevs.value)) {
+                favVal2indexKV[v.val] = parseInt(k);
+                favIndex2ValKV[k] = v.val;
+            }
+            let favLevCurrIndex = 0;
+            const favLevMinIndex = 1;
+            const favLevMaxIndex = favLevs.value.length - 1;
+
 
             // ================================================================
             // 3. 状态
@@ -1339,7 +1362,7 @@
 
 
             const detailModal = ref(false);
-            const detailForm = ref({id: null, title: '', detail: '', deny_reason: '', ds_deny_reason: '', tags: '', fav_lev: 3});
+            const detailForm = ref({id: null, title: '', detail: '', deny_reason: '', ds_deny_reason: '', tags: '', fav_lev: 30});
             const currentDetailIndex = ref(-1);
             const detailIsFields = computed(() => columns.value.filter(c => c.type === 'tinyint' && c.key.startsWith('is_')));
 
@@ -1639,7 +1662,8 @@
 
 
             function openDetail(row) {
-                const comName = row.company1 || row.company2 || companyMap.value[row.com_id] || row.com_id || '';
+
+                const comName = row.company2 || row.company1 || companyMap.value[row.com_id] || row.com_id || '';
 
                 detailForm.value = {
                     msg: '新打开',
@@ -1652,7 +1676,7 @@
                     ds_deny_reason: (row.ds_deny_reason || '').replace(/\\n/g, '\n'),
                     deny_reason: (row.deny_reason || '').replace(/\\n/g, '\n'),
                     // 新增字段
-                    com_name: comName,
+                    com_name: row.company2 || row.company1 || comName,
                     area_title: row.area_title || '',
                     //area_city: (row.area_title || '').split('.') ?.[0],
                     area_city: (row.area_title || '').split('·') ?.[0] ?? '',//比上面更保险的写法
@@ -1683,7 +1707,7 @@
 
             // fav_lev 变化处理：checkbox选中时赋值，取消选中时设为3
             function onFavLevChange(val, event) {
-                detailForm.value.fav_lev = event.target.checked ? val : 3;
+                detailForm.value.fav_lev = event.target.checked ? val : 30;
             }
 
 
@@ -1697,7 +1721,7 @@
                         }
                     };
                     editIsFields.value.forEach(f => {
-                        console.log( f.key, payload.attrs[f.key], detailForm.value[f.key] );
+                        console.log(f.key, payload.attrs[f.key], detailForm.value[f.key]);
                         if (f.readOnly !== true) {
                             payload.attrs[f.key] = detailForm.value[f.key];
                         }
@@ -1724,20 +1748,35 @@
                             detailForm.value.deny_reason = (json.data.deny_reason || '').replace(/\\n/g, '\n');
                         }
                     } else {
-                        fetchData();
+                      //  fetchData();
                     }
                     // 自动切换到下一行（优先）；没有下一行时翻到下一页第一行
                     if (detailModal.value) {
                         if (currentDetailIndex.value < dataList.value.length - 1) {
                             openDetail(dataList.value[currentDetailIndex.value + 1]);
                         } else {
-                            // 已经是最后一行 → 向后翻页，显示下一页第一行
-                            const oldPage = currentPage.value;
-                            await goPage(currentPage.value + 1);
-                            if (currentPage.value !== oldPage && dataList.value.length > 0) {
-                                openDetail(dataList.value[0]);
-                            } else {
-                                detailForm.value.msg = '没有下一页了';
+
+
+                            if(0) {
+                                // 已经是最后一行 → 向后翻页，显示下一页第一行
+                                const oldPage = currentPage.value;
+                                await goPage(currentPage.value + 1);
+                                if (currentPage.value !== oldPage && dataList.value.length > 0) {
+                                    openDetail(dataList.value[0]);
+                                } else {
+                                    detailForm.value.msg = '没有下一页了';
+
+                                }
+                            }else{
+                                const oldPage = currentPage.value;
+                              //  await goPage(currentPage.value );
+                                await fetchData();//上面注释掉的换这来
+
+                                if (currentPage.value === oldPage && dataList.value.length > 0) {
+                                    openDetail(dataList.value[0]);
+                                } else {
+                                    detailForm.value.msg = '没有下一页了';
+                                }
                             }
                         }
                     }
@@ -2241,6 +2280,7 @@
                                     openDetail(dataList.value[0]);
                                 } else {
                                     detailForm.value.msg = '没有下一页了';
+
                                 }
                             }
                         }
@@ -2250,10 +2290,11 @@
                             e.preventDefault();
                             if (e.ctrlKey) {
                                 //console.log('收藏等级:', detailForm.value.fav_lev);
-                                if (detailForm.value.fav_lev > 1) {
-                                    detailForm.value.fav_lev -= 1;
+                                let nowFavLevIndex = favVal2indexKV[detailForm.value.fav_lev];
+                                if (nowFavLevIndex > favLevMinIndex) {
+                                    detailForm.value.fav_lev = favIndex2ValKV[nowFavLevIndex - 1];
                                 } else {
-                                    detailForm.value.fav_lev = 5;
+                                    detailForm.value.fav_lev = favIndex2ValKV[favLevMaxIndex];
                                 }
                             } else {
                                 const oldPage = currentPage.value;
@@ -2270,8 +2311,13 @@
                         if (detailModal.value) {
                             e.preventDefault();
                             if (e.ctrlKey) {
-                                if (detailForm.value.fav_lev < 5) {
-                                    detailForm.value.fav_lev += 1;
+                                let nowFavLevIndex = favVal2indexKV[detailForm.value.fav_lev];
+                                //console.log({fav_lev:detailForm.value.fav_lev,favVal2indexKV,nowFavLevIndex,favLevMaxIndex,if:nowFavLevIndex < favLevMaxIndex});
+                                if (nowFavLevIndex < favLevMaxIndex) {
+                                    //console.warn('Increasing fav_lev to:', favIndex2ValKV[nowFavLevIndex + 1],favIndex2ValKV)
+                                    detailForm.value.fav_lev = favIndex2ValKV[nowFavLevIndex + 1];
+                                } else {
+                                    detailForm.value.fav_lev = favIndex2ValKV[favLevMinIndex];
                                 }
                             } else {
                                 const oldPage = currentPage.value;
