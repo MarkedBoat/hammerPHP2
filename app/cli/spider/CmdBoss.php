@@ -1018,4 +1018,228 @@ or title     like '%php%'
         var_dump(array_unique($arr));
     }
 
+    public function testLocalDeepseek()
+    {
+        $apiKey = 'sk-local-no-key-required';
+        $baseUrl = 'http://127.0.0.1:8080/v1';
+
+        $client = DeepSeekClient::build(
+            apiKey: $apiKey,
+            baseUrl: $baseUrl,      // 关键：指向本地服务
+            timeout: 300,            // 本地模型生成可能较慢，超时建议调大
+            clientType: 'guzzle'     // 或用 'symfony'，看你项目安装了什么
+        );
+
+        $prompt = "你是一个AI助手，告诉我你的名字";
+
+        $promptCommon = '你是一个岗位匹配分析助手。请根据给定的「岗位描述」，按以下规则输出一个 JSON 对象。
+
+【你的能力基线】（用于最终适合度判断）
+- 编程语言：PHP资深，12年经验，JavaScript/HTML/CSS（熟练） 实际项目经验丰富，Python/Java/Go/Node.js/微信小程序/vue/react/android等可写 demo 级代码，但是没有实际项目经验。
+- 行业：互联网 8年，4年游戏，在线视频、视频聚合，互联网电视 8年，2年短视频内容分发，2年建站。
+- 项目：管理后台（媒资数据、视频聚合、游戏运营）6年，内容定向爬虫 4年，支付 6年，电视支付平台 5年，建站20多个。
+- 学历：自考本科（非全日制）,统招大专。
+- 其他：无大型分布式系统经验，但能独立完成中小型项目，120万用户、20万日活的用户量。
+
+【判断规则】
+1. 是否为广义互联网开发岗位？
+   定义：包括但不限于 后端开发、前端开发、全栈开发、爬虫工程师、测试开发（SDET）、软件项目经理（需有技术背景）、运维开发（DevOps）等。
+   如果岗位属于上述范畴 → is_dev = 1，否则 → is_dev = 2。
+
+2. 技能与学历要求匹配（每项单独判断）：
+   - is_php：岗位描述中明确要求 PHP 开发经验（或精通 PHP） → 1，否则 2。
+   - is_adv_java：岗位描述中明确要求 Java 精通/熟练（非“了解即可”） → 1，否则 2。
+   - is_adv_go: 岗位描述中明确要求 Go 精通/熟练（非“了解即可”） → 1，否则 2。
+   - is_spider：岗位描述中出现“爬虫/数据采集/反爬/Scrapy”等关键词 → 1，否则 2。
+   - is_frontend（原 is_fee）：岗位描述中要求前端技术（如 Vue/React/JS/CSS）且要求“精通/熟练” → 1，否则 2。
+   - is_edu_ok：岗位要求“全日制本科及以上”学历 → 1，否则 2（注意：只要出现“全日制”字样即视为1，普通本科或不限视为2）。
+   - is_pm：岗位要求项目经理或者管理团队 → 1，否则 2。
+   - is_ops：岗位描述中要求运维开发（DevOps） → 1，否则 2。
+   - is_big_data: 岗位描述中要求大数据开发 → 1，否则 2。
+   - is_ios: 岗位描述中要求 iOS 开发 → 1，否则 2(注意：是指明ios开发)。
+   - is_android: 岗位描述中要求 Android 开发 → 1，否则 2(注意：是指明android开发)。
+   - is_new_frontend: 岗位描述中要求 Vue/react 开发 → 1，否则 2。
+   - is_fullstack：岗位描述中要求全栈开发 → 1，否则 2。
+   - is_more_than_one_job: 岗位描述中是多个岗位（如“前端开发、后端开发”等） → 1，否则 2。
+
+3. 综合适合度判断（is_deepseek_deny）：
+   基于你的能力基线，判断这个岗位是否适合你。
+   - 若适合（即你的核心技能匹配岗位核心需求，且学历等硬性条件未造成绝对障碍）→ 值为 2。
+   - 若不适合（如岗位要求 Java 高级开发，而你仅 demo 水平；或硬性要求全日制本科）→ 值为 1。
+
+【输出格式】
+严格按照以下 JSON 结构，不要添加任何额外文字：
+{
+  "is_dev": 1或2,
+  "is_php": 1或2,
+  "is_adv_java": 1或2,
+  "is_adv_go": 1或2,
+  "is_spider": 1或2,
+  "is_frontend": 1或2,
+  "is_edu_ok": 1或2,
+  "is_pm": 1或2,
+  "is_ops": 1或2,
+  "is_big_data": 1或2,
+  "is_ios": 1或2,
+  "is_android": 1或2,
+  "is_new_frontend": 1或2,
+  "is_fullstack": 1或2,
+  "is_more_than_one_job": 1或2,
+  "is_deepseek_deny": 1或2,
+  "reason": "简要说明为什么适合/不适合（20字以内）"
+}
+
+【岗位描述】
+';
+        $promptCommon2='你是岗位匹配分析助手。根据岗位描述输出JSON，不要思考过程，不要markdown。
+
+【我的能力】
+PHP资深12年；JS/CSS熟练；Python/Java/Go/Node/小程序/Vue/React/Android仅demo无实际项目；互联网/游戏/在线视频行业；管理后台、爬虫、支付、建站经验；自考本科(非全日制)+统招大专；无大型分布式，做过120万用户/20万日活项目。
+
+【判断规则】值1=是，2=否
+- is_dev: 广义互联网开发岗(后端/前端/全栈/爬虫/测试开发/技术型PM/DevOps)=1
+- is_php: 岗位明确要求PHP
+- is_adv_java: 要求Java精通或熟练
+- is_adv_go: 要求Go精通或熟练
+- is_spider: 出现爬虫/采集/反爬/Scrapy
+- is_frontend: 要求前端且精通或熟练
+- is_edu_ok: 出现"全日制本科"(含"全日制本科及以上")
+- is_pm: 要求项目经理或带团队
+- is_ops: 要求运维开发/DevOps
+- is_big_data: 要求大数据开发
+- is_ios: 要求iOS开发
+- is_android: 要求Android开发
+- is_new_frontend: 要求Vue或React
+- is_fullstack: 要求全栈
+- is_more_than_one_job: 混合多个不同岗位
+- is_deepseek_deny: 不适合我=1，适合=2。硬伤包括：Java/Go高级、全日制本科、大数据、iOS/Android原生、算法岗、大型分布式架构师。匹配项：PHP、爬虫、管理后台、Vue/React前端、PHP全栈。
+
+【示例】
+岗位:"Java高级工程师,全日制本科,精通Java和Spring"
+输出:{"is_dev":1,"is_php":2,"is_adv_java":1,"is_adv_go":2,"is_spider":2,"is_frontend":2,"is_edu_ok":1,"is_pm":2,"is_ops":2,"is_big_data":2,"is_ios":2,"is_android":2,"is_new_frontend":2,"is_fullstack":2,"is_more_than_one_job":2,"is_deepseek_deny":1,"reason":"Java高级且全日制本科"}
+
+【输出】只输出JSON，17个字段全部必填，reason不超过20字：
+{"is_dev":?,"is_php":?,"is_adv_java":?,"is_adv_go":?,"is_spider":?,"is_frontend":?,"is_edu_ok":?,"is_pm":?,"is_ops":?,"is_big_data":?,"is_ios":?,"is_android":?,"is_new_frontend":?,"is_fullstack":?,"is_more_than_one_job":?,"is_deepseek_deny":?,"reason":"..."}
+
+【岗位描述】';
+        $content='分布式经验/Docker/PostgreSQL/MySQL/运维开发经验/PHP/云计算经验/可兼职/Linux开发/部署经验
+岗位职责：
+1、负责软件产品的设计、编码及优化工作，确保产品的稳定性和高效性；
+2、参与软件项目的需求分析，提供技术解决方案，推动项目顺利进行；
+3、与团队紧密合作，共同解决开发过程中的技术难题，提升产品质量；
+4、跟踪分析新技术的发展，提出创新方案，持续优化产品功能；
+5、维护现有系统的正常运行，定期进行系统升级和性能调优。
+任职要求：
+1、精通PHP主流编程语言，具备良好的编码习惯；
+2、熟悉软件开发生命周期，了解敏捷开发流程，有较强的需求分析能力；
+3、具备良好的逻辑思维能力和问题解决能力，能够独立承担模块开发任务；
+4、了解数据库设计，具备较强的SQL编写和优化能力；
+5、具有较强的团队合作精神，能够与团队成员有效沟通，共同推动项目进展。';
+        $prompt = "{$promptCommon}\n{$content}";
+
+
+        echo "\n\n{$prompt}\n\n";
+        if(1)
+        {
+            $response = $client->withModel('deepseek-r1-distill-qwen-7b')  // 模型名可随意，llama-server 不校验
+                ->setTemperature(0.3)
+                //->setMaxTokens(250)
+                ->setResponseFormat('json_object')           // llama-server 可能不支持，见下方说明
+                ->query($prompt)->run();
+            // 解析响应并更新数据库
+        }else
+        {
+            $payload = [
+                'model'           => 'local',
+                'messages'        => [['role' => 'user', 'content' => $prompt]],
+                'temperature'     => 0.1,
+              //  'max_tokens'      => 400,
+                'response_format' => ['type' => 'json_object'],   // 这个字段必须出现在 body 里
+                'stream'          => false,
+            ];
+
+            $ch = curl_init('http://127.0.0.1:8080/v1/chat/completions');
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+                CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 300,
+            ]);
+            $response = curl_exec($ch);
+            curl_close($ch);
+        }
+
+
+
+        $printer= new Printer();
+        // 解析响应并更新数据库
+        $result = json_decode($response, true);
+        var_export($result);
+
+        function parseModelJson(string $raw): ?array
+        {
+            $s = trim($raw);
+
+            // 1. 剥掉 ```json ... ``` 或 ``` ... ``` 代码块
+            if (preg_match('/```(?:json)?\s*(.*?)\s*```/s', $s, $m)) {
+                $s = trim($m[1]);
+            }
+
+            // 2. 有的模型前面会带思考文字，取第一个 { 到最后一个 }
+            $start = strpos($s, '{');
+            $end   = strrpos($s, '}');
+            if ($start !== false && $end !== false && $end > $start) {
+                $s = substr($s, $start, $end - $start + 1);
+            }
+
+            // 3. 尝试直接解析
+            $data = json_decode($s, true);
+            if (is_array($data)) {
+                return $data;
+            }
+
+            // 4. 兜底：清理常见的尾逗号、单引号等
+            $s = preg_replace('/,\s*([}\]])/', '$1', $s);   // 去尾逗号
+            $data = json_decode($s, true);
+            if (is_array($data)) {
+                return $data;
+            }
+
+            return null;
+        }
+        //  echo "{$response}";
+        if (json_last_error() === JSON_ERROR_NONE)
+        {
+            if (isset($result['choices'][0]['message']['content']) && isset($result['choices'][0]['message']['reasoning_content']))
+            {
+                $resJson = parseModelJson($result['choices'][0]['message']['content']);
+                if (json_last_error() === JSON_ERROR_NONE)
+                {
+                    $resJson['reason'] = $result['choices'][0]['message']['reasoning_content'];
+
+                    $printer->tabEcho(CLIStrFormatter::success(json_encode($resJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+
+                }
+                else
+                {
+                    $printer->tabEcho(CLIStrFormatter::error("任务 ID: xxx  解码失败。\n{$result['choices'][0]['message']['content']}\n"));
+
+                }
+            }
+            else
+            {
+                $printer->tabEcho(CLIStrFormatter::error("任务 ID: $id  (丢失信息)。\n" + json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+
+
+            }
+        }
+        else
+        {
+            // 如果返回的不是有效JSON，将原始响应存入result
+            $printer->tabEcho(CLIStrFormatter::error("任务   (非JSON格式)。\n{$response}\n"));
+        }
+
+    }
+
 }
