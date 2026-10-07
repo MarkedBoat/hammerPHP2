@@ -161,7 +161,6 @@ class CmdFormat extends CmdBase
             echo "，跳过 {$skip} 项";
         }
 
-
         //  die;
 
 
@@ -189,6 +188,15 @@ class CmdFormat extends CmdBase
             $this->printer->tabEcho("not  {$rubishWordsFilename}");
 
         }
+
+        $tmpRubishWords1=$this->inputBox->tryGetString('rubishWords');
+        if($tmpRubishWords1){
+            $ar= json_decode($tmpRubishWords1,true);
+            if(!empty($ar)){
+                $rubbishWords=array_merge($rubbishWords,$ar);
+            }
+        }
+        $rubbishWords = array_unique($rubbishWords);
         $tmpIndex = array_search('/', $rubbishWords);
         if ($tmpIndex !== false)
         {
@@ -219,6 +227,19 @@ class CmdFormat extends CmdBase
             $this->printer->tabEcho($dir2id36toInfo);
         }
 
+        function pregReplace($str)
+        {
+            //$str = preg_replace('/^[\d\s-]*(?=AI(?![A-Za-z]))/i', '', $str);
+            // $str = preg_replace('/^([\d\s-]+)(AI![A-Za-z])/i', '$2', $str);
+            $str2 = preg_replace('/^[\d\s-]*(?=AI)/i', '', $str);
+            $str2 = preg_replace('/^[\w\s-]*(?=AI)/i', '', $str);
+
+            $str2 = preg_replace('/（[A-Za-z-]+\)(?=[^A-Za-z0-9])/u', '', $str2);
+
+            echo "\npreg->{$str}\n      {$str2}\n";
+            return $str2;
+        }
+
         $oldDir2newDir2list = [];
         $this->printer->newTabEcho('oldDir2newDir2list', '将   dir => id36 => lsCmdFileinfo 处理成  old dir =>  new dir => files');
         foreach ($dir2id36toInfo as $albumDir => $id36toLsCmdFileinfoKV)
@@ -241,11 +262,14 @@ class CmdFormat extends CmdBase
                 {
 
                     $i++;
-                    $this->printer->tabEcho("{$i}/{$cnt} {$lsCmdFileinfo->relativePath}");
+                    $this->printer->tabEcho("format_text_SingleVideoDir {$i}/{$cnt}   relativePath: {$lsCmdFileinfo->relativePath}");
                     $relativeFilename = str_replace("^{$id36}^.{$lsCmdFileinfo->ext}", '', $lsCmdFileinfo->relativePath);
                     //    $this->printer->tabEcho("$relativeFilename");
                     //$this->printer->
+
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $relativeFilename);
+                    $trimedRelativeFilename = pregReplace($trimedRelativeFilename);
+
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
                     $trimedRelativeFilename = str_replace($rubbishWords, $rubbishWordEmpty, $trimedRelativeFilename);
@@ -264,9 +288,9 @@ class CmdFormat extends CmdBase
                     $fileTitle = $paths[$pathsCnt - 1];
                     $allowDel  = false;
                     //找到一个有效秒数字数在16以上的,那上级的描述就可以丢了
-                    for ($i = 0; $i < $pathsCnt - 1; $i++)
+                    for ($tmp_i = 0; $tmp_i < $pathsCnt - 1; $tmp_i++)
                     {
-                        $j = $pathsCnt - $i - 1;
+                        $j = $pathsCnt - $tmp_i - 1;
                         if ($allowDel === false)
                         {
                             $allowDel = $this->getDescFilename($fileTitle) > 16;
@@ -280,9 +304,8 @@ class CmdFormat extends CmdBase
 
                     $this->printer->setOutputState($isShowStrMatch);
 
-                    //$fileTitleLength = $this->getDescFilename($fileTitle);
 
-                    $titleAr = array_unique(array_filter(array_map(function ($s) { return trim($s); }, explode(' ', join(' ', $paths))), function ($s) { return $s !== ''; }));
+                    $titleAr = array_unique(array_filter(array_map(function ($s) { return trim($s); }, preg_split('#[ /]+#', join(' ', $paths), -1, PREG_SPLIT_NO_EMPTY)), function ($s) { return $s !== ''; }));
 
                     $titleAr     = array_values($titleAr);
                     $titleArMaxI = count($titleAr) - 1;
@@ -307,24 +330,24 @@ class CmdFormat extends CmdBase
                             }
                         }
                     }
-                    for ($i = $titleArMaxI; $i >= 0; $i--)
+                    for ($tmp_i = $titleArMaxI; $tmp_i >= 0; $tmp_i--)
                     {
-                        $this->printer->tabEcho($titleAr[$i]);
-                        $this->printer->newTabEcho('strstr', "{$i}: [{$titleAr[$i]}]");
-                        $title_i = strtolower($titleAr[$i]);
+                        $this->printer->tabEcho($titleAr[$tmp_i]);
+                        $this->printer->newTabEcho('strstr', "{$tmp_i}: [{$titleAr[$tmp_i]}]");
+                        $title_i = strtolower($titleAr[$tmp_i]);
                         for ($j = 0; $j <= $titleArMaxI; $j++)
                         {
-                            if ($i === $j)
+                            if ($tmp_i === $j)
                             {
                                 continue;
                             }
-                            $this->printer->tabEcho("{$j}_{$titleAr[$j]}  -> [" . strstr($titleAr[$j], $titleAr[$i]) . ']' . (strlen(strstr($titleAr[$j], $titleAr[$i])) > 2 ? 'yes' : 'no'));
+                            $this->printer->tabEcho("{$j}_{$titleAr[$j]}  -> [" . strstr($titleAr[$j], $titleAr[$tmp_i]) . ']' . (strlen(strstr($titleAr[$j], $titleAr[$tmp_i])) > 2 ? 'yes' : 'no'));
                             $title_j = strtolower($titleAr[$j]);
                             if (strlen(strstr($title_j, $title_i)) > 2)
                             {
-                                $this->printer->tabEcho("unset {$i}_{$titleAr[$i]}");
-                                $titleAr[$i] = '';
-                                // unset($titleAr[$i]);
+                                $this->printer->tabEcho("unset {$tmp_i}_{$titleAr[$tmp_i]}");
+                                $titleAr[$tmp_i] = '';
+                                // unset($titleAr[$tmp_i]);
                                 break;
                             }
                         }
@@ -351,7 +374,12 @@ class CmdFormat extends CmdBase
             else
             {
 
+                $this->printer->tabEcho("format_text_MultiVideosDir {$i}/{$cnt}  isShowStrMatch:{$isShowStrMatch}  relativeALbum: {$albumDir}");
+
+
                 $trimedAlbumDir = str_replace($rubbishWords, $rubbishWordEmpty, $albumDir);
+                $trimedAlbumDir = pregReplace($trimedAlbumDir);
+
                 $trimedAlbumDir = str_replace($rubbishWords, $rubbishWordEmpty, $trimedAlbumDir);
                 $trimedAlbumDir = str_replace($rubbishWords, $rubbishWordEmpty, $trimedAlbumDir);
                 $trimedAlbumDir = str_replace($rubbishWords, $rubbishWordEmpty, $trimedAlbumDir);
@@ -361,34 +389,61 @@ class CmdFormat extends CmdBase
 
                 $this->printer->setOutputState($isShowStrMatch);
 
-                $dirAr     = array_unique(array_filter(array_map(function ($s) { return trim($s); }, explode(' ', $trimedAlbumDir)), function ($s) { return $s !== ''; }));
+                //# 是正则定界符，用它就不用转义 /
+                //[ /]+：空格或 /，+ 表示连续多个当作一个分隔符
+                //PREG_SPLIT_NO_EMPTY：去掉空元素
+               // $arr = preg_split('#[ /]+#', $trimedAlbumDir, -1, PREG_SPLIT_NO_EMPTY);
+
+                $dirAr     = array_unique(array_filter(array_map(function ($s) { return trim($s); }, preg_split('#[ /]+#', $trimedAlbumDir, -1, PREG_SPLIT_NO_EMPTY)), function ($s) { return $s !== ''; }));
                 $dirAr     = array_values($dirAr);
                 $dirArMaxI = count($dirAr) - 1;
+                $this->printer->tabEcho($dirAr);
                 foreach ($dirAr as $tmp_i => $dir_i)
                 {
                     $dir_i = strtolower($dir_i);
+                    $this->printer->tabEcho($dir_i);
+
+                    for ($tmp_j = $dirArMaxI; $tmp_j >$tmp_i; $tmp_j--)
+                    {
+                        $dir_j = strtolower($dirAr[$tmp_j]);
+                        $this->printer->tabEcho($dir_j);
+
+                            if (strlen(strstr($dir_j, $dir_i)) > 2)
+                            {
+                                $this->printer->tabEcho("#--unset {$tmp_j}_{$dirAr[$tmp_j]}");
+                                $dirAr[$dir_j] = '';
+                                // unset($dirAr[$i]);
+                                break;
+                            }
+
+                        $this->printer->endTabEcho('strstr');
+                    }
+
                     foreach ($dirAr as $tmp_j => $dir_j)
                     {
-                        if ($tmp_i === $tmp_j)
+                        if ($tmp_i <= $tmp_j)
                         {
                             continue;
                         }
                         $dir_j = strtolower($dir_j);
                         if (strlen(strstr($dir_j, $dir_i)) > 0)
                         {
+                            $this->printer->tabEcho("#++unset {$tmp_i}_{$dirAr[$tmp_i]}");
+
                             // $dirAr[$tmp_i] = "#{$dir_i}#";
                             #unset($dirAr[$tmp_i]);
                             $dirAr[$tmp_i] = '';
                         }
                     }
                 }
-                for ($i = $dirArMaxI; $i >= 0; $i--)
+                /*
+                for ($tmp_i = $dirArMaxI; $tmp_i >= 0; $tmp_i--)
                 {
-                    $this->printer->tabEcho($dirAr[$i]);
-                    $dir_i = strtolower($dirAr[$i]);
+                    $this->printer->tabEcho($dirAr[$tmp_i]);
+                    $dir_i = strtolower($dirAr[$tmp_i]);
                     for ($j = 0; $j <= $dirArMaxI; $j++)
                     {
-                        if ($i === $j)
+                        if ($tmp_i === $j)
                         {
                             continue;
                         }
@@ -396,15 +451,15 @@ class CmdFormat extends CmdBase
                         $dir_j = strtolower($dirAr[$j]);
                         if (strlen(strstr($dir_j, $dir_i)) > 2)
                         {
-                            $this->printer->tabEcho("unset {$i}_{$dirAr[$i]}");
-                            $dirAr[$i] = '';
+                            $this->printer->tabEcho("#--unset {$tmp_i}_{$dirAr[$tmp_i]}");
+                            $dirAr[$tmp_i] = '';
                             // unset($dirAr[$i]);
                             break;
                         }
                     }
                     $this->printer->endTabEcho('strstr');
                 }
-
+                */
                 $trimedAlbumDir = join('', $dirAr);
                 if (!empty($trimedAlbumDir))
                 {
@@ -414,13 +469,21 @@ class CmdFormat extends CmdBase
                 {
                     $oldDir2newDir2list[$albumDir][$trimedAlbumDir] = [];
                 }
+
+                $this->printer->tabEcho(" trimed Album Dir:{$trimedAlbumDir}");
+
+                $this->printer->newTabEcho('format_multi_videos_loop', "处理子视频");
                 foreach ($id36toLsCmdFileinfoKV as $id36 => $lsCmdFileinfo)
                 {
                     $i++;
-                    $this->printer->tabEcho("{$i}/{$cnt} {$lsCmdFileinfo->relativePath}");
+                    $this->printer->newTabEcho('in_format_multi_videos_loop', "format_text_MultiVideosDirVideo {$i}/{$cnt} relativePath:{$lsCmdFileinfo->relativePath}");
+
+                    //    $this->printer->tabEcho("format_text_MultiVideosDirVideo {$i}/{$cnt} relativePath:{$lsCmdFileinfo->relativePath}");
                     $relativeFilename = str_replace("^{$id36}^.{$lsCmdFileinfo->ext}", '', $lsCmdFileinfo->relativePath);
                     //    $this->printer->tabEcho("$relativeFilename");
                     $trimedTitle = str_replace($rubbishWords, $rubbishWordEmpty, $lsCmdFileinfo->title);
+                    $trimedTitle = pregReplace($trimedTitle);
+
                     // $trimedTitle = str_replace($rubbishWords, $rubbishWordEmpty, $trimedTitle);
                     $trimedTitle = str_replace(['_'], [' '], $trimedTitle);
                     $trimedTitle = str_replace([' / ', ' /', '/ '], ['/', '/', '/'], $trimedTitle);
@@ -433,24 +496,24 @@ class CmdFormat extends CmdBase
 
                     $titleAr     = array_values($titleAr);
                     $titleArMaxI = count($titleAr) - 1;
-                    for ($i = $titleArMaxI; $i >= 0; $i--)
+                    for ($tmp_i = $titleArMaxI; $tmp_i >= 0; $tmp_i--)
                     {
-                        $this->printer->tabEcho($titleAr[$i]);
-                        $this->printer->newTabEcho('strstr', "{$i}: [{$titleAr[$i]}]");
-                        $title_i = strtolower($titleAr[$i]);
+                        $this->printer->tabEcho($titleAr[$tmp_i]);
+                        $this->printer->newTabEcho('strstr', "{$tmp_i}: [{$titleAr[$tmp_i]}]");
+                        $title_i = strtolower($titleAr[$tmp_i]);
                         for ($j = 0; $j <= $titleArMaxI; $j++)
                         {
-                            if ($i === $j)
+                            if ($tmp_i === $j)
                             {
                                 continue;
                             }
                             $title_j = strtolower($titleAr[$j]);
-                            //  $this->printer->tabEcho("{$j}_{$titleAr[$j]}  -> [".strstr($titleAr[$j], $titleAr[$i]).']'.(strlen(strstr($titleAr[$j], $titleAr[$i]))>2?'yes':'no') );
+                            //  $this->printer->tabEcho("{$j}_{$titleAr[$j]}  -> [".strstr($titleAr[$j], $titleAr[$tmp_i]).']'.(strlen(strstr($titleAr[$j], $titleAr[$tmp_i]))>2?'yes':'no') );
                             if (strlen(strstr($title_j, $title_i)) > 2)
                             {
-                                $this->printer->tabEcho("unset {$i}_{$titleAr[$i]}");
-                                $titleAr[$i] = '';
-                                // unset($titleAr[$i]);
+                                $this->printer->tabEcho("unset {$tmp_i}_{$titleAr[$tmp_i]}");
+                                $titleAr[$tmp_i] = '';
+                                // unset($titleAr[$tmp_i]);
                                 break;
                             }
                         }
@@ -510,8 +573,10 @@ class CmdFormat extends CmdBase
                     // $this->printer->tabEcho("{$trimedRelativeFilename}");
                     $this->printer->tabEcho("-- new:{$uniqPath}\n");
                     $oldDir2newDir2list[$albumDir][$trimedAlbumDir][] = ['old' => $lsCmdFileinfo->fullFilename, 'new' => $uniqPath];
+                    $this->printer->endTabEcho('in_format_multi_videos_loop');
 
                 }
+                $this->printer->endTabEcho('format_multi_videos_loop');
             }
             $this->printer->endTabEcho('oldDir');
         }

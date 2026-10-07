@@ -1345,7 +1345,8 @@ class CmdTask extends CmdBase
                 die("\nno_dst_flag [{$type}] !!!\n");
                 break;
         }
-        echo "\nconvFuckType2Mp4 CMD:\n{$cmd}\n";
+        echo CLIStrFormatter::getStr("\nconvFuckType2Mp4 CMD:\n{$cmd}\n", CLIStrFormatter::blue, CLIStrFormatter::white);
+
         passthru($cmd);
     }
 
@@ -1458,7 +1459,7 @@ class CmdTask extends CmdBase
             }
 
 
-            echo CLIStrFormatter::success("\ncurr: {$true_i}/{$true_cnt}   ID:{$taskM->id}  ERR:{$taskM->is_err} OK:{$taskM->is_ok}  PRE:{$taskM->is_pre} SRC_EXIST:{$taskM->is_src_exist} EXT:{$taskM->video_ext} Lock:{$taskM->run_lc}   \n{$lsCmdFileinfo->fullFilename}\n");
+            echo CLIStrFormatter::getStr("\ncurr: {$true_i}/{$true_cnt}   ID:{$taskM->id}  ERR:{$taskM->is_err} OK:{$taskM->is_ok}  PRE:{$taskM->is_pre} SRC_EXIST:{$taskM->is_src_exist} EXT:{$taskM->video_ext} Lock:{$taskM->run_lc}   \n{$lsCmdFileinfo->fullFilename}\n", CLIStrFormatter::green, CLIStrFormatter::white);
             echo "\n" . json_encode($taskM->src_video_info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             $lc = intval(date('YmdHis'));
             $db->setText("update {$tn}  set run_lc={$lc} ,try_times=try_times+1 where id={$taskM->id} and run_lc=0")->execute();
@@ -1978,9 +1979,9 @@ ffmpeg -hide_banner -i '{srcFile}' {$cutStr} \
             $cmdTpl    = str_replace($paramKeys, $paramVals, $cmdTpl);
 
 
-            echo "\nmake tmp video CMD:\n{$cmd}\n";
-            echo "\nmake tmp video CMD tpl:\n{$cmdTpl}\n";
 
+            echo CLIStrFormatter::getStr("\nmake tmp video CMD:\n{$cmd}\n", CLIStrFormatter::blue, CLIStrFormatter::white);
+            echo CLIStrFormatter::getStr("\nmake tmp video CMD tpl:\n{$cmdTpl}\n", CLIStrFormatter::black, CLIStrFormatter::white);
             passthru($cmd);
             // echo CLIStrFormatter::error("ERROR initVideo失败\n{$video_path}\n{$msgsStr}\n");
 
@@ -2015,6 +2016,7 @@ ffmpeg -hide_banner -i '{srcFile}' {$cutStr} \
             // 3. 提取中点帧
             $tmpCoverAbsoluteFilename = $taskM->tmpLsCmdFileinfo->fullFilename . '.jpg';
             $cmdCover                 = sprintf('ffmpeg -hide_banner -ss %.3f -i %s -vframes 1 -q:v 2 %s -y', $mid, escapeshellarg($taskM->tmpLsCmdFileinfo->fullFilename), escapeshellarg($tmpCoverAbsoluteFilename));
+            echo CLIStrFormatter::getStr("\nmake cover CMD:\n{$cmdCover}\n", CLIStrFormatter::blue, CLIStrFormatter::white);
             exec($cmdCover, $output, $ret);
             if ($ret !== 0)
             {

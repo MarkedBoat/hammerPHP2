@@ -114,12 +114,22 @@
                     isShowStrMatch: {input: kl.HTML.CHECKBOX().setPros({checked: false}), text: '展示字符处理过程'},
                     isLsAll: {input: kl.HTML.CHECKBOX().setPros({checked: true}), text: '展示所有文件'},
                     isPreview: {input: kl.HTML.CHECKBOX().setPros({checked: false}), text: '预览'},
+                    rubishWords: {input: kl.HTML.TEXTAREA().setPros({}), text: '垃圾词，回车分割'},
+
 
                 },
                 call: async (item) => {
                     let tmp = {};
                     for (const [k, optItem] of Object.entries(item.opt)) {
-                        tmp[k] = optItem.input.checked;
+                        if(optItem.input.checked===undefined){
+                            if(k==='rubishWords'){
+                                tmp[k] = JSON.stringify(optItem.input.value.split('\n'));
+                            }else{
+                                tmp[k] = optItem.input.value;
+                            }
+                        }else{
+                            tmp[k] = optItem.input.checked;
+                        }
                     }
 
                     let tmpStr = JSON.stringify(tmp);

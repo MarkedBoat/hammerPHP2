@@ -194,7 +194,7 @@ class Printer
                 $call             = $this->getCaller(false);
                 $text             .= "----      {$call['file']}:{$call['line']}     ";
             }
-            if ($text[0] !== "\n")
+            if (isset($text[0]) && $text[0] !== "\n")
             {
                 $text = "\n{$text}";
             }

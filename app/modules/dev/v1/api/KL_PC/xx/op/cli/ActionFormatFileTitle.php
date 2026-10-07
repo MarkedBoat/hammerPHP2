@@ -32,6 +32,8 @@ class ActionFormatFileTitle extends ActionBase
                 {
                     $v = $v ? 'yes' : 'no';
 
+                }else if(is_string($v) && strstr($v,"\n")){
+
                 }
                 $extStr .= " --{$k}='{$v}'";
 
