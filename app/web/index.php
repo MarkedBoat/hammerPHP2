@@ -22,12 +22,12 @@ $configFiles = [
     'porter.bfcode.com'         => 'debug',
     //'porter.kl.com'             => 'dev0',
     'porter.dev.com'            => 'poseidon_test',
-    'kl-home-pc:8001'           => 'kl-pc',
+    'kl-laptop-2021:8001'           => 'kl-pc',
     '127.0.0.1:8001'            => 'kl-pc',
-    'kl-home-pc:8002'           => 'kl-pc',
+    'kl-laptop-2021:8002'           => 'kl-pc',
     '127.0.0.1:8002'            => 'kl-pc',
-    'kl-home-pc:8003'           => 'kl-pc',
-    'kl-home-pc:8004'           => 'kl-pc',
+    'kl-laptop-2021:8003'           => 'kl-pc',
+    'kl-laptop-2021:8004'           => 'kl-pc',
     '124.112.79.235:8002'       => 'kl-pc',
 
 ];

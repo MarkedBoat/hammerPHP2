@@ -1,7 +1,7 @@
 
 
 ### POST
-POST http://kl-home-pc:8002/spider/v1/boss_zhipin/submitChat
+POST http://kl-laptop-2021:8002/spider/v1/boss_zhipin/submitChat
 Content-Type: application/json
 
 [{"hrTitle":"于海旭","comName":"上海佩航航空科技","title":"devops高级开发工程师","msgs":[{"isHr":true,"time":"07-04 21:00","textContent":"07-04 21:00你好，我司正在诚招devops高级开发工程师，不知道你是否感兴趣"}]}]

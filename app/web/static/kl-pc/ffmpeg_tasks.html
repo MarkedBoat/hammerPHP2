@@ -596,7 +596,7 @@
         document.body.append(volumeInput);
 
         let getVdieoSrc = (src) => {
-            return `http://kl-home-pc:8001${src}`;
+            return `http://kl-laptop-2021:8001${src}`;
         }
         let functionPlay = (item) => {
 
@@ -1582,7 +1582,7 @@
                     opConfig.loadStill = (id36) => {
                         if(loadAdImgsCheckbox.checked) {
                             for (const [key, img] of Object.entries(opConfig.sec2stillImg)) {
-                                img.src = `http://kl-home-pc:8001/mnt/f/tmp2/format/wait/FFOutput_stills/${id36}/${key}.jpg`;
+                                img.src = `http://kl-laptop-2021:8001/mnt/f/tmp2/format/wait/FFOutput_stills/${id36}/${key}.jpg`;
                             }
                         }
                     };
