@@ -22,15 +22,20 @@ $configFiles = [
     'porter.bfcode.com'         => 'debug',
     //'porter.kl.com'             => 'dev0',
     'porter.dev.com'            => 'poseidon_test',
-    'kl-laptop-2021:8001'           => 'kl-pc',
-    '127.0.0.1:8001'            => 'kl-pc',
-    'kl-laptop-2021:8002'           => 'kl-pc',
-    '127.0.0.1:8002'            => 'kl-pc',
-    'kl-laptop-2021:8003'           => 'kl-pc',
-    'kl-laptop-2021:8004'           => 'kl-pc',
-    '124.112.79.235:8002'       => 'kl-pc',
+    'kl-home-pc'                => 'kl-pc',
+    'kl-laptop-2021'            => 'kl-laptop-2021',
 
 ];
+$cfgName     = false;
+if (str_contains($host, ':'))
+{
+    list($hostName, $port) = explode(':', $host);
+    $cfgName = $configFiles[$host] ?? $configFiles[$hostName] ?? $configFiles[$port] ?? false;
+}
+else
+{
+    $cfgName = $configFiles[$host] ?? false;
+}
 
 
 function lastError()
@@ -70,9 +75,9 @@ register_shutdown_function('lastError');
 require __HAMMER_DIR__ . '/autoloader.php';
 require __HAMMER_DIR__ . '/vendor/autoload.php';
 
-if (isset($configFiles[__HOST__]))
+if ($cfgName)
 {
-    $file = __APP_DIR__ . "/config/env/{$configFiles[__HOST__]}.php";
+    $file = __APP_DIR__ . "/config/env/{$cfgName}.php";
     if (is_file($file) && is_readable($file))
     {
         $config = require $file;
@@ -85,7 +90,7 @@ if (isset($configFiles[__HOST__]))
 }
 else
 {
-    die("domain not in config array: " . __HOST__);
+    die("domain not in config array:: " . __HOST__);
 }
 
 (new \hammer\web\HttpApp())->run();
