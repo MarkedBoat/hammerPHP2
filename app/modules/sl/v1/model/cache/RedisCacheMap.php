@@ -14,7 +14,7 @@
         }
 
         public function getByKey($key) {
-            return $this->__getForce($key);
+            return $this->getForce($key);
         }
 
         public function __getForce($key) {
@@ -59,7 +59,7 @@
 
 
         public function setByKey($key, $val) {
-            $this->__setForce($key, $val);
+            $this->setForce($key, $val);
         }
 
         private function __setForce($key, $val) {
@@ -94,7 +94,7 @@
          * @return int
          */
         public function delByKey($key) {
-            return $this->__delForce($key);
+            return $this->delForce($key);
         }
 
         /**

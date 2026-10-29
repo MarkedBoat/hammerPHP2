@@ -14,7 +14,7 @@
         /**
          * @var RedisCache|null
          */
-        private   $__cache      = null;
+        private   $cache      = null;
         protected $extTableName = '';
         protected $indexField   = '';
         protected $pkField      = '';
@@ -34,7 +34,7 @@
          * @return RedisCache|null
          */
         public function getCache() {
-            return $this->__cache;
+            return $this->cache;
         }
 
 

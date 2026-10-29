@@ -29,8 +29,12 @@ class ActionList extends ActionBase
         {
             $ak      = "sortAttr{$i}";
             $tk      = "sortType{$i}";
-            $sorts[] = "`{$attrs[$ak]}` {$attrs[$tk]}";
+            if(isset($attrs[$ak])){
+                $sorts[] = "`{$attrs[$ak]}` {$attrs[$tk]}";
+            }
             unset($attrs[$ak], $attrs[$tk]);
+
+
         }
         $sortStr = join(',', $sorts);
 

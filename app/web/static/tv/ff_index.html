@@ -121,13 +121,13 @@
                 call: async (item) => {
                     let tmp = {};
                     for (const [k, optItem] of Object.entries(item.opt)) {
-                        if(optItem.input.checked===undefined){
-                            if(k==='rubishWords'){
+                        if (optItem.input.checked === undefined) {
+                            if (k === 'rubishWords') {
                                 tmp[k] = JSON.stringify(optItem.input.value.split('\n'));
-                            }else{
+                            } else {
                                 tmp[k] = optItem.input.value;
                             }
-                        }else{
+                        } else {
                             tmp[k] = optItem.input.checked;
                         }
                     }
@@ -563,7 +563,7 @@
                 for (const [k, cfg] of Object.entries(item.opt)) {
                     //   console.log(k, cfg);
                     div.addNode(
-                        kl.HTML.LABEL().addNode(
+                        kl.HTML.LABEL().setAttrs({style: 'display: flex; align-items: center;'}).addNode(
                             kl.HTML.SPAN('', cfg.text),
                             cfg.input,
                         )
@@ -571,12 +571,10 @@
                 }
                 outDiv.addNode(div);
             }
-            outsDiv.addNodes([outDiv.addNode(item.resPre)]);
-            let call = function () {
+            let runBtn = kl.HTML.BUTTON_BUTTON('', '运行', {});
+            let showOpArea = function () {
                 console.log(item.rootEle.classList.contains('selected'));
-                if (item.rootEle.classList.contains('selected') || item.resPre.textContent.length === 0) {
-                    item.call(item);
-                }
+
                 advMenus.forEach(item_new => {
                     if (item_new === item) {
                         item.rootEle.classList.add('selected');
@@ -593,15 +591,22 @@
                     }
                 })
             }
+
+
             if (item.startBtn.type === 'checkbox') {
+                runBtn = false;
                 item.startBtn.addEventListener('change', () => {
-                    call();
+                    showOpArea();
                 });
             } else {
                 item.startBtn.addEventListener('click', () => {
-                    call();
+                    showOpArea();
+                });
+                runBtn.addEventListener('click', () => {
+                    item.call(item);
                 });
             }
+            outsDiv.addNodes([outDiv.addNode(runBtn, item.resPre)]);
 
 
         })

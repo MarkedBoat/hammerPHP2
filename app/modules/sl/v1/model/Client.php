@@ -59,8 +59,8 @@
          * @var ClientDao
          */
         protected $dao      = null;
-        private   $__ext    = null;
-        private   $__member = null;
+        private   $ext    = null;
+        private   $member = null;
 
         protected $pkAttrsCacheType = RedisCache::clientPk_basicAttrs;
 
@@ -203,18 +203,18 @@
          * @return ClientMember
          */
         public function getMember() {
-            if (is_null($this->__member))
-                $this->__member = new ClientMember($this);
-            return $this->__member;
+            if (is_null($this->member))
+                $this->member = new ClientMember($this);
+            return $this->member;
         }
 
         /**
          * @return ClientExt
          */
         public function getExt() {
-            if (is_null($this->__ext))
-                $this->__ext = new ClientExt($this);
-            return $this->__ext;
+            if (is_null($this->ext))
+                $this->ext = new ClientExt($this);
+            return $this->ext;
         }
 
         public function isIos() {

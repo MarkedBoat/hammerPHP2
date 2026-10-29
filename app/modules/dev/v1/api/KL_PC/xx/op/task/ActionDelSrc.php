@@ -35,7 +35,7 @@ class ActionDelSrc extends ActionBase
         }
         if ($taskM->dstLsCmdFileinfo->filesize < 100000)
         {
-            $this->setMsg('找不到转码后的文件')->outError();
+        //    $this->setMsg('找不到转码后的文件')->outError();
         }
         //        var_dump($taskM->srcLsCmdFileinfo, $taskM->dstLsCmdFileinfo);
 
