@@ -6,13 +6,13 @@
 
     class Interruption {
         const ERROR = 400;
-        private $__code      = 'ok';
-        private $__msg       = '';
-        private $__debugMsg  = [];
-        private $__debugData = [];
-        private $__logs      = [];
-        private $__isThrower = false;
-        private $__isWorking = false;
+        private $code      = 'ok';
+        private $msg       = '';
+        private $debugMsg  = [];
+        private $debugData = [];
+        private $logs      = [];
+        private $isThrower = false;
+        private $isWorking = false;
 
 
         /**
@@ -33,12 +33,12 @@
          * @return Interruption
          */
         public function setCode($code) {
-            $this->__code = $code;
+            $this->code = $code;
             return $this;
         }
 
         public function getCode() {
-            return $this->__code;
+            return $this->code;
         }
 
         /**
@@ -46,7 +46,7 @@
          * @return Interruption
          */
         public function setMsg($msg) {
-            $this->__msg = $msg;
+            $this->msg = $msg;
             return $this;
         }
 
@@ -54,7 +54,7 @@
          * @return string
          */
         public function getMsg() {
-            return $this->__msg;
+            return $this->msg;
         }
 
         /**
@@ -62,12 +62,12 @@
          * @return Interruption
          */
         public function setDebugMsg($debugMsg) {
-            $this->__debugMsg = $debugMsg;
+            $this->debugMsg = $debugMsg;
             return $this;
         }
 
         public function getDebugMsg() {
-            return $this->__debugMsg;
+            return $this->debugMsg;
         }
 
         /**
@@ -75,48 +75,48 @@
          * @return Interruption
          */
         public function setDebugData($debugData) {
-            $this->__debugData = $debugData;
+            $this->debugData = $debugData;
             return $this;
         }
 
         public function getDebugData() {
-            return $this->__debugData;
+            return $this->debugData;
         }
 
         /**
          * @throws \Exception
          */
         public function outError() {
-            if ($this->__code === 'ok')
-                $this->__code = 'error';
-            $this->__isThrower = true;
+            if ($this->code === 'ok')
+                $this->code = 'error';
+            $this->isThrower = true;
             throw  new \Exception($this->getMsg(), 400);
         }
 
         public function isThrower() {
-            return $this->__isThrower;
+            return $this->isThrower;
         }
 
         public function isWorking() {
-            return $this->__isWorking;
+            return $this->isWorking;
         }
 
         public function setWorking() {
-            $this->__isWorking = true;
+            $this->isWorking = true;
         }
 
         /**
          * @param $info
          */
         public function logInfo($info) {
-            $this->__logs[] = $info;
+            $this->logs[] = $info;
         }
 
         /**
          * @return array
          */
         public function getLogs() {
-            return $this->__logs;
+            return $this->logs;
         }
 
     }

@@ -88,9 +88,13 @@ class CmdTask extends CmdBase
             $clearEmptyDirsFun($srcRootDir);
         }
 
-        $this->printer->setOutputState(false);
+        $this->printer->setOutputState(true);
+        $this->printer->newTabEcho('getVideos', 'ls -l videos');
 
         $videoInfoKV = (new XxCommon())->setPrinter($printer)->getVideos($srcRootDir);
+        $this->printer->tabEcho($videoInfoKV);
+        $this->printer->endTabEcho('getVideos', 'ls -l videos');
+
         $this->printer->setOutputState(true);
         $taskM = new FfmpegTask();
         $this->printer->newTabEcho('try_insert_new', 'try_insert_new 先记录文件');
@@ -1280,12 +1284,12 @@ class CmdTask extends CmdBase
     }
 
 
-    public function convFuckType2Mp4($type, $srcFile, $dstFile)
+    public function convFuckType2Mp4($srcType, $srcFile, $dstFile,$dstType,$dstVer)
     {
-        $this->printer->tabEcho("convFuckType2Mp4 {$type}\n{$srcFile}\n{$dstFile}");
+        $this->printer->tabEcho("convFuckType2Mp4 {$srcType}\n{$srcFile}  \n{$dstType}\n{$dstFile}");
 
 
-        switch ($type)
+        switch ($srcType)
         {
 
             case 'ts':
@@ -1332,7 +1336,36 @@ class CmdTask extends CmdBase
                 break;
             case 'avi':
             case 'mp4':
-                $cmd = "ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i '{$srcFile}' \
+                switch ($dstType){
+                    case 'h264':
+                        $cmd = "ffmpeg -hide_banner -i '{$srcFile}' \
+-c:v libx264 -preset fast -crf 18 \
+-vf \"scale=-2:if(gte(ih\,1080)\,1080\,ih),fps=24,setpts=PTS-STARTPTS\" \
+-c:a aac -ac 2 -b:a 192k -af \"loudnorm=I=-16:TP=-1.5:LRA=11,asetpts=PTS-STARTPTS\" \
+-c:s mov_text \
+-map_metadata 0 -movflags use_metadata_tags+faststart \
+'{$dstFile}'
+";
+                        break;
+                    default:
+                        switch ($dstVer){
+                            case '[v.25.10.09.1]':
+                                $this->printer->tabEcho(CLIStrFormatter::warning("use h265 [v.25.10.09.1]"));
+                                $cmd = "ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i '{$srcFile}' \
+  -map 0:v:0 -c:v hevc_nvenc -rc vbr -cq 22 -maxrate 3600k -bufsize 9000k \
+  -vf \"scale_cuda=-2:if(gte(ih\,1080)\,1080\,ih)\" \
+  -r 24 -fps_mode cfr \
+  -preset p7 -enc_time_base demux \
+  -map 0:a? -c:a aac -ac 2 -b:a 192k -af \"volume=5dB\" \
+  -map_metadata 0 -movflags use_metadata_tags \
+  -avoid_negative_ts make_zero -write_tmcd 0 \
+  '{$dstFile}'";
+
+                                break;
+                            default:
+                                $this->printer->tabEcho(CLIStrFormatter::warning("use h265 default"));
+
+                                $cmd = "ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i '{$srcFile}' \
   -map 0:v:0 -c:v hevc_nvenc -rc vbr -cq 22 -maxrate 3600k -bufsize 9000k \
   -vf \"scale_cuda=-2:if(gte(ih\,1080)\,1080\,ih),fps=24,setpts=PTS-STARTPTS\" \
   -preset p7 -enc_time_base -1 -vsync 0 \
@@ -1340,9 +1373,15 @@ class CmdTask extends CmdBase
   -map_metadata 0 -movflags use_metadata_tags \
   -avoid_negative_ts make_zero -write_tmcd 0 \
   '{$dstFile}'";
+                                break;
+                        }
+
+                        break;
+                }
+
                 break;
             default:
-                die("\nno_dst_flag [{$type}] !!!\n");
+                die("\nno_dst_flag [{$srcType}] !!!\n");
                 break;
         }
         echo CLIStrFormatter::getStr("\nconvFuckType2Mp4 CMD:\n{$cmd}\n", CLIStrFormatter::blue, CLIStrFormatter::white);
@@ -1449,18 +1488,17 @@ class CmdTask extends CmdBase
 
             $taskM->getLsCmdFileinfosBySrc($lsCmdFileinfo);
 
-            if (strlen($lsCmdFileinfo->albumNameDir) > 0)
-            {
-                $albumDirPath = "/{$lsCmdFileinfo->albumNameDir}/";
-            }
-            else
-            {
-                $albumDirPath = "/";
-            }
 
 
-            echo CLIStrFormatter::getStr("\ncurr: {$true_i}/{$true_cnt}   ID:{$taskM->id}  ERR:{$taskM->is_err} OK:{$taskM->is_ok}  PRE:{$taskM->is_pre} SRC_EXIST:{$taskM->is_src_exist} EXT:{$taskM->video_ext} Lock:{$taskM->run_lc}   \n{$lsCmdFileinfo->fullFilename}\n", CLIStrFormatter::green, CLIStrFormatter::white);
+            echo CLIStrFormatter::getStr("\ncurr: {$true_i}/{$true_cnt}   ID:{$taskM->id}  ERR:{$taskM->is_err} OK:{$taskM->is_ok}  PRE:{$taskM->is_pre} SRC_EXIST:{$taskM->is_src_exist} EXT:{$taskM->video_ext} Lock:{$taskM->run_lc}   \n{$lsCmdFileinfo->fullFilename}\n", CLIStrFormatter::white, CLIStrFormatter::blue);
             echo "\n" . json_encode($taskM->src_video_info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            echo "\n" . json_encode($taskM->dst_video_info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            echo "\n" . json_encode($taskM->task_info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+            $manualSetting = $taskM->task_info['manual'] ?? [];
+            $resTypeAs     = $manualSetting['resAs'] ?? '';
+            $resVer        = $manualSetting['resVer'] ?? '';
+
             $lc = intval(date('YmdHis'));
             $db->setText("update {$tn}  set run_lc={$lc} ,try_times=try_times+1 where id={$taskM->id} and run_lc=0")->execute();
             if (intval($db->setText("select  run_lc from {$tn}  where id={$taskM->id}")->queryScalar()) !== $lc)
@@ -1491,7 +1529,7 @@ class CmdTask extends CmdBase
                     {
                         if (!file_exists($taskM->preLsCmdFileinfo->fullFilename))
                         {
-                            $this->convFuckType2Mp4($lowerExt, $lsCmdFileinfo->fullFilename, $taskM->preLsCmdFileinfo->fullFilename);
+                            $this->convFuckType2Mp4($lowerExt, $lsCmdFileinfo->fullFilename, $taskM->preLsCmdFileinfo->fullFilename,$resTypeAs,$resVer);
                         }
                     }
                     else
@@ -1501,7 +1539,7 @@ class CmdTask extends CmdBase
                             unlink($taskM->preLsCmdFileinfo->fullFilename);
                             usleep(1000);
                         }
-                        $this->convFuckType2Mp4($lowerExt, $lsCmdFileinfo->fullFilename, $taskM->preLsCmdFileinfo->fullFilename);
+                        $this->convFuckType2Mp4($lowerExt, $lsCmdFileinfo->fullFilename, $taskM->preLsCmdFileinfo->fullFilename,$resTypeAs,$resVer);
                     }
 
                     usleep(1000);

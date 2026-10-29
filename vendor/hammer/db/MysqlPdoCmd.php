@@ -114,18 +114,18 @@ class MysqlPdoCmd
 
     public function execute()
     {
-        return $this->__execute();
+        return $this->execute();
     }
 
     public function queryAll()
     {
-        $this->__execute();
+        $this->execute();
         return $this->cmd->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function queryRow()
     {
-        $this->__execute();
+        $this->execute();
         if (!$this->cmd->rowCount())
             return false;
         $result = array();
@@ -149,7 +149,7 @@ class MysqlPdoCmd
 
     public function queryScalar()
     {
-        $this->__execute();
+        $this->execute();
         if (!$this->cmd->rowCount())
             return false;
         $this->cmd->setFetchMode(\PDO::FETCH_BOTH);

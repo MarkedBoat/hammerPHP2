@@ -7,40 +7,40 @@ use hammer\sys\Sys;
 
 class Printer
 {
-    private static $_case                    = null;
-    private        $_configs                 = array();
-    private        $_cases                   = array();//实例
-    public         $cache                    = true;
-    public         $params                   = array();
-    private        $_logs                    = array();
-    private        $_error_level             = 0;//输出级别
-    private        $_out_opts                = array();
-    private        $_opts                    = array();
-    private        $_debug_fix               = false;
-    private        $_force_out               = false;
-    private        $_pretty                  = false;
-    private        $_pretty_border           = '';
-    private        $_json_mocks              = array();
-    private        $_php_mod                 = 'cli';
-    private        $_debug_opts              = null;
-    private        $_tab_deep                = 0;
-    private        $_echo_title              = '';
-    private        $_echo_level              = '';
-    private        $_echo_unfold             = '';
-    private        $_opts_setting            = array();
-    private        $_has_loaded_args         = false;
-    private        $_callback_while_shutdown = array();//当shutdown的时候 要呼叫的东西
-    private        $_has_listen_shutdown     = false;
-    private        $_dump_tmp_outtype        = '';
-    private        $_has_start_debug         = false;
-    private        $_output_state            = true;     //是否关闭输出
-    private        $data2textType            = 'print_r';//json
+    private static $case                  = null;
+    private        $configs               = array();
+    private        $cases                 = array();//实例
+    public         $cache                 = true;
+    public         $params                = array();
+    private        $logs                  = array();
+    private        $errorLevel            = 0;//输出级别
+    private        $outOpts               = array();
+    private        $opts                  = array();
+    private        $debugFix              = false;
+    private        $forceOut              = false;
+    private        $pretty                = false;
+    private        $prettyBorder          = '';
+    private        $jsonMocks             = array();
+    private        $phpMod                = 'cli';
+    private        $debugOpts             = null;
+    private        $tabDeep               = 0;
+    private        $echoTitle             = '';
+    private        $echoLevel             = '';
+    private        $echoUnfold            = '';
+    private        $optsSetting           = array();
+    private        $hasLoadedArgs         = false;
+    private        $callbackWhileShutdown = array();//当shutdown的时候 要呼叫的东西
+    private        $hasListenShutdown     = false;
+    private        $dumpTmpOuttype        = '';
+    private        $hasStartDebug         = false;
+    private        $outputState           = true;     //是否关闭输出
+    private        $data2textType         = 'print_r';//json
 
-    private $adv_fcgi_url;
-    private $adv_tabecho;
+    private $advFcgiUrl;
+    private $advTabecho;
 
-    private $flag_list    = [];
-    private $base_tab_cnt = 2;
+    private $flagList   = [];
+    private $baseTabCnt = 2;
 
     /**
      * @param bool $all_info 返回全部信息
@@ -65,9 +65,9 @@ class Printer
         $caller          = $steps[$getCaller_index];
 
         $user_array_fun_fix = isset($steps[$getCaller_index]['file']) ? 0 : 1;
-        if ($this->_debug_fix && isset($steps[$getCaller_index + $this->_debug_fix + $user_array_fun_fix]))
+        if ($this->debugFix && isset($steps[$getCaller_index + $this->debugFix + $user_array_fun_fix]))
         {
-            $fixed = $steps[$getCaller_index + $this->_debug_fix + $user_array_fun_fix];
+            $fixed = $steps[$getCaller_index + $this->debugFix + $user_array_fun_fix];
         }
         foreach ($steps as $i => $step)
         {
@@ -91,18 +91,18 @@ class Printer
             '$j'               => $j,
             '$getCaller_index' => $getCaller_index,
             'count'            => count($steps),
-            'line_fix'         => $this->_debug_fix,
+            'line_fix'         => $this->debugFix,
             //'$caller'          => $caller,
             //'$fixed'           => $fixed,
             'return'           => $fixed ? $fixed : $caller,
         );
-        //$this->__dump(__FILE__ . ':' . __LINE__, array('假code1,', '假code2'), array_keys($map), array_values($map));
+        //$this->dump(__FILE__ . ':' . __LINE__, array('假code1,', '假code2'), array_keys($map), array_values($map));
         if (count($caller) === 0)
         {
-            $this->_logs = array('没找到caller', array($steps));
+            $this->logs = array('没找到caller', array($steps));
         }
         //echo $this->jsonFormat($caller);
-        $this->_debug_fix = false;
+        $this->debugFix = false;
         return $all_info ? $map : $map['return'];
     }
 
@@ -112,7 +112,7 @@ class Printer
      */
     public function setOutputState($state)
     {
-        $this->_output_state = $state === true;
+        $this->outputState = $state === true;
         return $this;
     }
 
@@ -122,9 +122,9 @@ class Printer
      */
     public function setCallerDeep($deep)
     {
-        if (empty($this->_debug_fix))
+        if (empty($this->debugFix))
         {
-            $this->_debug_fix = $deep;
+            $this->debugFix = $deep;
         }
         return $this;
     }
@@ -142,7 +142,7 @@ class Printer
         {
             throw new \Exception('说了，不得小于0');
         }
-        $this->base_tab_cnt = $num;
+        $this->baseTabCnt = $num;
         return $this;
     }
 
@@ -164,13 +164,13 @@ class Printer
      */
     public function tabEcho($text, $deep = 0, $call = false)
     {
-        if (empty($deep) && $this->_tab_deep)
+        if (empty($deep) && $this->tabDeep)
         {
-            $deep = $this->_tab_deep;
+            $deep = $this->tabDeep;
         }
         $spaces = str_repeat('|    ', $deep);
         //$spaces = str_repeat('.....', $level);
-        if ($this->_output_state)
+        if ($this->outputState)
         {
             if (is_array($text) || is_object($text))
             {
@@ -190,9 +190,9 @@ class Printer
             }
             if ($call)
             {
-                $this->_debug_fix = 1;
-                $call             = $this->getCaller(false);
-                $text             .= "----      {$call['file']}:{$call['line']}     ";
+                $this->debugFix = 1;
+                $call           = $this->getCaller(false);
+                $text           .= "----      {$call['file']}:{$call['line']}     ";
             }
             if (isset($text[0]) && $text[0] !== "\n")
             {
@@ -204,20 +204,20 @@ class Printer
 
     public function newTabEcho($flag, $text = '', $call = false)
     {
-        if (!in_array($flag, $this->flag_list, true))
+        if (!in_array($flag, $this->flagList, true))
         {
-            $this->flag_list[] = $flag;
+            $this->flagList[] = $flag;
         }
-        $this->_tab_deep = count($this->flag_list) + $this->base_tab_cnt - 1;
-        $this->tabEcho(($this->_php_mod === 'cli' ? '<<<<<<<' : htmlspecialchars('<<<<<<<')) . $text, $this->_tab_deep, $call);
-        $this->_tab_deep = $this->_tab_deep + 1;
+        $this->tabDeep = count($this->flagList) + $this->baseTabCnt - 1;
+        $this->tabEcho(($this->phpMod === 'cli' ? '<<<<<<<' : htmlspecialchars('<<<<<<<')) . $text, $this->tabDeep, $call);
+        $this->tabDeep = $this->tabDeep + 1;
     }
 
     public function endTabEcho($flag, $text = '', $call = false)
     {
-        $new_flag_list = [];
-        $is_matched    = false;
-        foreach ($this->flag_list as $tmp_i => $exist_flag)
+        $new_flagList = [];
+        $is_matched   = false;
+        foreach ($this->flagList as $tmp_i => $exist_flag)
         {
 
             if ($exist_flag === $flag)
@@ -225,19 +225,19 @@ class Printer
                 $is_matched = true;
                 break;
             }
-            $new_flag_list[] = $exist_flag;//和new tab 不一样，并没有-1的修正，所以没有把命中的key 塞进数组，因为end需要把 key 清掉
+            $new_flagList[] = $exist_flag;//和new tab 不一样，并没有-1的修正，所以没有把命中的key 塞进数组，因为end需要把 key 清掉
         }
         if ($is_matched)
         {
-            $this->flag_list = $new_flag_list;
-            $this->_tab_deep = count($this->flag_list) + $this->base_tab_cnt;//和new tab 不一样，并没有上面-1的修正，所以没有把命中的key 塞进数组，因为end需要把 key 清掉
-            $this->tabEcho(($this->_php_mod === 'cli' ? '>>>>>>>' : htmlspecialchars('>>>>>>>')) . $text, $this->_tab_deep, $call);
+            $this->flagList = $new_flagList;
+            $this->tabDeep  = count($this->flagList) + $this->baseTabCnt;//和new tab 不一样，并没有上面-1的修正，所以没有把命中的key 塞进数组，因为end需要把 key 清掉
+            $this->tabEcho(($this->phpMod === 'cli' ? '>>>>>>>' : htmlspecialchars('>>>>>>>')) . $text, $this->tabDeep, $call);
         }
         else
         {
             if ($text !== '')
             {
-                $this->tabEcho(($this->_php_mod === 'cli' ? '>>>>>>>' : htmlspecialchars('>>>>>>>')) . $text, 0, $call);
+                $this->tabEcho(($this->phpMod === 'cli' ? '>>>>>>>' : htmlspecialchars('>>>>>>>')) . $text, 0, $call);
             }
         }
 
@@ -245,7 +245,7 @@ class Printer
 
     public function getTabEchoDeep()
     {
-        return $this->_tab_deep;
+        return $this->tabDeep;
     }
 
     /**
@@ -255,7 +255,7 @@ class Printer
      */
     public function setTabEchoDeep($deep)
     {
-        $this->_tab_deep = $deep;
+        $this->tabDeep = $deep;
         return $this;
     }
 
@@ -273,7 +273,7 @@ class Printer
 
         if (1)
         {
-            $this->_force_out = false;
+            $this->forceOut = false;
 
             $args = func_get_args();
 
@@ -283,7 +283,7 @@ class Printer
             $line  = $step['class'] . '->' . $step['function'] . '() #' . $step['file'] . ':' . $step['line'] . '       <<<<<>>>>>>';
             $codes = explode("\n", file_get_contents($step['file']));
             $str   = $codes[$step['line'] - 1];
-            if ($this->_php_mod === 'cli')
+            if ($this->phpMod === 'cli')
             {
                 $codes = array($str);
             }
@@ -298,10 +298,10 @@ class Printer
                 $argnames = self::splitStringKeepBlock($ar[1]);
             }
 
-            $this->__dump($line, $codes, $argnames, $args, true ? $map : array());
+            $this->dump($line, $codes, $argnames, $args, true ? $map : array());
         }
-        $this->_echo_level       = '';
-        $this->_dump_tmp_outtype = '';
+        $this->echoLevel      = '';
+        $this->dumpTmpOuttype = '';
     }
 
     /**
@@ -314,17 +314,17 @@ class Printer
      */
     private function __dump($line, $codes, $argnames, $args, $traces = array())
     {
-        if ($this->_pretty)
+        if ($this->pretty)
         {
-            $this->__prettyDump($line, $codes, $argnames, $args, $traces);
+            $this->prettyDump($line, $codes, $argnames, $args, $traces);
             return false;
         }
         echo "--------------------------------------Echo Var:{$line}:\n";
         echo join("\n", $codes);
-        if ($this->_echo_title)
+        if ($this->echoTitle)
         {
-            echo "\n####{$this->_echo_title}";
-            $this->_echo_title = '';
+            echo "\n####{$this->echoTitle}";
+            $this->echoTitle = '';
         }
         echo "\n--------------------------------------\n";
         foreach ($args as $i => $data)
@@ -344,7 +344,7 @@ class Printer
             }
             else if (is_object($data) || is_array($data))
             {
-                if (1 || $this->_dump_tmp_outtype === 'json')
+                if (1 || $this->dumpTmpOuttype === 'json')
                 {
                     echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
@@ -380,28 +380,28 @@ class Printer
      */
     public function __prettyDump($line, $codes, $argnames, $args, $traces = array())
     {
-        $lines              = array('title' => $this->_echo_title, 'unfold' => $this->_echo_unfold, 'echo_type' => $this->_echo_level, 'line' => $line, 'code' => $codes, 'argnames' => $argnames, 'args' => array(), 'traces' => array($traces));
-        $this->_echo_title  = '';
-        $this->_echo_unfold = false;
+        $lines            = array('title' => $this->echoTitle, 'unfold' => $this->echoUnfold, 'echo_type' => $this->echoLevel, 'line' => $line, 'code' => $codes, 'argnames' => $argnames, 'args' => array(), 'traces' => array($traces));
+        $this->echoTitle  = '';
+        $this->echoUnfold = false;
         foreach ($args as $i => $data)
         {
             $lines['args'][] = array('key' => isset($argnames[$i]) ? $argnames[$i] : $i, 'val' => $data);
         }
         $json = json_encode(array('type' => 'dump', 'data' => $lines));
-        // echo "<pretty>$json</pretty>\n{$this->_pretty_border}\n";
-        // $this->__prettyEchoHeader();
+        // echo "<pretty>$json</pretty>\n{$this->pretty_border}\n";
+        // $this->prettyEchoHeader();
         //echo "<script>window.top.new_content({$json})</script>\n";
         if (!headers_sent())
         {
             header('content-Type:text/html;charset=utf8');
         }
-        $adv_fcgi_url = $this->adv_fcgi_url;
-        if (empty($adv_fcgi_url))
+        $advFcgiUrl = $this->advFcgiUrl;
+        if (empty($advFcgiUrl))
         {
-            $adv_fcgi_url = 'http://cli.kl_funtv.com/';
+            $advFcgiUrl = 'http://cli.kl_funtv.com/';
         }
-        echo "<script>window.parent.postMessage({$json},'{$adv_fcgi_url}')</script>";
-        if ($this->adv_tabecho)
+        echo "<script>window.parent.postMessage({$json},'{$advFcgiUrl}')</script>";
+        if ($this->advTabecho)
         {
             echo "\n";
         }
@@ -415,7 +415,7 @@ class Printer
      */
     public function setEchoTitle($title)
     {
-        $this->_echo_title = $title;
+        $this->echoTitle = $title;
         return $this;
     }
 
@@ -425,12 +425,12 @@ class Printer
 
         if (is_array($last_error) && isset($last_error['type']))
         {
-            if (count($this->_callback_while_shutdown) === 0)
+            if (count($this->callbackWhileShutdown) === 0)
             {
                 $this->setEchoTitle('没有callback')->dump($last_error, '没有没有callback');
                 return false;
             }
-            foreach ($this->_callback_while_shutdown as $flag => $opt)
+            foreach ($this->callbackWhileShutdown as $flag => $opt)
             {
                 if ($opt['types'] === false || in_array($last_error['type'], $opt['types']))
                 {

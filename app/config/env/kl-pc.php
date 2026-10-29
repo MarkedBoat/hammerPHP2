@@ -29,7 +29,7 @@ return [
         ],
     ],
     'redis'  => [
-
+        'default' => ['host' => 'kl-home-pc', 'port' => 6379, 'password' => '', 'db' => 0],
     ],
     'log'    => [
         //必须遵循 \hammer\logs\LogInterface

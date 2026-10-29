@@ -44,7 +44,7 @@
         const srcWxapplet = 'wxapplet';
         const srcPadIos   = 'pad_ios';
 
-        private $__tokenId = '';
+        private $tokenId = '';
         /**
          * @var OperDao
          */
@@ -53,16 +53,16 @@
         /**
          * @var null|UserMember
          */
-        private $__member = null;
+        private $member = null;
         /**
          * @var null|UserExt
          */
-        private $__ext = null;
+        private $ext = null;
 
         /**
          * @param UserGroup|null
          */
-        private $__group = null;
+        private $group = null;
 
         public function __construct1(OperDao $dao) {
             $this->dao = $dao;
@@ -110,7 +110,7 @@
                 Sys::app()->interruption()->setMsg('请重新登录')->setCode('user_error_not_exist')->outError();*/
             $user = self::getByPk($log->oper);
             // $user->loadByAttrs(self::getAttrsCacheByUserPk($log->oper));
-            $user->__tokenId = $tokenId;
+            $user->tokenId = $tokenId;
             return $user;
         }
 
@@ -187,7 +187,7 @@
         }
 
         public function getToken() {
-            return $this->__tokenId;
+            return $this->tokenId;
         }
 
         public function annex(User $user) {
@@ -228,24 +228,24 @@
          * @return UserMember
          */
         public function getMember() {
-            if (is_null($this->__member))
-                $this->__member = new UserMember($this);
-            return $this->__member;
+            if (is_null($this->member))
+                $this->member = new UserMember($this);
+            return $this->member;
         }
 
         /**
          * @return UserExt
          */
         public function getExt() {
-            if (is_null($this->__ext))
-                $this->__ext = new UserExt($this);
-            return $this->__ext;
+            if (is_null($this->ext))
+                $this->ext = new UserExt($this);
+            return $this->ext;
         }
 
         public function getGroup() {
-            if (is_null($this->__group))
-                $this->__group = new UserGroup($this);
-            return $this->__group;
+            if (is_null($this->group))
+                $this->group = new UserGroup($this);
+            return $this->group;
         }
 
 

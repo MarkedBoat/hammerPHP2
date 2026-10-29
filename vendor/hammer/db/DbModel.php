@@ -11,12 +11,12 @@ class DbModel
 {
     public         $isAlive           = false;
     private        $pk                = null;
-    private static $__columnInfo      = [];//表的字段结构
-    private        $__attrsRecord     = array();
+    private static $columnInfo      = [];//表的字段结构
+    private        $attrsRecord     = array();
     private        $className         = '';
-    private        $__hasInitAttrs    = false;
-    private        $__forceInsert     = false;
-    private        $__onDuplicateSets = [];
+    private        $hasInitAttrs    = false;
+    private        $forceInsert     = false;
+    private        $onDuplicateSets = [];
     public         $attributes        = array();
     public         $bindArray         = array();
     public         $conditions        = array();
@@ -28,9 +28,9 @@ class DbModel
     private        $_logState         = false;
     private        $_logs             = [];
 
-    private $__dbCnn = null;
+    private $dbCnn = null;
 
-    private $__conditions = [];
+    private $conditions = [];
 
     /**
      * @return static
@@ -57,14 +57,14 @@ class DbModel
         $this->initAttributes();
         if (isset($this->getFileds()[$key]))
             $key = $this->getFileds()[$key];
-        if (isset($this->__attrsRecord[$key]))
+        if (isset($this->attrsRecord[$key]))
         {
             //var_dump([$key,$val]);
-            if ((is_null($this->__attrsRecord[$key]['value']) && !is_null($val)) || $this->__attrsRecord[$key]['value'] != $val)
+            if ((is_null($this->attrsRecord[$key]['value']) && !is_null($val)) || $this->attrsRecord[$key]['value'] != $val)
             {
-                $this->__attrsRecord[$key]['isChange'] = true;
+                $this->attrsRecord[$key]['isChange'] = true;
             }
-            $this->__attrsRecord[$key]['value'] = $val;
+            $this->attrsRecord[$key]['value'] = $val;
             $this->attributes[$key]             = $val;
         }
         else
@@ -79,9 +79,9 @@ class DbModel
         $this->initAttributes();
         if (isset($this->getFileds()[$key]))
             $key = $this->getFileds()[$key];
-        if (isset($this->__attrsRecord[$key]))
+        if (isset($this->attrsRecord[$key]))
         {
-            return $this->__attrsRecord[$key]['value'];
+            return $this->attrsRecord[$key]['value'];
         }
         else
         {
@@ -92,11 +92,11 @@ class DbModel
 
     public function clearRecord()
     {
-        foreach ($this->__attrsRecord as $attr => $_)
+        foreach ($this->attrsRecord as $attr => $_)
         {
-            $this->__attrsRecord[$attr]['value']    = null;
-            $this->__attrsRecord[$attr]['isChange'] = false;
-            unset($this->__attrsRecord[$attr]['bindValue']);
+            $this->attrsRecord[$attr]['value']    = null;
+            $this->attrsRecord[$attr]['isChange'] = false;
+            unset($this->attrsRecord[$attr]['bindValue']);
             $this->attributes[$attr] = null;
         }
         $this->conditions = [];
@@ -142,25 +142,25 @@ class DbModel
 
     public function initAttributes()
     {
-        if ($this->__hasInitAttrs)
+        if ($this->hasInitAttrs)
             return false;
         $tableName = $this->getTableName();
-        if (!isset(self::$__columnInfo[$tableName]))
+        if (!isset(self::$columnInfo[$tableName]))
         {
-            self::$__columnInfo[$tableName] = ['columns' => [], 'pk' => ''];
+            self::$columnInfo[$tableName] = ['columns' => [], 'pk' => ''];
             $result                         = $this->getConnection()->setText('show full columns from ' . $this->getTableName() . ';')->queryAll();
             foreach ($result as $row)
             {
                 $row['value']                                             = null;
                 $row['isChange']                                          = false;
-                self::$__columnInfo[$tableName]['columns'][$row['Field']] = $row;
+                self::$columnInfo[$tableName]['columns'][$row['Field']] = $row;
                 if (is_null($this->pk) && strstr($row['Key'], 'PRI'))
-                    self::$__columnInfo[$tableName]['pk'] = $row['Field'];
+                    self::$columnInfo[$tableName]['pk'] = $row['Field'];
             }
         }
-        $this->__attrsRecord  = self::$__columnInfo[$tableName]['columns'];
-        $this->pk             = self::$__columnInfo[$tableName]['pk'];
-        $this->__hasInitAttrs = true;
+        $this->attrsRecord  = self::$columnInfo[$tableName]['columns'];
+        $this->pk             = self::$columnInfo[$tableName]['pk'];
+        $this->hasInitAttrs = true;
     }
 
     /**
@@ -168,12 +168,12 @@ class DbModel
      */
     public function setForceInsert()
     {
-        $this->__forceInsert = true;
+        $this->forceInsert = true;
     }
 
     public function setConditions($param = [])
     {
-        $this->__conditions = $param;
+        $this->conditions = $param;
     }
 
     public function compare($attr, $isEq = false)
@@ -183,7 +183,7 @@ class DbModel
         if (is_null($value))
             return;
         $this->conditions[$attr]                 = $isEq ? "`$attr`=:$attr" : "`$attr` like :$attr";
-        $this->__attrsRecord[$attr]['bindValue'] = $isEq ? $value : "%$value%";
+        $this->attrsRecord[$attr]['bindValue'] = $isEq ? $value : "%$value%";
         $this->bindArray[':' . $attr]            = $isEq ? $value : "%$value%";
     }
 
@@ -244,19 +244,19 @@ class DbModel
     private function __loadValues($data)
     {
         $this->initAttributes();
-        foreach ($this->__attrsRecord as $key => $attribute)
+        foreach ($this->attrsRecord as $key => $attribute)
         {
             if (isset($data[$key]))
             {
                 if ($attribute['Type'] === 'json')
                 {
                     $tmp                                = json_decode($data[$key], true);
-                    $this->__attrsRecord[$key]['value'] = $tmp;
+                    $this->attrsRecord[$key]['value'] = $tmp;
                     $this->attributes[$key]             = $tmp;
                 }
                 else
                 {
-                    $this->__attrsRecord[$key]['value'] = $data[$key];
+                    $this->attrsRecord[$key]['value'] = $data[$key];
                     $this->attributes[$key]             = $data[$key];
                 }
 
@@ -283,7 +283,7 @@ class DbModel
     public function loadValues($data)
     {
         $this->initAttributes();
-        foreach ($this->__attrsRecord as $key => $attribute)
+        foreach ($this->attrsRecord as $key => $attribute)
         {
             if (isset($data[$key]))
                 $this->$key = $data[$key];
@@ -302,7 +302,7 @@ class DbModel
         $row = $this->getConnection()->setText('SELECT * FROM ' . $this->getTableName() . ' WHERE `' . $this->pk . '`=:' . $this->pk . ';')->bind(':' . $this->pk, $pk)->queryRow();
         if ($row)
         {
-            $this->__loadValues($row);
+            $this->loadValues($row);
             return $this;
         }
         else
@@ -353,7 +353,7 @@ class DbModel
         foreach ($attributes as $key => $val)
         {
 
-            if (!isset($this->__attrsRecord[$key]))
+            if (!isset($this->attrsRecord[$key]))
             {
                 if (is_numeric($key))
                 {
@@ -394,7 +394,7 @@ class DbModel
                     get_class($this),
                     'model'
                 ), array());
-                $list[] = $tmp->__loadValues($row);
+                $list[] = $tmp->loadValues($row);
             }
             return $list;
         }
@@ -415,7 +415,7 @@ class DbModel
         $bind = array();
         foreach ($attributes as $key => $val)
         {
-            if (!isset($this->__attrsRecord[$key]))
+            if (!isset($this->attrsRecord[$key]))
                 continue;
             $sqls[':' . $key] = "`$key`=:$key";
             $bind[':' . $key] = $val;
@@ -427,7 +427,7 @@ class DbModel
         }
         if ($row)
         {
-            return $this->__loadValues($row);
+            return $this->loadValues($row);
         }
         else
         {
@@ -450,7 +450,7 @@ class DbModel
                     get_class($this),
                     'model'
                 ), array());
-                $list[] = $tmp->__loadValues($row);
+                $list[] = $tmp->loadValues($row);
             }
             return $list;
         }
@@ -465,8 +465,8 @@ class DbModel
         $this->initAttributes();
         $sqls = array();
         $bind = array();
-        //var_export($this->__attrsRecord);
-        foreach ($this->__attrsRecord as $key => $attribute)
+        //var_export($this->attrsRecord);
+        foreach ($this->attrsRecord as $key => $attribute)
         {
             if (!$attribute['isChange'])
                 continue;
@@ -479,15 +479,15 @@ class DbModel
             {
                 $bind[':' . $key] = $attribute['value'];
             }
-            $this->__attrsRecord[$key]['isChange'] = false;
+            $this->attrsRecord[$key]['isChange'] = false;
         }
-        if (isset($this->__attrsRecord['utime']))
+        if (isset($this->attrsRecord['utime']))
             $sqls[] = 'utime=unix_timestamp()';
         if (count($bind))
         {
-            if (!is_null($this->pk) && !$this->__attrsRecord[$this->pk]['isChange'] && $this->__attrsRecord[$this->pk]['value'])
+            if (!is_null($this->pk) && !$this->attrsRecord[$this->pk]['isChange'] && $this->attrsRecord[$this->pk]['value'])
             {
-                $bind[':' . $this->pk] = $this->__attrsRecord[$this->pk]['value'];
+                $bind[':' . $this->pk] = $this->attrsRecord[$this->pk]['value'];
                 return $this->getConnection()->setText('update ' . $this->getTableName() . ' set ' . join(',', $sqls) . ' where `' . $this->pk . '`=:' . $this->pk . ';')->bindArray($bind)->execute();
             }
             else
@@ -507,7 +507,7 @@ class DbModel
 
     public function setOnDuplicateSet(array $keyVals)
     {
-        $this->__onDuplicateSets = $keyVals;
+        $this->onDuplicateSets = $keyVals;
     }
 
     public function trySave()
@@ -516,32 +516,32 @@ class DbModel
         $sqls       = array();
         $bind       = array();
         $isPkChange = false;
-        foreach ($this->__attrsRecord as $key => $attribute)
+        foreach ($this->attrsRecord as $key => $attribute)
         {
             if (!$attribute['isChange'])
                 continue;
             $sqls[':' . $key]                      = "`$key`=:$key";
             $bind[':' . $key]                      = $attribute['value'];
-            $this->__attrsRecord[$key]['isChange'] = false;
+            $this->attrsRecord[$key]['isChange'] = false;
             if ($key == $this->pk)
                 $isPkChange = true;
         }
-        if (isset($this->__attrsRecord['utime']))
+        if (isset($this->attrsRecord['utime']))
             $sqls[] = 'utime=unix_timestamp()';
         if (count($bind))
         {
-            if ($isPkChange === false && !is_null($this->pk) && !$this->__attrsRecord[$this->pk]['isChange'] && $this->__attrsRecord[$this->pk]['value'] && $this->__forceInsert === false)
+            if ($isPkChange === false && !is_null($this->pk) && !$this->attrsRecord[$this->pk]['isChange'] && $this->attrsRecord[$this->pk]['value'] && $this->forceInsert === false)
             {
-                $bind[':' . $this->pk] = $this->__attrsRecord[$this->pk]['value'];
+                $bind[':' . $this->pk] = $this->attrsRecord[$this->pk]['value'];
                 try
                 {
                     $sql = 'update ' . $this->getTableName() . ' set ' . join(',', $sqls) . ' where `' . $this->pk . '`=:' . $this->pk . ';';
-                    if (count($this->__conditions))
+                    if (count($this->conditions))
                     {
                         $conds = [];
-                        foreach ($this->__conditions as $ci => $cv)
+                        foreach ($this->conditions as $ci => $cv)
                         {
-                            if (isset($this->__attrsRecord[$ci]))
+                            if (isset($this->attrsRecord[$ci]))
                             {
                                 $conds[':c_' . $ci] = "`$ci`=:c_$ci";
                                 $bind[':c_' . $ci]  = $cv;
@@ -552,7 +552,7 @@ class DbModel
                             }
                         }
                         $sql                = str_replace(';', ' and ' . join(' and ', $conds) . ';', $sql);
-                        $this->__conditions = [];
+                        $this->conditions = [];
                     }
                     return $this->getConnection()->setText($sql)->bindArray($bind)->execute();
                 } catch (\Exception $e)
@@ -564,10 +564,10 @@ class DbModel
             {
                 $sql = 'INSERT IGNORE  INTO ' . $this->getTableName() . ' SET ' . join(',', $sqls) . ' ;';
 
-                if (count($this->__onDuplicateSets))
+                if (count($this->onDuplicateSets))
                 {
                     $sets = [];
-                    foreach ($this->__onDuplicateSets as $si => $sv)
+                    foreach ($this->onDuplicateSets as $si => $sv)
                     {
                         if (intval($si) === $si)
                         {
@@ -580,7 +580,7 @@ class DbModel
                         }
                     }
                     $sql                     = str_replace(';', 'on duplicate key update ' . join(',', $sets) . ';', $sql);
-                    $this->__onDuplicateSets = [];
+                    $this->onDuplicateSets = [];
                 }
                 $cmd = $this->getConnection()->setText($sql)->bindArray($bind);
                 $cmd->execute();
@@ -589,7 +589,7 @@ class DbModel
                     return false;
                 $pk                                    = $this->pk;
                 $this->$pk                             = $id;
-                $this->__attrsRecord['id']['isChange'] = false;
+                $this->attrsRecord['id']['isChange'] = false;
                 return true;
             }
         }
@@ -647,7 +647,7 @@ class DbModel
 
     public function getPkVal()
     {
-        return $this->__attrsRecord[$this->getPkField()]['value'];
+        return $this->attrsRecord[$this->getPkField()]['value'];
     }
 
     public function getPkField()

@@ -56,8 +56,8 @@
             top: 0;
             left: 3em;
             width: 90%;
-            height: calc(100vh - 25em);
-            max-height: calc(100vh - 25em);
+            height: calc(100vh - 44em);
+            max-height: calc(100vh - 44em);
             z-index: 999;
             border: 1px solid #AA0;
             padding: 0.3em;
@@ -235,7 +235,7 @@
             width: calc(100vw - 3em);
             left: 2em;
             background: #DDD;
-            max-height: 25em;
+            max-height: 40em;
 
             overflow: scroll;
 
@@ -250,23 +250,24 @@
                 }
 
                 .still {
-                    padding: 1em;
-                    max-height: 280px;
-                    max-width: 200px;
+                    padding: 3px;
+                    max-height: 120px;
+                    max-width: 120px;
                     border: 1px solid #000;
 
                     span {
                         margin-top: -1px;
+                        cursor:pointer;
                     }
 
                     img {
-                        max-height: 280px;
-                        max-width: 200px;
+                        max-height: 120px;
+                        max-width: 120px;
                     }
                 }
 
                 .empty-still {
-                    max-height: 280px;
+                    max-height: 120px;
                     width: 100px;
                     border: 1px solid #000;
 
@@ -275,8 +276,8 @@
                     }
 
                     img {
-                        max-height: 280px;
-                        max-width: 200px;
+                        max-height: 120px;
+                        max-width: 120px;
                     }
                 }
 
@@ -361,7 +362,7 @@
         let rootDiv = kl.id('root_div');
 
         let attrInputDiv = new Emt('div', 'class="attrs-input-div"');
-        let loadAdImgsCheckbox=kl.HTML.CHECKBOX().setPros({checked:false});
+        let loadAdImgsCheckbox = kl.HTML.CHECKBOX().setPros({checked: false});
         let queryBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', '查询');
         let fetchResBtn = kl.HTML.BUTTON_BUTTON('class="mark-ad-btn"', 'fetch res');
 
@@ -584,8 +585,8 @@
                 ])
             })).addNodes([
                 kl.HTML.LABEL().addNode(
-                  kl.HTML.SPAN('', '加载广告图片:'),
-                  loadAdImgsCheckbox
+                    kl.HTML.SPAN('', '加载广告图片:'),
+                    loadAdImgsCheckbox
                 ),
                 queryBtn, fetchResBtn
             ]),
@@ -632,7 +633,6 @@
             console.log(videoPlayer);
             videoPlayer.play();
         }
-
 
 
         let makeGearVal = (gear) => {
@@ -1028,8 +1028,8 @@
                                 let playTmpBtn = new Emt('button', 'type="button" class="rename-src-btn"', 'play tmp');
                                 let playPreBtn = new Emt('button', 'type="button" class="rename-src-btn"', 'play pre');
 
-                                let preSrc=  videoInfo.src.split('/src/')[0]+`/FFOutput_pre/${videoInfo.id}^${videoInfo.id36}^.mp4`;
-                                let tmpSrc=  videoInfo.src.split('/src/')[0]+`/FFOutput_tmp/${videoInfo.id}^${videoInfo.id36}^.mp4`;
+                                let preSrc = videoInfo.src.split('/src/')[0] + `/FFOutput_pre/${videoInfo.id}^${videoInfo.id36}^.mp4`;
+                                let tmpSrc = videoInfo.src.split('/src/')[0] + `/FFOutput_tmp/${videoInfo.id}^${videoInfo.id36}^.mp4`;
 
                                 //videoPlayer.src = getVdieoSrc(item.src);
 
@@ -1047,12 +1047,12 @@
                                     functionPlay(videoInfo);
                                     opConfig.loadStill(videoInfo.id36);
                                 });
-                                playTmpBtn.addEventListener('click',function (){
+                                playTmpBtn.addEventListener('click', function () {
                                     event.preventDefault(); //阻止冒泡
                                     functionPlaySrc(tmpSrc);
 
                                 });
-                                playPreBtn.addEventListener('click',function (){
+                                playPreBtn.addEventListener('click', function () {
                                     event.preventDefault(); //阻止冒泡
                                     functionPlaySrc(preSrc);
                                 });
@@ -1442,11 +1442,15 @@
 
         });
 
+
         stillsDiv.addEventListener('click', function (e) {
-            console.log(e.target);
-            if (e.target.ttype !== undefined && e.target.sec !== undefined) {
-                let type = e.target.ttype;
-                let sec = e.target.sec;
+            if (e.target === stillsDiv) {
+                return false;
+            }
+            let stillEle = e.target.closest('.still');
+            if (stillEle.ttype !== undefined && stillEle.sec !== undefined) {
+                let type = stillEle.ttype;
+                let sec = stillEle.sec;
                 if (type === 'header') {
                     let startSec = sec;
                     videoPlayer.currentTime = startSec;
@@ -1485,8 +1489,10 @@
                     }
                 }
 
+            } else {
+                //  console.log('not_ok:',e.target);
             }
-        });
+        }, false);
 
         volumeInput.addEventListener('input', () => {
             //cli.log(durationInput.value);
@@ -1580,7 +1586,7 @@
                     });
 
                     opConfig.loadStill = (id36) => {
-                        if(loadAdImgsCheckbox.checked) {
+                        if (loadAdImgsCheckbox.checked) {
                             for (const [key, img] of Object.entries(opConfig.sec2stillImg)) {
                                 img.src = `http://kl-laptop-2021:8001/mnt/f/tmp2/format/wait/FFOutput_stills/${id36}/${key}.jpg`;
                             }

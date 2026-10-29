@@ -28,11 +28,12 @@ class XxCommon
 
         $rootDir = '/' . trim($rootDir, '/');
 
-        $cmd = "find '{$rootDir}' -type f|grep -v '.png'|grep -v '.jpg'|grep -v '.gif'";
+        $cmd = "find '{$rootDir}' -type f|grep -v '\.png'|grep -v '\.jpg'|grep -v '\.gif'";
         //  $cmd = "find '{$dir}' -type f|grep -v '.png'|grep -v '.jpg'|grep -v '.gif'|grep -v FFOutput|grep -v 'VIF_'|grep -v '.json'";
         $videoExts = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'm4v', 'mpg', 'mpeg', '3gp', 'webm', 'ogv', 'ts', 'mts', 'm2ts'];
 
         exec($cmd, $ar);
+        $this->printer->tabEcho($cmd);
         $this->printer->tabEcho($ar);
         $map = [];
         foreach ($ar as $i => $filepath)

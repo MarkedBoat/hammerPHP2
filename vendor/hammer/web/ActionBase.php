@@ -18,15 +18,15 @@ abstract class ActionBase
     /**
      * @var DataBox
      */
-    protected $inputBox       = null;
-    public    $uniqueId       = '';
-    private   $__errorMessage = '';
-    private   $__errorCode    = 400;
-    private   $__debugMessage = '';
-    private   $__debugData    = null;
-    private   $__logResult    = false;
-    private   $__debug        = false;
-    private   $__apiName      = '';
+    protected $inputBox     = null;
+    public    $uniqueId     = '';
+    private   $errorMessage = '';
+    private   $errorCode    = 400;
+    private   $debugMessage = '';
+    private   $debugData    = null;
+    private   $logResult    = false;
+    private   $debug        = false;
+    private   $apiName      = '';
 
     protected $timeout        = 0;
     protected $hasSign        = true;
@@ -35,15 +35,30 @@ abstract class ActionBase
 
     protected $inputType = 'REQUEST';// GET/POST/JSON
 
+    /**
+     * @var null |WebRequest
+     */
+    protected $webRequest = null;
+
 
     /**
      * @param BaseApp $app
      */
-    public function __construct($app = null)
+    public function construct($app = null)
     {
         //$this->baseInit($param);
     }
 
+
+    /**
+     * @param WebRequest $webRequest
+     * @return static
+     */
+    public function setWebRequest(WebRequest $webRequest)
+    {
+        $this->webRequest = $webRequest;
+        return $this;
+    }
 
     public function beforeInit($param = [])
     {
@@ -69,7 +84,7 @@ abstract class ActionBase
     {
         $this->beforeInit($param);
         $this->initInputBox($param);
-        $this->__apiName = $this->inputBox->tryGetString('method');
+        $this->apiName = $this->inputBox->tryGetString('method');
 
         static::init($param);
         $this->afterInit($param);
@@ -80,16 +95,16 @@ abstract class ActionBase
         switch ($this->inputType)
         {
             case 'GET':
-                $this->inputBox = new DataBox($_GET);
+                $this->inputBox = new DataBox($this->webRequest->getGetVar());
                 break;
             case 'POST':
-                $this->inputBox = new DataBox($_POST);
+                $this->inputBox = new DataBox($this->webRequest->getPostVar());
                 break;
             case 'JSON':
                 $this->inputBox = new DataBox($this->getRawJsonData());
                 break;
             case 'REQUEST':
-                $this->inputBox = new DataBox($_REQUEST);
+                $this->inputBox = new DataBox($this->webRequest->getRequestVar());
                 break;
             default:
                 $this->inputBox = new DataBox($param);
@@ -129,7 +144,8 @@ abstract class ActionBase
 
     public function getRawData()
     {
-        return file_get_contents('php://input');
+        return $this->webRequest->getRawBody();
+        //return file_get_contents('php://input');
     }
 
     /**
@@ -146,14 +162,14 @@ abstract class ActionBase
     public function setMsg($msg)
     {
         Sys::app()->interruption()->setMsg($msg);
-        $this->__errorMessage = $msg;
+        $this->errorMessage = $msg;
         return $this;
     }
 
 
     public function setCode($code)
     {
-        $this->__errorCode = $code;
+        $this->errorCode = $code;
         Sys::app()->interruption()->setCode($code);
         return $this;
     }
@@ -165,7 +181,7 @@ abstract class ActionBase
     public function setDebugMsg($debugMessage)
     {
         Sys::app()->interruption()->setDebugMsg($debugMessage);
-        $this->__debugMessage = $debugMessage;
+        $this->debugMessage = $debugMessage;
         return $this;
     }
 
@@ -176,7 +192,7 @@ abstract class ActionBase
     public function setDebugData($data)
     {
         Sys::app()->interruption()->setDebugData($data);
-        $this->__debugData = $data;
+        $this->debugData = $data;
         return $this;
     }
 
@@ -194,25 +210,25 @@ abstract class ActionBase
      */
     public function logResult($debug = false)
     {
-        $this->__logResult = true;
-        $this->__debug     = $debug;
+        $this->logResult = true;
+        $this->debug     = $debug;
     }
 
     public function isLogResult()
     {
 
-        return $this->__logResult;
+        return $this->logResult;
     }
 
     public function debug()
     {
-        $this->__debug = true;
+        $this->debug = true;
     }
 
     public function isDebug()
     {
         return $this->inputBox->tryGetString('kldebug') == 'x' ? true : false;
-        //   return $this->__debug;
+        //   return $this->debug;
     }
 
     public function logInfo($info, $title = false)
@@ -222,12 +238,12 @@ abstract class ActionBase
 
     public function setApiName($apiName)
     {
-        $this->__apiName = $apiName;
+        $this->apiName = $apiName;
     }
 
     public function getApiName()
     {
-        return $this->__apiName;
+        return $this->apiName;
     }
 
     public function initQueryParams()
@@ -284,7 +300,6 @@ abstract class ActionBase
         $sign  = Security::RSASign($query);
         echo "query:{$query}\nsign:{$sign}";
         echo "\n";
-        die;
     }
 
 

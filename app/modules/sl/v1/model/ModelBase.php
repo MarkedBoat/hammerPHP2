@@ -16,7 +16,7 @@
          * @var OperDao
          */
         protected $dao        = null;
-        private   $__daoAttrs = [];
+        private   $daoAttrs = [];
         /**
          * @var RedisCache
          */
@@ -54,7 +54,7 @@
             foreach ($attrs as $key => $val)
                 if (in_array($key, $this->allAttrKeys))
                     $this->$key = $val;
-            $this->__daoAttrs = $attrs;
+            $this->daoAttrs = $attrs;
             $this->getCache()->set($attrs);
             return $this;
         }
@@ -64,7 +64,7 @@
         }
 
         public function getDaoAttrs() {
-            return $this->__daoAttrs;
+            return $this->daoAttrs;
         }
 
         /**

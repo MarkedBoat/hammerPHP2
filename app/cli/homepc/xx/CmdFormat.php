@@ -178,26 +178,24 @@ class CmdFormat extends CmdBase
         if (file_exists($rubishWordsFilename))
         {
             $this->printer->tabEcho("load {$rubishWordsFilename}");
-
             $rubbishWords = explode("\n", file_get_contents($rubishWordsFilename));
-
-
         }
         else
         {
             $this->printer->tabEcho("not  {$rubishWordsFilename}");
-
         }
 
-        $tmpRubishWords1=$this->inputBox->tryGetString('rubishWords');
-        if($tmpRubishWords1){
-            $ar= json_decode($tmpRubishWords1,true);
-            if(!empty($ar)){
-                $rubbishWords=array_merge($rubbishWords,$ar);
+        $tmpRubishWords1 = $this->inputBox->tryGetString('rubishWords');
+        if ($tmpRubishWords1)
+        {
+            $ar = json_decode($tmpRubishWords1, true);
+            if (!empty($ar))
+            {
+                $rubbishWords = array_merge($rubbishWords, $ar);
             }
         }
         $rubbishWords = array_unique($rubbishWords);
-        $tmpIndex = array_search('/', $rubbishWords);
+        $tmpIndex     = array_search('/', $rubbishWords);
         if ($tmpIndex !== false)
         {
             unset($rubbishWords[$tmpIndex]);
@@ -392,7 +390,7 @@ class CmdFormat extends CmdBase
                 //# 是正则定界符，用它就不用转义 /
                 //[ /]+：空格或 /，+ 表示连续多个当作一个分隔符
                 //PREG_SPLIT_NO_EMPTY：去掉空元素
-               // $arr = preg_split('#[ /]+#', $trimedAlbumDir, -1, PREG_SPLIT_NO_EMPTY);
+                // $arr = preg_split('#[ /]+#', $trimedAlbumDir, -1, PREG_SPLIT_NO_EMPTY);
 
                 $dirAr     = array_unique(array_filter(array_map(function ($s) { return trim($s); }, preg_split('#[ /]+#', $trimedAlbumDir, -1, PREG_SPLIT_NO_EMPTY)), function ($s) { return $s !== ''; }));
                 $dirAr     = array_values($dirAr);
@@ -403,18 +401,18 @@ class CmdFormat extends CmdBase
                     $dir_i = strtolower($dir_i);
                     $this->printer->tabEcho($dir_i);
 
-                    for ($tmp_j = $dirArMaxI; $tmp_j >$tmp_i; $tmp_j--)
+                    for ($tmp_j = $dirArMaxI; $tmp_j > $tmp_i; $tmp_j--)
                     {
                         $dir_j = strtolower($dirAr[$tmp_j]);
                         $this->printer->tabEcho($dir_j);
 
-                            if (strlen(strstr($dir_j, $dir_i)) > 2)
-                            {
-                                $this->printer->tabEcho("#--unset {$tmp_j}_{$dirAr[$tmp_j]}");
-                                $dirAr[$dir_j] = '';
-                                // unset($dirAr[$i]);
-                                break;
-                            }
+                        if (strlen(strstr($dir_j, $dir_i)) > 2)
+                        {
+                            $this->printer->tabEcho("#--unset {$tmp_j}_{$dirAr[$tmp_j]}");
+                            $dirAr[$dir_j] = '';
+                            // unset($dirAr[$i]);
+                            break;
+                        }
 
                         $this->printer->endTabEcho('strstr');
                     }

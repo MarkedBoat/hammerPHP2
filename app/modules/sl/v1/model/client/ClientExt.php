@@ -52,20 +52,20 @@
         /**
          * @var Client|null
          */
-        private $__client = null;
+        private $client = null;
         /**
          * @var RedisCache|null
          */
-        private $__cache = null;
+        private $cache = null;
 
         public static $rules = [];
 
         public function __construct(Client $client, $load = true) {
             $this->trialNotYet  = Sys::app()->params['trial_member_dur'];
             $this->extTableName = ClientRuleDao::tableName;
-            $this->__client     = $client;
+            $this->client     = $client;
             $this->dao          = $client;
-            $this->__cache      = RedisCache::model(RedisCache::clientPk_extAttrs, $client->id);
+            $this->cache      = RedisCache::model(RedisCache::clientPk_extAttrs, $client->id);
             if ($load)
                 $this->get();
         }
@@ -74,7 +74,7 @@
          * @return RedisCache|null
          */
         public function getCache() {
-            return $this->__cache;
+            return $this->cache;
         }
 
         public function getAttrsRule() {
@@ -134,10 +134,10 @@
         }
 
         public function get2() {
-            $cacheData = $this->__cache->get();
+            $cacheData = $this->cache->get();
             if (is_null($cacheData)) {
                 $tn        = ClientRuleDao::tableName;
-                $sql       = "select id,attr,sn,val,sta from {$tn} where cid={$this->__client->id}";
+                $sql       = "select id,attr,sn,val,sta from {$tn} where cid={$this->client->id}";
                 $table     = Sys::app()->db('sl_master')->setText($sql)->queryAll();
                 $cacheData = [];
                 $rule      = self::getAttrsRule();
@@ -178,7 +178,7 @@
                         $cacheData[$row['attr']][intval($row['sn'])] = $val;
                     }
                 }
-                $this->__cache->set($cacheData);
+                $this->cache->set($cacheData);
             } else {
                 Sys::app()->logData('cache');
             }
@@ -197,7 +197,7 @@
             $rules = self::getAttrsRule();
             $sqls  = [];
             $bind  = [
-                ':cid'   => $this->__client->id,
+                ':cid'   => $this->client->id,
                 ':ndate' => date('Y-m-d H:i:s', time()),
             ];
             $tn    = ClientRuleDao::tableName;
@@ -240,7 +240,7 @@
 
 
         public function clearData() {
-            $clientPk  = intval($this->__client->id);
+            $clientPk  = intval($this->client->id);
             $tn        = ClientRuleDao::tableName;
             $table     = Sys::app()->db('sl_master')->setText("select id,attr_type from {$tn} where cid={$clientPk}")->queryAll();
             $rules     = self::getAttrsRule();

@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  kl_desktop_redis:
+    image: redis:7.2
+    container_name: kl_desktop_redis
+    privileged: true
+    user: "0:0"
+    cap_add:
+      - ALL
+    security_opt:
+      - seccomp=unconfined
+    extra_hosts:
+      - "kl-home-pc:172.17.0.1"
+    environment:
+      - TZ=Asia/Shanghai
+    # 不挂 /mnt/f，数据放内存 tmpfs，容器内可写层也在 WSL 本地盘
+    tmpfs:
+      - /data:rw,size=2g,mode=1777
+    ports:
+      - "6379:6379"
+
+    command: >
+      sh -c "
+      exec redis-server
+      --bind 0.0.0.0
+      --protected-mode no
+      --port 6379
+      --daemonize no
+      --dir /data
+      --save ''
+      --appendonly no
+      --appendfsync no
+      --maxmemory 1536mb
+      --maxmemory-policy allkeys-lru
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+      --hz 20
+      --dynamic-hz yes
+      --lazyfree-lazy-eviction yes
+      --lazyfree-lazy-expire yes
+      --lazyfree-lazy-server-del yes
+      --lazyfree-lazy-user-del yes
+      --lazyfree-lazy-user-flush yes
+      --disable-thp yes
+      --logfile ''
+      "
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    restart: unless-stopped
+
+networks:
+  default:
+    name: kl_desktop_network
+    external: true
