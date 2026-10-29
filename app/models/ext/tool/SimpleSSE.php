@@ -22,6 +22,12 @@ class SimpleSSE
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
         header('Connection: keep-alive');
+
+        header('X-Accel-Buffering: no');
+
+        ini_set('output_buffering', 'off');
+        ini_set('zlib.output_compression', 'off');
+
         return $this;
     }
 
@@ -30,8 +36,8 @@ class SimpleSSE
         // 发送开始事件
         echo "event: start\n";
         echo "data: 开始执行:sse\n\n";
-        ob_flush();
-        flush();
+        @ob_flush();
+        @flush();
         return $this;
     }
 
@@ -40,8 +46,8 @@ class SimpleSSE
         echo "event: output\n";
         echo "data: " . str_replace("\n", "<br>", $msg) . "\n\n";
 
-        ob_flush();
-        flush();
+        @ob_flush();
+        @flush();
         return $this;
     }
 

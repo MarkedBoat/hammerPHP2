@@ -434,6 +434,7 @@ or title     like '%php%'
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_南京%' and (salary_gte>=12 or salary_lte>=12);",
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_合肥%' and (salary_gte>=12 or salary_lte>=12);",
                     "update spider.boss_job set is_salary_ok=1 where  area_title like '_阜阳%' and (salary_gte>=7  or salary_lte>=8);",
+                    "update spider.boss_job set is_salary_ok=1 where  area_title like '_青岛%' and (salary_gte>=12 or salary_lte>=12);",
 
 
                 ]
