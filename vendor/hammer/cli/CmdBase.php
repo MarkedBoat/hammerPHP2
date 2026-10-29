@@ -20,7 +20,7 @@
         public static $hammerDir  = '';
         public static $env        = '';
         protected     $inputBox     = null;
-        private       $__planId   = '';
+        private       $planId   = '';
 
         public static function getClassName()
         {
@@ -34,7 +34,7 @@
 
         public function init() {
             // $this->inputBox = new DataBox($param);
-            // $this->__apiName = $this->args->tryGetString('method');
+            // $this->apiName = $this->args->tryGetString('method');
         }
 
 
@@ -106,7 +106,7 @@
          * @return bool|string
          */
         public function getCurrentStatus() {
-            return Sys::app()->redis('default')->get('cmd_current_status_' . $this->__planId);
+            return Sys::app()->redis('default')->get('cmd_current_status_' . $this->planId);
         }
 
         /**
@@ -114,7 +114,7 @@
          * @return bool
          */
         public function isCmdShutdown() {
-            $shutdownStatus = Sys::app()->redis('default')->get('cmd_is_shutdown_' . $this->__planId);
+            $shutdownStatus = Sys::app()->redis('default')->get('cmd_is_shutdown_' . $this->planId);
             return $shutdownStatus === 'yes' ? true : false;
         }
 

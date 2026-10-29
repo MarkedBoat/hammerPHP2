@@ -11,69 +11,69 @@
         const typeArray  = 'array';
         const typeBool   = 'bool';
 
-        private $__data = [];
+        private $data = [];
 
         public function __construct(array $array) {
-            $this->__data = $array;
+            $this->data = $array;
         }
 
         public function add($key, $val) {
-            $this->__data[$key] = $val;
+            $this->data[$key] = $val;
         }
 
         public function getInt($key) {
-            return $this->__getExisted($key, self::typeInt);
+            return $this->getExisted($key, self::typeInt);
         }
 
         public function getNotEmptyInt($key) {
-            return $this->__getNotNull($key, self::typeInt);
+            return $this->getNotNull($key, self::typeInt);
         }
 
         public function tryGetInt($key, $allNull = false) {
-            return $this->__tryGet($key, self::typeInt, $allNull);
+            return $this->tryGet($key, self::typeInt, $allNull);
         }
 
 
         public function getString($key) {
-            return $this->__getExisted($key, self::typeString);
+            return $this->getExisted($key, self::typeString);
         }
 
         public function getNotEmptyString($key) {
-            return $this->__getNotNull($key, self::typeString);
+            return $this->getNotNull($key, self::typeString);
         }
 
         public function tryGetString($key, $allNull = false) {
-            return $this->__tryGet($key, self::typeString, $allNull);
+            return $this->tryGet($key, self::typeString, $allNull);
         }
 
         public function getBool($key) {
-            return $this->__getExisted($key, self::typeBool);
+            return $this->getExisted($key, self::typeBool);
         }
 
         public function getNotEmptyBool($key) {
-            return $this->__getNotNull($key, self::typeBool);
+            return $this->getNotNull($key, self::typeBool);
         }
 
         public function tryGetBool($key, $allNull = false) {
-            return $this->__tryGet($key, self::typeBool, $allNull);
+            return $this->tryGet($key, self::typeBool, $allNull);
         }
 
 
         public function getArray($key) {
-            return $this->__getExisted($key, self::typeArray);
+            return $this->getExisted($key, self::typeArray);
         }
 
         public function getNotEmptyArray($key) {
-            return $this->__getNotNull($key, self::typeArray);
+            return $this->getNotNull($key, self::typeArray);
         }
 
         public function tryGetArray($key, $allNull = false) {
-            return $this->__tryGet($key, self::typeArray, $allNull);
+            return $this->tryGet($key, self::typeArray, $allNull);
         }
 
 
         public function getData() {
-            return $this->__data;
+            return $this->data;
         }
 
         /**
@@ -87,7 +87,7 @@
          * @throws \Exception
          */
         public function getVersion(&$v1 = 0, &$v2 = 0, &$v3 = 0, $key = 'version', $necessary = false) {
-            $version = $necessary ? Param::getNotEmptyString($this->__data, $key) : Param::tryGetString($this->__data, $key);
+            $version = $necessary ? Param::getNotEmptyString($this->data, $key) : Param::tryGetString($this->data, $key);
             if (empty($version))
                 return false;
             $vers = explode('.', $version);
@@ -120,21 +120,21 @@
         }
 
         private function __tryGet($key, $type, $allNull = false) {
-            if (isset($this->__data[$key])) {
-                return $this->__conv($this->__data[$key], $type, $key);
+            if (isset($this->data[$key])) {
+                return $this->conv($this->data[$key], $type, $key);
             } else {
                 if ($allNull) {
                     return null;
                 } else {
-                    return $this->__getNullVal($type);
+                    return $this->getNullVal($type);
                 }
 
             }
         }
 
         private function __getExisted($key, $type) {
-            if (isset($this->__data[$key])) {
-                $val = $this->__conv($this->__data[$key], $type, $key);
+            if (isset($this->data[$key])) {
+                $val = $this->conv($this->data[$key], $type, $key);
                 return $val;
             } else {
                 throw  new \Exception('缺少参数:' . $key, 400);
@@ -142,9 +142,9 @@
         }
 
         private function __getNotNull($key, $type) {
-            if (isset($this->__data[$key])) {
-                $val = $this->__conv($this->__data[$key], $type, $key);
-                if ($val === $this->__getNullVal($type))
+            if (isset($this->data[$key])) {
+                $val = $this->conv($this->data[$key], $type, $key);
+                if ($val === $this->getNullVal($type))
                     throw  new \Exception('参数不能为空:' . $key, 400);
                 return $val;
             } else {

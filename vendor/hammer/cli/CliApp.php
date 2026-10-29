@@ -15,8 +15,8 @@ class CliApp extends BaseApp
     private $args    = array();
 
     private static $cmd            = '';
-    private static $__logFile      = '';
-    private static $__errorLogFile = '';
+    private static $logFile      = '';
+    private static $errorLogFile = '';
 
     function __construct($args)
     {
@@ -196,48 +196,48 @@ class CliApp extends BaseApp
 
     public static function getErrorLogFile()
     {
-        if (self::$__errorLogFile === '')
+        if (self::$errorLogFile === '')
         {
             $date                 = date('Ymd');
-            self::$__errorLogFile = Sys::app()->params['cli']['logDir'] . '/app.error_' . $date . '.log';
-            if (!file_exists(self::$__errorLogFile))
+            self::$errorLogFile = Sys::app()->params['cli']['logDir'] . '/app.error_' . $date . '.log';
+            if (!file_exists(self::$errorLogFile))
             {
-                $tmp_dir = dirname(self::$__errorLogFile);
+                $tmp_dir = dirname(self::$errorLogFile);
                 if (!file_exists($tmp_dir))
                 {
                     mkdir($tmp_dir, 0777, true);
                 }
 
-                file_put_contents(self::$__errorLogFile, "\n", FILE_APPEND);
-                chmod(self::$__errorLogFile, 0777);
+                file_put_contents(self::$errorLogFile, "\n", FILE_APPEND);
+                chmod(self::$errorLogFile, 0777);
             }
 
         }
-        return self::$__errorLogFile;
+        return self::$errorLogFile;
 
     }
 
     public static function getLogFile()
     {
-        if (self::$__logFile === '')
+        if (self::$logFile === '')
         {
             if (!file_exists(Sys::app()->params['cli']['logDir']))
             {
                 mkdir(Sys::app()->params['cli']['logDir'], 0777, true);
             }
             $date            = date('Ymd');
-            self::$__logFile = Sys::app()->params['cli']['logDir'] . '/app.history_' . $date . '.log';
-            if (!file_exists(self::$__logFile))
+            self::$logFile = Sys::app()->params['cli']['logDir'] . '/app.history_' . $date . '.log';
+            if (!file_exists(self::$logFile))
             {
-                file_put_contents(self::$__logFile, "\n", FILE_APPEND);
+                file_put_contents(self::$logFile, "\n", FILE_APPEND);
                 usleep(200);
-                if (posix_geteuid() === fileowner(self::$__logFile))
+                if (posix_geteuid() === fileowner(self::$logFile))
                 {
-                    @chmod(self::$__logFile, 0777);//wsl 下权限可能有问题
+                    @chmod(self::$logFile, 0777);//wsl 下权限可能有问题
                 }
             }
         }
-        return self::$__logFile;
+        return self::$logFile;
 
     }
 

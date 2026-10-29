@@ -88,6 +88,13 @@ else
     die("domain not in config array: " . __HOST__);
 }
 
-(new \hammer\web\HttpApp())->run();
+(new \hammer\web\HttpApp())->setWebRequest(
+    (new \hammer\web\WebRequest($_SERVER))
+        ->setPostVar($_POST)
+        ->setGetVar($_GET)
+        ->setRequestVar($_REQUEST)
+        ->setRawBody(file_get_contents('php://input'))
+
+)->run();
 
 

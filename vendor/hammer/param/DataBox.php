@@ -14,14 +14,14 @@ class DataBox
     const typeArray  = 'array';
     const typeBool   = 'bool';
 
-    private $__core_array = [];
+    private $coreArray = [];
 
     private $exception_class = '';
     private $execSettingInfo = [];
 
     public function __construct(array $array)
     {
-        $this->__core_array = $array;
+        $this->coreArray = $array;
     }
 
     /**
@@ -150,7 +150,7 @@ class DataBox
 
     public function add($key, $val)
     {
-        $this->__core_array[$key] = $val;
+        $this->coreArray[$key] = $val;
     }
 
     /**
@@ -158,7 +158,7 @@ class DataBox
      */
     public function getExistVal($key, $type)
     {
-        return $this->__getExisted($key, $type);
+        return $this->getExisted($key, $type);
     }
 
     /**
@@ -166,7 +166,7 @@ class DataBox
      */
     public function getExistedInt($key)
     {
-        return $this->__getExisted($key, self::typeInt);
+        return $this->getExisted($key, self::typeInt);
     }
 
     /**
@@ -174,7 +174,7 @@ class DataBox
      */
     public function getNotEmptyInt($key)
     {
-        return $this->__getNotEmpty($key, self::typeInt);
+        return $this->getNotEmpty($key, self::typeInt);
     }
 
     /**
@@ -182,7 +182,7 @@ class DataBox
      */
     public function tryGetInt($key, $allNull = false)
     {
-        return $this->__tryGet($key, self::typeInt, $allNull);
+        return $this->tryGet($key, self::typeInt, $allNull);
     }
 
 
@@ -191,7 +191,7 @@ class DataBox
      */
     public function getExistedString($key)
     {
-        return $this->__getExisted($key, self::typeString);
+        return $this->getExisted($key, self::typeString);
     }
 
     /**
@@ -199,7 +199,7 @@ class DataBox
      */
     public function getNotEmptyString($key)
     {
-        return $this->__getNotEmpty($key, self::typeString);
+        return $this->getNotEmpty($key, self::typeString);
     }
 
     /**
@@ -207,7 +207,7 @@ class DataBox
      */
     public function tryGetString($key, $allNull = false)
     {
-        return $this->__tryGet($key, self::typeString, $allNull);
+        return $this->tryGet($key, self::typeString, $allNull);
     }
 
     /**
@@ -215,7 +215,7 @@ class DataBox
      */
     public function getExistedBool($key)
     {
-        return $this->__getExisted($key, self::typeBool);
+        return $this->getExisted($key, self::typeBool);
     }
 
     /**
@@ -223,7 +223,7 @@ class DataBox
      */
     public function getNotEmptyBool($key)
     {
-        return $this->__getNotEmpty($key, self::typeBool);
+        return $this->getNotEmpty($key, self::typeBool);
     }
 
     /**
@@ -231,7 +231,7 @@ class DataBox
      */
     public function tryGetBool($key, $allNull = false)
     {
-        return $this->__tryGet($key, self::typeBool, $allNull);
+        return $this->tryGet($key, self::typeBool, $allNull);
     }
 
 
@@ -240,7 +240,7 @@ class DataBox
      */
     public function getExistedArray($key)
     {
-        return $this->__getExisted($key, self::typeArray);
+        return $this->getExisted($key, self::typeArray);
     }
 
     /**
@@ -251,7 +251,7 @@ class DataBox
      */
     public function getNotEmptyArray($key): array
     {
-        return $this->__getNotEmpty($key, self::typeArray);
+        return $this->getNotEmpty($key, self::typeArray);
     }
 
     /**
@@ -259,13 +259,13 @@ class DataBox
      */
     public function tryGetArray($key, $allNull = false)
     {
-        return $this->__tryGet($key, self::typeArray, $allNull);
+        return $this->tryGet($key, self::typeArray, $allNull);
     }
 
 
     public function getCoreArray(): array
     {
-        return $this->__core_array;
+        return $this->coreArray;
     }
 
 
@@ -283,7 +283,7 @@ class DataBox
      */
     public function tryGet($key)
     {
-        return $this->__core_array[$key] ?? null;
+        return $this->coreArray[$key] ?? null;
     }
 
     /**
@@ -291,9 +291,9 @@ class DataBox
      */
     private function __tryGet($key, $type, $allNull = false)
     {
-        if (isset($this->__core_array[$key]))
+        if (isset($this->coreArray[$key]))
         {
-            return $this->__conv($this->__core_array[$key], $type, $key);
+            return $this->conv($this->coreArray[$key], $type, $key);
         }
         else
         {
@@ -310,7 +310,7 @@ class DataBox
             }
             else
             {
-                return $this->__getEmptyVal($type);
+                return $this->getEmptyVal($type);
             }
 
         }
@@ -321,9 +321,9 @@ class DataBox
      */
     private function __getExisted($key, $type)
     {
-        if (isset($this->__core_array[$key]))
+        if (isset($this->coreArray[$key]))
         {
-            return $this->__conv($this->__core_array[$key], $type, $key);
+            return $this->conv($this->coreArray[$key], $type, $key);
         }
         else
         {
@@ -348,11 +348,11 @@ class DataBox
     {
         $this->execSettingInfo['key']  = $key;
         $this->execSettingInfo['type'] = $type;
-        if (isset($this->__core_array[$key]))
+        if (isset($this->coreArray[$key]))
         {
             $err_msg = $this->execSettingInfo['empty_error_msg'] ?? ('参数不能为空:' . $key);
-            $val     = $this->__conv($this->__core_array[$key], $type, $key);
-            if ($val === $this->__getEmptyVal($type))
+            $val     = $this->conv($this->coreArray[$key], $type, $key);
+            if ($val === $this->getEmptyVal($type))
             {
                 $this->execSettingInfo = [];
                 if ($this->exception_class === '')
@@ -481,9 +481,9 @@ class DataBox
      */
     public function tryGetVal(string $key, $default)
     {
-        if (isset($this->__core_array[$key]))
+        if (isset($this->coreArray[$key]))
         {
-            return $this->__core_array[$key];
+            return $this->coreArray[$key];
         }
         else
         {

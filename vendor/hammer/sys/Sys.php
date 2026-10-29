@@ -20,20 +20,20 @@ use models\ext\tool\Printer;
  */
 class Sys
 {
-    /** @var $__instance static|null */
-    private static $__instance;
-    private        $__instances       = [];//实例
-    private        $__configKV        = [];
-    private        $__isDebug         = false;
-    private        $__magic_propertys = [];
-    private        $__log_trace_step  = 1;
-    private        $__logs            = [];
-    private        $_forceLog         = false;
-    private        $opts              = [];
-    private        $log_filename      = '';
-    public         $cache             = true;
-    public         $params            = [];
-    private        $__propertys       = [];
+    /** @var $instance static|null */
+    private static $instance;
+    private        $instances      = [];//实例
+    private        $configKV       = [];
+    private        $isDebug        = false;
+    private        $magicPropertys = [];
+    private        $logTraceStep   = 1;
+    private        $logs           = [];
+    private        $forceLog       = false;
+    private        $opts           = [];
+    private        $logFilename    = '';
+    public         $cache          = true;
+    public         $params         = [];
+    private        $propertys      = [];
 
     public  $workMode             = '';
     private $cliRunningParam      = [];
@@ -42,7 +42,7 @@ class Sys
     const cfgKeyRedis = 'redis';
 
     /** @var HttpApp| CliApp */
-    private $__dispatcher;
+    private $dispatcher;
 
     /** @var $bizConfig  mixed */
     public $bizConfig;
@@ -62,9 +62,9 @@ class Sys
      */
     public static function app()
     {
-        if (is_null(self::$__instance))
+        if (is_null(self::$instance))
             throw  new \Exception('SysHelper 并未init~!');
-        return self::$__instance;
+        return self::$instance;
     }
 
     /**
@@ -94,7 +94,7 @@ class Sys
 
     public static function isInit()
     {
-        return is_null(self::$__instance) ? false : true;
+        return is_null(self::$instance) ? false : true;
     }
 
     /**
@@ -115,15 +115,15 @@ class Sys
                 die;
             }
         }
-        self::$__instance             = new static();
-        self::$__instance->__configKV = $configs;
+        self::$instance           = new static();
+        self::$instance->configKV = $configs;
         if (isset($configs['params']))
-            self::$__instance->params = $configs['params'];
-        self::$__instance->__isDebug = isset(self::$__instance->params['is_debug']) && self::$__instance->params['is_debug'] === true;
-        self::$__instance->__initLoger();
+            self::$instance->params = $configs['params'];
+        self::$instance->isDebug = isset(self::$instance->params['is_debug']) && self::$instance->params['is_debug'] === true;
+        self::$instance->initLoger();
         ini_set('date.timezone', 'Asia/Shanghai');
 
-        return self::$__instance;
+        return self::$instance;
     }
 
     /**
@@ -154,7 +154,7 @@ class Sys
 
     public function setDispatcher($dispatcher)
     {
-        $this->__dispatcher = $dispatcher;
+        $this->dispatcher = $dispatcher;
         return $this;
     }
 
@@ -163,27 +163,27 @@ class Sys
      */
     public function getDispatcher()
     {
-        return $this->__dispatcher;
+        return $this->dispatcher;
     }
 
     public function getConfig()
     {
-        return $this->__configKV;
+        return $this->configKV;
     }
 
     public function setConfig($configs)
     {
-        $this->__configKV = $configs;
+        $this->configKV = $configs;
     }
 
     public function addConfig($key, $config)
     {
-        $this->__configKV[$key] = $config;
+        $this->configKV[$key] = $config;
     }
 
     public function addCase($key, $case)
     {
-        $this->__instances[$key] = $case;
+        $this->instances[$key] = $case;
     }
 
     public function setInputDataBox(DataBox $inputDataBox)
@@ -199,24 +199,24 @@ class Sys
      */
     public function redis($redisKey = 'default')
     {
-        if (isset($this->__configKV['redis'][$redisKey]))
+        if (isset($this->configKV['redis'][$redisKey]))
         {
-            if (!isset($this->__instances['redis']))
-                $this->__instances['redis'] = [];
-            if (!isset($this->__instances['redis'][$redisKey]))
+            if (!isset($this->instances['redis']))
+                $this->instances['redis'] = [];
+            if (!isset($this->instances['redis'][$redisKey]))
             {
                 try
                 {
-                    $this->__instances['redis'][$redisKey] = new \Redis();
-                    $this->__instances['redis'][$redisKey]->connect($this->__configKV['redis'][$redisKey]['host'], $this->__configKV['redis'][$redisKey]['port']);
-                    if (isset($this->__configKV['redis'][$redisKey]['password']))
-                        $this->__instances['redis'][$redisKey]->auth($this->__configKV['redis'][$redisKey]['password']);
-                    if (isset($this->__configKV['redis'][$redisKey]['db']))
-                        $this->__instances['redis'][$redisKey]->select($this->__configKV['redis'][$redisKey]['db']);
+                    $this->instances['redis'][$redisKey] = new \Redis();
+                    $this->instances['redis'][$redisKey]->connect($this->configKV['redis'][$redisKey]['host'], $this->configKV['redis'][$redisKey]['port']);
+                    if (isset($this->configKV['redis'][$redisKey]['password']) && $this->configKV['redis'][$redisKey]['password'] !== '')
+                        $this->instances['redis'][$redisKey]->auth($this->configKV['redis'][$redisKey]['password']);
+                    if (isset($this->configKV['redis'][$redisKey]['db']))
+                        $this->instances['redis'][$redisKey]->select($this->configKV['redis'][$redisKey]['db']);
 
                 } catch (\Exception $exception)
                 {
-                    throw  new \Exception($exception->getMessage(), $exception->getCode(), '', $this->__configKV['redis'][$redisKey]);
+                    throw  new \Exception($exception->getMessage(), $exception->getCode(), $exception);
                 }
 
             }
@@ -225,7 +225,7 @@ class Sys
         {
             throw  new \Exception('没有配置redis信息', 400);
         }
-        return $this->__instances['redis'][$redisKey];
+        return $this->instances['redis'][$redisKey];
     }
 
     /**
@@ -234,15 +234,15 @@ class Sys
      */
     public function memcached()
     {
-        if (isset($this->__instances['memcached']))
-            return $this->__instances['memcached'];
-        if (isset($this->__configKV['memcached']))
+        if (isset($this->instances['memcached']))
+            return $this->instances['memcached'];
+        if (isset($this->configKV['memcached']))
         {
-            if (!isset($this->__instances['memcached']))
+            if (!isset($this->instances['memcached']))
             {
                 try
                 {
-                    $this->__instances['memcached'] = new MCD($this->__configKV['memcached']);
+                    $this->instances['memcached'] = new MCD($this->configKV['memcached']);
                 } catch (\Exception $exception)
                 {
                     throw  new \Exception($exception->getMessage(), $exception->getCode(), '');
@@ -253,7 +253,7 @@ class Sys
         {
             throw  new \Exception('没有配置memcached信息', 400);
         }
-        return $this->__instances['memcached'];
+        return $this->instances['memcached'];
     }
 
 
@@ -264,31 +264,31 @@ class Sys
      */
     public function db($dbKey)
     {
-        if (isset($this->__configKV['db'][$dbKey]))
+        if (isset($this->configKV['db'][$dbKey]))
         {
-            if (!isset($this->__instances['db']))
-                $this->__instances['db'] = [];
-            if (!isset($this->__instances['db'][$dbKey]))
+            if (!isset($this->instances['db']))
+                $this->instances['db'] = [];
+            if (!isset($this->instances['db'][$dbKey]))
             {
-                $this->__instances['db'][$dbKey] = MysqlPdo::configDb($this->__configKV['db'][$dbKey]);
+                $this->instances['db'][$dbKey] = MysqlPdo::configDb($this->configKV['db'][$dbKey]);
             }
         }
         else
         {
             Sys::app()->interruption()->setMsg('没有配置信息:db>' . $dbKey . '>' . ENV_NAME)->outError();
         }
-        return $this->__instances['db'][$dbKey];
+        return $this->instances['db'][$dbKey];
     }
 
     public function unsetDb($dbKey)
     {
-        if (isset($this->__configKV['db'][$dbKey]))
+        if (isset($this->configKV['db'][$dbKey]))
         {
-            if (!isset($this->__instances['db']))
-                $this->__instances['db'] = [];
-            if (isset($this->__instances['db'][$dbKey]))
+            if (!isset($this->instances['db']))
+                $this->instances['db'] = [];
+            if (isset($this->instances['db'][$dbKey]))
             {
-                $this->__instances['db'][$dbKey] = null;
+                $this->instances['db'][$dbKey] = null;
                 return true;
             }
             else
@@ -305,7 +305,7 @@ class Sys
 
     public function isDebug()
     {
-        return $this->__isDebug;
+        return $this->isDebug;
     }
 
     /**
@@ -315,7 +315,7 @@ class Sys
      */
     public function setDebug($status)
     {
-        $this->__isDebug = $status;
+        $this->isDebug = $status;
         if ($status)
         {
             self::app()->logData([$status], 'setDebug', true);
@@ -329,14 +329,14 @@ class Sys
      */
     public function setForceLog($status = true)
     {
-        $this->_forceLog = $status;
+        $this->forceLog = $status;
         return $this;
     }
 
 
     public function setLogTraceStep($step = 1)
     {
-        $this->__log_trace_step = $step;
+        $this->logTraceStep = $step;
     }
 
     /**
@@ -344,9 +344,9 @@ class Sys
      */
     public function logData($data, $title = false, $trace = false, $logFile = false)
     {
-        if ($this->__isDebug === false && $this->_forceLog === false)
+        if ($this->isDebug === false && $this->forceLog === false)
             return false;
-        $this->_forceLog = false;
+        $this->forceLog = false;
         if ($trace)
         {
             $steps = debug_backtrace();
@@ -376,9 +376,9 @@ class Sys
      */
     public function interruption()
     {
-        if (!isset($this->__instances['interruption']))
-            $this->__instances['interruption'] = new Interruption();
-        return $this->__instances['interruption'];
+        if (!isset($this->instances['interruption']))
+            $this->instances['interruption'] = new Interruption();
+        return $this->instances['interruption'];
     }
 
 
@@ -393,16 +393,16 @@ class Sys
 
     public function __get($name)
     {
-        if (!isset($this->__magic_propertys[$name]))
+        if (!isset($this->magicPropertys[$name]))
         {
             switch ($name)
             {
                 case 'webRequest':
-                    $this->__magic_propertys['webRequest'] = new WebRequest();
+                    $this->magicPropertys['webRequest'] = new WebRequest();
                     break;
             }
         }
-        return $this->__magic_propertys[$name] ?? false;
+        return $this->magicPropertys[$name] ?? false;
     }
 
     /**
@@ -410,7 +410,7 @@ class Sys
      */
     public function getPrinter()
     {
-        return $this->__instances['printer'];
+        return $this->instances['printer'];
     }
 
     public function initPrinter()
@@ -452,7 +452,7 @@ class Sys
      */
     public function outError($code, $msg, $data, $debugData = [])
     {
-        $this->__dispatcher->expectError($code, $msg, $data, $debugData);
+        $this->dispatcher->expectError($code, $msg, $data, $debugData);
     }
 
 
@@ -460,31 +460,31 @@ class Sys
      * 初始化loger
      * @return void
      */
-    private function __initLoger()
+    private function initLoger()
     {
         if (empty($this->logger))
         {
 
-            $this->logger = new $this->__configKV['log']['classname']();
-            if (isset($this->__configKV['log']['fullDir']) && $this->__configKV['log']['fullDir'])
+            $this->logger = new $this->configKV['log']['classname']();
+            if (isset($this->configKV['log']['fullDir']) && $this->configKV['log']['fullDir'])
             {
-                $this->logger->setDir($this->__configKV['log']['fullDir']);
+                $this->logger->setDir($this->configKV['log']['fullDir']);
             }
             else
             {
-                if (isset($this->__configKV['log']['dir']) && $this->__configKV['log']['dir'])
+                if (isset($this->configKV['log']['dir']) && $this->configKV['log']['dir'])
                 {
-                    $this->logger->setDir(__HAMMER_DIR__ . $this->__configKV['log']['dir']);
+                    $this->logger->setDir(__HAMMER_DIR__ . $this->configKV['log']['dir']);
                 }
                 else
                 {
                     $this->logger->setDir(__HAMMER_DIR__ . '/runtimes/log');
                 }
             }
-            $this->logger->setlogDatePathStyle($this->__configKV['log']['datePathStyle'] ?? 'Ymd');
-            if (isset($this->__configKV['log']['dataStyle']))
+            $this->logger->setlogDatePathStyle($this->configKV['log']['datePathStyle'] ?? 'Ymd');
+            if (isset($this->configKV['log']['dataStyle']))
             {
-                $this->logger->setDataStyle($this->__configKV['log']['dataStyle']);
+                $this->logger->setDataStyle($this->configKV['log']['dataStyle']);
             }
         }
     }
@@ -512,7 +512,7 @@ class Sys
     public function log($v1defText, $v2defData = false)
     {
 
-        if ($this->__isDebug)
+        if ($this->isDebug)
         {
             $this->logger->letMemLogging(true);
         }

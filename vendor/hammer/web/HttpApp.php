@@ -11,10 +11,18 @@ class HttpApp extends BaseApp
 {
 
     /**
-     * @var ActionBase
+     * @var ActionBase|null
      */
-    private       $__action  = null;
+    private       $action    = null;
     public static $hasOutput = false;
+    /**
+     * @var bool 是否输出结果,true 直接输出，false 直接返回
+     */
+    private $isResOutput = true;
+    /**
+     * @var WebRequest
+     */
+    private $webRequest = null;
 
     /**
      * Displays homepage.
@@ -24,8 +32,13 @@ class HttpApp extends BaseApp
     public function run()
     {
         Sys::app()->setDispatcher($this);
-        $uri             = trim(preg_replace('/\?(.*)?$/', '', $_SERVER['REQUEST_URI']), '/');
-        $arr             = explode('/', $uri);
+        $uri = trim(preg_replace('/\?(.*)?$/', '', $this->webRequest->serverVar['REQUEST_URI']), '/');
+        $arr = explode('/', $uri);
+        if (!isset($arr[1]))
+        {
+            return $this->expectError('server_error', 'error_route', []);
+        }
+        // var_dump($uri,$arr);
         $version         = $arr[1];
         $arr[1]          = explode('.', $version)[0];
         $arr[1]          .= '\\api';
@@ -36,15 +49,15 @@ class HttpApp extends BaseApp
         $actionClassPath = join('\\', $arr);
         // var_dump($actionClassPath);die;
         // Sys::app()->setDebug(true || isset($_REQUEST['kldebug']) && $_REQUEST['kldebug'] === 'x');
-        Sys::app()->cache = isset($_REQUEST['nocache']) ? false : true;
+        Sys::app()->cache = isset($this->webRequest->getRequestVar()['nocache']) ? false : true;
         try
         {
             $this->initAction($actionClassPath);
-            $this->__action->version = floatval(substr($version, 1));
-            $this->output();
+            $this->action->version = floatval(substr($version, 1));
+            return $this->output();
         } catch (\Exception $e)
         {
-            $this->outError($e);
+            return $this->outError($e);
         }
     }
 
@@ -53,8 +66,9 @@ class HttpApp extends BaseApp
     {
         if (class_exists($actionClassPath))
         {
-            $this->__action = new $actionClassPath();
-            $this->__action->baseInit();
+            $this->action = new $actionClassPath();
+            $this->action->setWebRequest($this->webRequest); // Set web request to action
+            $this->action->baseInit();
         }
         else
         {
@@ -63,12 +77,40 @@ class HttpApp extends BaseApp
         }
     }
 
+    /**
+     * 设置是否输出结果
+     * @param bool $isResOutput true:直接输出，false 返回结果
+     * @return static
+     */
+    public function setIsResOutput(bool $isResOutput)
+    {
+        $this->isResOutput = $isResOutput;
+        return $this;
+    }
+
+    /**
+     * @return WebRequest
+     */
+    public function getWebRequest()
+    {
+        return $this->webRequest;
+    }
+
+    /**
+     * @param WebRequest $webRequest
+     * @return static
+     */
+    public function setWebRequest(WebRequest $webRequest)
+    {
+        $this->webRequest = $webRequest;
+        return $this;
+    }
 
     public function output()
     {
         try
         {
-            $res = $this->__action->run();
+            $res = $this->action->run();
             @ob_end_clean();
             if (is_object($res) && get_class($res) === ' hammer\common\Respone')
             {
@@ -88,7 +130,7 @@ class HttpApp extends BaseApp
             else if (is_string($res))
             {
                 @header('content-Type:text/html;charset=utf8');
-                die($res);
+                $this->outputString($json);
             }
             else
             {
@@ -98,7 +140,7 @@ class HttpApp extends BaseApp
                     'data'   => $res,
                     'code'   => Sys::app()->interruption()->getCode(),
                 ];
-                if ($this->__action->isDebug())
+                if ($this->action->isDebug())
                 {
                     $data['__debugs'] = [
                         'out'   => __CLASS__ . '==>' . __METHOD__ . '() ##' . __LINE__,
@@ -106,15 +148,14 @@ class HttpApp extends BaseApp
                         'error' => error_get_last()
                     ];
                 }
-                $json            = json_encode($data, JSON_UNESCAPED_SLASHES);
-                self::$hasOutput = true;
-                die($json);
+                $json = json_encode($data, JSON_UNESCAPED_SLASHES);
+                return $this->outputString($json);
             }
 
 
         } catch (\Exception $exception)
         {
-            $this->outError($exception);
+            return $this->outError($exception);
         }
     }
 
@@ -144,17 +185,39 @@ class HttpApp extends BaseApp
         {
             $data['__debug'] = $debugData;
         }
-        $json            = json_encode($data, JSON_UNESCAPED_SLASHES);
+        $json = json_encode($data, JSON_UNESCAPED_SLASHES);
+        return $this->outputString($json);
+    }
+
+    public function getStatusCode()
+    {
+        return 200;
+    }
+
+    public function getContentType()
+    {
+        return 'application/json';
+    }
+
+    public function outputString($str)
+    {
         self::$hasOutput = true;
-        die($json);
+        if ($this->isResOutput)
+        {
+            echo $str;
+        }
+        else
+        {
+            return $str;
+        }
     }
 
     public function outError(\Exception $exception)
     {
-        if (Sys::app()->isDebug() || (!is_null($this->__action) && $this->__action->isDebug()))
+        if (Sys::app()->isDebug() || (!is_null($this->action) && $this->action->isDebug()))
         {
 
-            $this->expectError('server_error', $exception->getMessage(), [], [
+            return $this->expectError('server_error', $exception->getMessage(), [], [
                 'out'   => __CLASS__ . '==>' . __METHOD__ . '() ##' . __LINE__,
                 'file'  => $exception->getFile() . '#' . $exception->getLine(),
                 'log'   => Sys::app()->getLogs(),
@@ -164,7 +227,7 @@ class HttpApp extends BaseApp
         }
         else
         {
-            $this->expectError('server_error', $exception->getMessage(), []);
+            return $this->expectError('server_error', $exception->getMessage(), []);
         }
     }
 
@@ -206,12 +269,12 @@ class HttpApp extends BaseApp
 
     function gf_ajax_error($msg, $code = -1, $debug = [], $okCode = 'error')
     {
-        $this->outJson([], $code, $msg, $debug, $okCode);
+        return $this->outJson([], $code, $msg, $debug, $okCode);
     }
 
     function gf_ajax_success($data, $extra = [], $okCode = 'ok')
     {
-        $this->outJson($data, 0, '', $extra, $okCode);
+        return $this->outJson($data, 0, '', $extra, $okCode);
     }
 
 
@@ -222,7 +285,7 @@ class HttpApp extends BaseApp
         {
             $extra['sys_debug'] = Sys::app()->interruption()->getLogs();
         }
-        return exit(json_encode(array_merge(array(
+        return $this->outputString(json_encode(array_merge(array(
             'code'    => $code,
             'msg'     => $msg,
             'bizRes'  => $okCode,
